@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sessão • Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
+
+#player{
+  position:fixed;
+  inset:0;
+  background:#000;
+}
+
+#close{
+  position:absolute;
+  top:16px;
+  left:16px;
+  padding:10px 16px;
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  border:none;
+  border-radius:999px;
+  cursor:pointer;
+  z-index:10;
+}
+
+#layout{
+  display:grid;
+  grid-template-columns:3fr 1.4fr;
+  height:100%;
+}
+
+video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* LATERAL */
+#side{
+  background:#111;
+  padding:32px;
+}
+
+#titulo{
+  font-size:26px;
+  margin-bottom:8px;
+}
+
+#meta{
+  margin-bottom:12px;
+  font-size:14px;
+}
+
+.badge{
+  display:inline-block;
+  padding:4px 10px;
+  margin-right:6px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+  background:#222;
+}
+
+.badge.tipo{background:#e50914}
+.badge.categoria{background:#333}
+.badge.classificacao{background:#444}
+
+#desc{
+  font-size:14px;
+  line-height:1.5;
+  color:#ccc;
+  margin-bottom:18px;
+}
+
+/* 🎨 CONTROLES DE SÉRIE (BONITOS) */
+#serieControls{
+  display:none;
+  margin-top:12px;
+}
+
+.select-box{
+  position:relative;
+  margin-bottom:10px;
+}
+
+.select-box::after{
+  content:"▾";
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  pointer-events:none;
+  color:#aaa;
+}
+
+select{
+  width:100%;
+  appearance:none;
+  padding:12px 14px;
+  background:#1c1c1c;
+  border:1px solid #333;
+  border-radius:10px;
+  color:#fff;
+  font-size:14px;
+  cursor:pointer;
+}
+
+select:hover{border-color:#555}
+select:focus{
+  outline:none;
+  border-color:#e50914;
+  box-shadow:0 0 0 2px rgba(229,9,20,.25);
+}
+
+/* ▶ PRÓXIMO EP */
+#btnProximo{
+  position:absolute;
+  right:40px;
+  bottom:120px;
+  padding:12px 22px;
+  border:none;
+  border-radius:999px;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  background:rgba(255,255,255,.15);
+  color:#fff;
+  backdrop-filter:blur(6px);
+  display:none;
+  z-index:20;
+}
+
+#btnProximo:hover{
+  background:rgba(255,255,255,.28);
+}
+
+@media(max-width:768px){
+  #layout{grid-template-columns:1fr}
+  #side{padding:16px}
+}
+</style>
+</head>
+
+<body>
+
+<div id="player">
+  <button id="close" onclick="voltar()">←</button>
+
+  <div id="layout">
+    <video id="video" controls autoplay></video>
+
+    <button id="btnProximo" onclick="proximoEpisodio()">▶ Próximo episódio</button>
+
+    <div id="side">
+      <h2 id="titulo"></h2>
+      <div id="meta"></div>
+      <p id="desc"></p>
+
+      <div id="serieControls">
+        <div class="select-box">
+          <select id="selTemporada"></select>
+        </div>
+        <div class="select-box">
+          <select id="selEpisodio"></select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* 🔗 SUPABASE */
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+/* 🔐 VALIDA SESSÃO */
+const usuarioEmail = localStorage.getItem("usuario_email");
+if(!usuarioEmail){
+  location.replace("login.html");
+}
+
+/* 📦 ITEM */
+const params = new URLSearchParams(location.search);
+const rawItem = params.get("item");
+
+if(!rawItem){
+  location.replace("index.html");
+}
+
+const item = JSON.parse(decodeURIComponent(rawItem));
+
+/* 🎬 ELEMENTOS */
+const video = document.getElementById("video");
+const titulo = document.getElementById("titulo");
+const meta = document.getElementById("meta");
+const desc = document.getElementById("desc");
+const serieControls = document.getElementById("serieControls");
+const selTemporada = document.getElementById("selTemporada");
+const selEpisodio = document.getElementById("selEpisodio");
+const btnProximo = document.getElementById("btnProximo");
+
+/* 🧠 CONTROLE */
+let serie = [];
+let episodioIndex = 0;
+
+/* 🏷️ META */
+meta.innerHTML = `
+  <span class="badge categoria">${item.categoria || "Geral"}</span>
+  <span class="badge tipo">${item.tipo}</span>
+  ${item.classificacao ? `<span class="badge classificacao">${item.classificacao}</span>` : ""}
+`;
+
+titulo.textContent = item.titulo || item.serie_nome;
+desc.textContent = item.descricao || "";
+
+/* 🎞️ FILME */
+if(item.tipo === "filme"){
+  video.src = item.video_url;
+  video.play().catch(()=>{});
+}
+
+/* 📺 SÉRIE */
+if(item.tipo === "serie"){
+  carregarSerie();
+}
+
+async function carregarSerie(){
+  const { data } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("serie_nome", item.serie_nome)
+    .order("temporada")
+    .order("episodio");
+
+  serie = data || [];
+  if(!serie.length) return;
+
+  serieControls.style.display = "block";
+
+  const temporadas = [...new Set(serie.map(e => e.temporada))];
+  selTemporada.innerHTML = temporadas
+    .map(t => `<option value="${t}">Temporada ${t}</option>`)
+    .join("");
+
+  selTemporada.onchange = montarEpisodios;
+  montarEpisodios();
+}
+
+function montarEpisodios(){
+  const eps = serie.filter(e => e.temporada == selTemporada.value);
+
+  selEpisodio.innerHTML = eps
+    .map((e,i)=> `<option value="${i}">Episódio ${e.episodio}</option>`)
+    .join("");
+
+  episodioIndex = 0;
+  tocarEpisodio(eps, episodioIndex);
+
+  selEpisodio.onchange = ()=>{
+    episodioIndex = Number(selEpisodio.value);
+    tocarEpisodio(eps, episodioIndex);
+  };
+}
+
+function tocarEpisodio(eps, index){
+  btnProximo.style.display = "none";
+  const ep = eps[index];
+  if(!ep) return;
+
+  video.src = ep.video_url;
+  video.play().catch(()=>{});
+}
+
+function proximoEpisodio(){
+  const eps = serie.filter(e => e.temporada == selTemporada.value);
+  episodioIndex++;
+
+  if(episodioIndex < eps.length){
+    selEpisodio.value = episodioIndex;
+    tocarEpisodio(eps, episodioIndex);
+  }
+}
+
+video.addEventListener("timeupdate", ()=>{
+  if(item.tipo !== "serie") return;
+  if(!video.duration) return;
+
+  btnProximo.style.display =
+    (video.duration - video.currentTime <= 60)
+      ? "block"
+      : "none";
+});
+
+/* ⬅ VOLTAR */
+function voltar(){
+  video.pause();
+  video.src = "";
+  location.replace("index.html");
+}
+</script>
+
+</body>
+</html>

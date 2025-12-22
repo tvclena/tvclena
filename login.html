@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Login | Sessão 99</title>
+
+<!-- 🔒 BLOQUEIA ZOOM TOTAL -->
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{
+  box-sizing:border-box;
+  font-family:Inter,Arial,sans-serif;
+}
+
+html,body{
+  overscroll-behavior:none;
+  touch-action:manipulation;
+}
+
+:root{
+  --bg:#0f0f10;
+  --surface:#1b1b1e;
+  --card:#232326;
+  --accent:#e50914;
+  --text:#ffffff;
+  --muted:#b5b5b5;
+  --border:#2b2b2b;
+}
+
+body{
+  margin:0;
+  height:100vh;
+  overflow:hidden;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* 🎬 VÍDEO FUNDO */
+video{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:-2;
+}
+
+/* OVERLAY */
+.bg{
+  position:fixed;
+  inset:0;
+  background:
+    linear-gradient(to right,rgba(0,0,0,.88),rgba(0,0,0,.3)),
+    linear-gradient(to top,rgba(0,0,0,.65),rgba(0,0,0,0));
+  z-index:-1;
+}
+
+/* CONTAINER */
+.container{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:420px;
+  max-width:92%;
+  background:rgba(27,27,30,.75);
+  backdrop-filter:blur(14px);
+  padding:42px;
+  border-radius:18px;
+  box-shadow:0 40px 80px rgba(0,0,0,.6);
+}
+
+h1{
+  margin:0 0 30px;
+  font-size:38px;
+  font-weight:800;
+}
+h1 span{color:var(--accent)}
+
+.group{margin-bottom:22px}
+
+label{
+  font-size:14px;
+  color:var(--muted);
+  display:block;
+  margin-bottom:6px;
+}
+
+input{
+  width:100%;
+  padding:14px 16px;
+  font-size:15px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,.45);
+  color:#fff;
+  outline:none;
+}
+
+input:focus{border-color:var(--accent)}
+
+.btn{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:14px;
+  background:var(--accent);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+.btn.loading{opacity:.8;pointer-events:none}
+
+.link{
+  margin-top:18px;
+  text-align:center;
+  font-size:14px;
+  text-decoration:underline;
+  cursor:pointer;
+}
+
+.msg{
+  margin-top:14px;
+  min-height:20px;
+  font-size:14px;
+  color:#facc15;
+}
+
+/* MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal-box{
+  width:420px;
+  max-width:92%;
+  background:var(--surface);
+  padding:34px;
+  border-radius:18px;
+}
+</style>
+</head>
+
+<body>
+
+<video autoplay muted loop playsinline>
+  <source src="SEU_VIDEO.mp4" type="video/mp4">
+</video>
+<div class="bg"></div>
+
+<!-- LOGIN -->
+<div class="container">
+  <h1>Sessão <span>99</span></h1>
+
+  <div class="group">
+    <label>Email</label>
+    <input id="email" type="email">
+  </div>
+
+  <div class="group">
+    <label>Senha</label>
+    <input id="senha" type="password" minlength="4">
+  </div>
+
+  <button id="btnLogin" class="btn">Entrar</button>
+  <div class="link" id="abrirCadastro">Ainda não tenho uma conta</div>
+  <div class="msg" id="msg"></div>
+</div>
+
+<!-- CADASTRO -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h2>Criar conta</h2>
+
+    <div class="group">
+      <label>Email</label>
+      <input id="c_email" type="email">
+    </div>
+
+    <div class="group">
+      <label>CPF</label>
+      <input id="c_cpf" inputmode="numeric" placeholder="000.000.000-00">
+    </div>
+
+    <div class="group">
+      <label>WhatsApp</label>
+      <input id="c_whats" inputmode="numeric" placeholder="(99) 99999-9999">
+    </div>
+
+    <div class="group">
+      <label>Senha</label>
+      <input id="c_senha" type="password" minlength="4">
+    </div>
+
+    <div class="group">
+      <label>Confirmar senha</label>
+      <input id="c_confirma" type="password" minlength="4">
+    </div>
+
+    <button id="btnCadastro" class="btn">Cadastrar</button>
+    <div class="link" id="fecharCadastro">Cancelar</div>
+  </div>
+</div>
+
+<script>
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+/* MODAL */
+abrirCadastro.onclick=()=>modal.style.display="flex";
+fecharCadastro.onclick=()=>modal.style.display="none";
+
+/* 🔢 MÁSCARAS */
+c_cpf.oninput = e=>{
+  e.target.value = e.target.value
+    .replace(/\D/g,"")
+    .replace(/(\d{3})(\d)/,"$1.$2")
+    .replace(/(\d{3})(\d)/,"$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/,"$1-$2")
+    .slice(0,14);
+};
+
+c_whats.oninput = e=>{
+  e.target.value = e.target.value
+    .replace(/\D/g,"")
+    .replace(/^(\d{2})(\d)/,"($1) $2")
+    .replace(/(\d{5})(\d)/,"$1-$2")
+    .slice(0,15);
+};
+
+/* LOGIN */
+btnLogin.onclick = async () => {
+  msg.textContent = "";
+  btnLogin.classList.add("loading");
+
+  const emailVal = email.value.trim();
+  const senhaVal = senha.value;
+
+  if (!emailVal || !senhaVal) {
+    msg.textContent = "Preencha email e senha";
+    btnLogin.classList.remove("loading");
+    return;
+  }
+
+  const { data, error } = await sb
+    .from("usuarios")
+    .select("email, senha, status, trial_expires_at")
+    .eq("email", emailVal)
+    .maybeSingle(); // 👈 importante
+
+  btnLogin.classList.remove("loading");
+
+  if (error) {
+    msg.textContent = "Erro ao consultar usuário";
+    console.error(error);
+    return;
+  }
+
+  if (!data) {
+    msg.textContent = "Usuário não encontrado";
+    return;
+  }
+
+  if (data.senha !== senhaVal) {
+    msg.textContent = "Senha incorreta";
+    return;
+  }
+
+  const agora = new Date();
+  const expira = new Date(data.trial_expires_at);
+
+  if (data.status === "aprovado" || agora <= expira) {
+    localStorage.setItem("usuario_email", data.email);
+    console.log("LOGIN OK:", data.email); // 👈 debug
+    location.replace("index.html"); // 👈 evita histórico bugado
+  } else {
+    msg.textContent = "Seu teste expirou. Aguarde aprovação.";
+  }
+};
+
+
+/* CADASTRO */
+btnCadastro.onclick = async ()=>{
+  if(c_senha.value!==c_confirma.value){
+    alert("Senhas não conferem");
+    return;
+  }
+
+  const trial=new Date(Date.now()+86400000);
+
+  const { error } = await sb.from("usuarios").insert({
+    email:c_email.value.trim(),
+    cpf:c_cpf.value.replace(/\D/g,""),
+    whatsapp:c_whats.value.replace(/\D/g,""),
+    senha:c_senha.value,
+    status:"pendente",
+    trial_expires_at:trial.toISOString()
+  });
+
+  if(error){
+    alert("Erro ao cadastrar");
+    return;
+  }
+
+  alert("Cadastro criado! Aguarde aprovação.");
+  modal.style.display="none";
+};
+</script>
+
+</body>
+</html>
