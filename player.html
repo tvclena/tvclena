@@ -12,19 +12,48 @@
 body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
 #player{position:fixed;inset:0;background:#000}
+
 #close{
-  position:absolute;top:16px;left:16px;
+  position:absolute;
+  top:16px;
+  left:16px;
   padding:10px 16px;
   background:rgba(0,0,0,.6);
-  color:#fff;border:none;border-radius:999px;
-  cursor:pointer;z-index:10
+  color:#fff;
+  border:none;
+  border-radius:999px;
+  cursor:pointer;
+  z-index:10
 }
-#layout{display:grid;grid-template-columns:3fr 1.4fr;height:100%}
-video{width:100%;height:100%;object-fit:cover}
 
-#side{background:#111;padding:32px}
-#titulo{font-size:26px;margin-bottom:8px}
-#meta{margin-bottom:12px;font-size:14px}
+#layout{
+  display:grid;
+  grid-template-columns:3fr 1.4fr;
+  height:100%
+}
+
+/* 🔥 PLAYER NATIVO (CAST / AIRPLAY) */
+video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  background:#000;
+}
+
+#side{
+  background:#111;
+  padding:32px;
+}
+
+#titulo{
+  font-size:26px;
+  margin-bottom:8px
+}
+
+#meta{
+  margin-bottom:12px;
+  font-size:14px
+}
 
 .badge{
   display:inline-block;
@@ -39,10 +68,22 @@ video{width:100%;height:100%;object-fit:cover}
 .badge.categoria{background:#333}
 .badge.classificacao{background:#444}
 
-#desc{font-size:14px;line-height:1.5;color:#ccc;margin-bottom:18px}
+#desc{
+  font-size:14px;
+  line-height:1.5;
+  color:#ccc;
+  margin-bottom:18px
+}
 
-#serieControls{display:none;margin-top:12px}
-.select-box{position:relative;margin-bottom:10px}
+#serieControls{
+  display:none;
+  margin-top:12px
+}
+
+.select-box{
+  position:relative;
+  margin-bottom:10px
+}
 .select-box::after{
   content:"▾";
   position:absolute;
@@ -52,6 +93,7 @@ video{width:100%;height:100%;object-fit:cover}
   color:#aaa;
   pointer-events:none
 }
+
 select{
   width:100%;
   appearance:none;
@@ -92,8 +134,22 @@ select{
   <button id="close" onclick="voltar()">←</button>
 
   <div id="layout">
-    <video id="video" controls autoplay playsinline></video>
-    <button id="btnProximo" onclick="proximoEpisodio()">▶ Próximo episódio</button>
+
+    <!-- 🎬 PLAYER NATIVO COM CAST / AIRPLAY -->
+    <video
+      id="video"
+      controls
+      autoplay
+      playsinline
+      webkit-playsinline
+      x-webkit-airplay="allow"
+      disablePictureInPicture="false"
+      controlsList="nodownload"
+    ></video>
+
+    <button id="btnProximo" onclick="proximoEpisodio()">
+      ▶ Próximo episódio
+    </button>
 
     <div id="side">
       <h2 id="titulo"></h2>
@@ -109,6 +165,7 @@ select{
         </div>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -119,7 +176,7 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ================= SESSÃO ================= */
+/* ================= VALIDAR SESSÃO ================= */
 async function validarSessaoPlayer(){
   const email = localStorage.getItem("usuario_email");
   if (!email) {
@@ -166,27 +223,27 @@ const selEpisodio = document.getElementById("selEpisodio");
 const btnProximo = document.getElementById("btnProximo");
 
 /* ================= UI ================= */
+titulo.textContent = item.titulo || item.serie_nome;
+desc.textContent = item.descricao || "";
+
 meta.innerHTML = `
   <span class="badge categoria">${item.categoria || "Geral"}</span>
   <span class="badge tipo">${item.tipo}</span>
   ${item.classificacao ? `<span class="badge classificacao">${item.classificacao}</span>` : ""}
 `;
-titulo.textContent = item.titulo || item.serie_nome;
-desc.textContent = item.descricao || "";
 
-/* ================= CONTEXTO GLOBAL ================= */
+/* ================= CONTEXTO GLOBAL (ANALYTICS) ================= */
 window.__CLENA_CONTEXT__ = {
   email: localStorage.getItem("usuario_email"),
-  item: item,
-  video: video
+  item,
+  video
 };
 
-// 🔥 inicia analytics APENAS quando tudo existir
-const s = document.createElement("script");
-s.src = "/analytics/tracker.js";
-s.defer = true;
-document.body.appendChild(s);
-
+/* ================= ANALYTICS (DEPOIS DE TUDO PRONTO) ================= */
+const analytics = document.createElement("script");
+analytics.src = "/analytics/tracker.js";
+analytics.defer = true;
+document.body.appendChild(analytics);
 
 /* ================= FILME ================= */
 if (item.tipo === "filme") {
@@ -230,6 +287,11 @@ function montarEpisodios(){
 
   episodioIndex = 0;
   tocarEpisodio(eps, episodioIndex);
+
+  selEpisodio.onchange = () => {
+    episodioIndex = Number(selEpisodio.value);
+    tocarEpisodio(eps, episodioIndex);
+  };
 }
 
 function tocarEpisodio(eps, index){
@@ -243,7 +305,7 @@ function tocarEpisodio(eps, index){
   };
 
   video.src = ep.video_url;
-  video.play();
+  video.play().catch(()=>{});
 }
 
 function proximoEpisodio(){
@@ -262,6 +324,7 @@ video.addEventListener("timeupdate", () => {
     (video.duration - video.currentTime <= 60) ? "block" : "none";
 });
 
+/* ================= VOLTAR ================= */
 function voltar(){
   video.pause();
   video.src = "";
@@ -273,13 +336,10 @@ function voltar(){
   const ok = await validarSessaoPlayer();
   if (!ok) return;
 
-  // força play caso autoplay tenha sido bloqueado
+  // força play caso autoplay seja bloqueado
   video.play().catch(()=>{});
 })();
 </script>
-
-<!-- 📊 ANALYTICS -->
-<script src="/analytics/collector.js"></script>
 
 </body>
 </html>
