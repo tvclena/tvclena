@@ -842,10 +842,6 @@ const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
 );
-const BUNNY_STORAGE_ZONE = "sessao99";
-const BUNNY_REGION = "br";
-const BUNNY_ACCESS_KEY = "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17"; // ⚠️ INSEGURO
-const BUNNY_PULL_ZONE = "https://sessao99.b-cdn.net";
 
 
 let dados=[], heroItem=null, filtro='todos', usuario=null;
@@ -1317,57 +1313,15 @@ async function validarSessao() {
   usuario = { email };
   return true;
 }
-async function carregarAvatarHeader() {
-  const { data } = await sb
-    .from("usuarios")
-    .select("avatar_url, nome_usuario")
-    .eq("email", usuario.email)
-    .single();
-
-  const avatarUrl =
-    data?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
-
-  perfilBtn.innerHTML = `
-    <img src="${avatarUrl}"
-         style="width:36px;height:36px;border-radius:50%;object-fit:cover">
-  `;
-}
-async function carregarPerfil() {
-  const { data } = await sb
-    .from("usuarios")
-    .select(`
-      id,
-      email,
-      nome_usuario,
-      username,
-      avatar_url,
-      tipo_assinatura,
-      valor_assinatura,
-      vencimento_assinatura
-    `)
-    .eq("email", usuario.email)
-    .single();
-
-  if (!data) return;
-
-  userId = data.id;
-
-  perfilEmail.textContent = data.email;
-  nomeUsuario.value = data.nome_usuario || "";
-  usernameInput.value = data.username || "";
-
-  avatarImg.src =
-    data.avatar_url ||
-    `https://ui-avatars.com/api/?name=${(nomeUsuario.value || "U")[0]}&background=e50914&color=fff`;
-
-  perfilPlano.textContent = data.tipo_assinatura || "-";
-  perfilValor.textContent = formatarReal(data.valor_assinatura);
-  perfilVencimento.textContent = formatarData(data.vencimento_assinatura);
-}
 async function uploadAvatar(input) {
   const file = input.files[0];
   if (!file || !userId) return;
+
+  // 🔹 valida tipo
+  if (!file.type.startsWith("image/")) {
+    alert("Arquivo inválido");
+    return;
+  }
 
   // 🔹 redimensiona para 512x512
   const img = new Image();
@@ -1387,43 +1341,43 @@ async function uploadAvatar(input) {
 
   URL.revokeObjectURL(img.src);
 
-  const nome = `${userId}_${Date.now()}.jpg`;
-  const uploadUrl =
-    `https://br.storage.bunnycdn.com/sessao99/avatars/${nome}`;
+  // 🔹 nome único
+  const fileName = `${userId}.jpg`;
+  const filePath = `avatars/${fileName}`;
 
-  try {
-    const res = await fetch(uploadUrl, {
-      method: "PUT",
-      headers: {
-        "AccessKey": "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
-        "Content-Type": "application/octet-stream"
-      },
-      body: blob
+  // 🔹 upload no Supabase Storage
+  const { error: uploadError } = await sb
+    .storage
+    .from("avatars")
+    .upload(fileName, blob, {
+      upsert: true,
+      contentType: "image/jpeg"
     });
 
-    if (!res.ok) {
-      console.error("Bunny erro:", res.status);
-      alert("Erro ao enviar avatar");
-      return;
-    }
-
-    const avatarUrl =
-      `https://sessao99.b-cdn.net/avatars/${nome}`;
-
-    await sb
-      .from("usuarios")
-      .update({ avatar_url: avatarUrl })
-      .eq("id", userId);
-
-    avatarImg.src = avatarUrl + "?v=" + Date.now();
-    carregarAvatarHeader();
-
-  } catch (e) {
-    console.error(e);
-    alert("Falha no upload");
+  if (uploadError) {
+    console.error(uploadError);
+    alert("Erro ao enviar avatar");
+    return;
   }
+
+  // 🔹 URL pública
+  const { data } = sb
+    .storage
+    .from("avatars")
+    .getPublicUrl(fileName);
+
+  const avatarUrl = data.publicUrl + "?v=" + Date.now();
+
+  // 🔹 salva no usuário
+  await sb
+    .from("usuarios")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", userId);
+
+  // 🔹 atualiza UI
+  avatarImg.src = avatarUrl;
+  carregarAvatarHeader();
 }
-  
 async function validarUsername() {
   const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
   usernameInput.value = u;
