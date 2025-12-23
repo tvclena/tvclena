@@ -1,6 +1,6 @@
 const sb = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+  window.NEXT_PUBLIC_SUPABASE_URL,
+  window.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 async function carregar() {
