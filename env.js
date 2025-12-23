@@ -1,5 +1,4 @@
-fetch("/api/env")
-  .then(r => r.json())
-  .then(env => {
-    window.ENV = env;
-  });
+window.ENV = {
+  SUPABASE_URL: window.__ENV__.SUPABASE_URL,
+  SUPABASE_ANON_KEY: window.__ENV__.SUPABASE_ANON_KEY
+};
