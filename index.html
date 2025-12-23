@@ -1260,7 +1260,6 @@ if ("serviceWorker" in navigator) {
 
   });
 }
-
 async function validarSessao() {
   const email = localStorage.getItem("usuario_email");
 
@@ -1269,24 +1268,22 @@ async function validarSessao() {
     return false;
   }
 
-  const res = await fetch("/api/validar-sessao", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email })
-  });
+  const { data, error } = await sb
+    .from("usuarios")
+    .select("status, trial_expires_at")
+    .eq("email", email)
+    .maybeSingle();
 
-  const json = await res.json();
-
-  if (!res.ok) {
+  if (error || !data) {
     localStorage.clear();
     location.replace("login.html");
     return false;
   }
 
-  // 🚫 BLOQUEADO
-  if (json.bloqueado) {
-    localStorage.clear();
+  const agora = new Date();
+  const expira = new Date(data.trial_expires_at);
 
+  if (data.status === "bloqueado") {
     document.body.innerHTML = `
       <div style="
         height:100vh;
@@ -1300,32 +1297,14 @@ async function validarSessao() {
       ">
         <div>
           <h1 style="color:#e50914">Acesso bloqueado</h1>
-          <p style="margin:14px 0;color:#b5b5b5">
-            Seu acesso foi bloqueado.<br>
-            Entre em contato para regularizar.
-          </p>
-          <a href="https://wa.me/55${json.whatsapp || ""}"
-             target="_blank"
-             style="
-               display:inline-block;
-               margin-top:12px;
-               padding:14px 26px;
-               border-radius:999px;
-               background:#25d366;
-               color:#000;
-               font-weight:700;
-               text-decoration:none;
-             ">
-            Falar no WhatsApp
-          </a>
+          <p>Entre em contato para regularizar.</p>
         </div>
       </div>
     `;
     return false;
   }
 
-  // ⏰ TRIAL EXPIRADO
-  if (json.expirado) {
+  if (agora > expira && data.status !== "aprovado") {
     localStorage.clear();
     location.replace("login.html");
     return false;
@@ -1334,6 +1313,132 @@ async function validarSessao() {
   usuario = { email };
   return true;
 }
+async function carregarAvatarHeader() {
+  const { data } = await sb
+    .from("usuarios")
+    .select("avatar_url, nome_usuario")
+    .eq("email", usuario.email)
+    .single();
+
+  const avatarUrl =
+    data?.avatar_url ||
+    `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
+
+  perfilBtn.innerHTML = `
+    <img src="${avatarUrl}"
+         style="width:36px;height:36px;border-radius:50%;object-fit:cover">
+  `;
+}
+async function carregarPerfil() {
+  const { data } = await sb
+    .from("usuarios")
+    .select(`
+      id,
+      email,
+      nome_usuario,
+      username,
+      avatar_url,
+      tipo_assinatura,
+      valor_assinatura,
+      vencimento_assinatura
+    `)
+    .eq("email", usuario.email)
+    .single();
+
+  if (!data) return;
+
+  userId = data.id;
+
+  perfilEmail.textContent = data.email;
+  nomeUsuario.value = data.nome_usuario || "";
+  usernameInput.value = data.username || "";
+
+  avatarImg.src =
+    data.avatar_url ||
+    `https://ui-avatars.com/api/?name=${(nomeUsuario.value || "U")[0]}&background=e50914&color=fff`;
+
+  perfilPlano.textContent = data.tipo_assinatura || "-";
+  perfilValor.textContent = formatarReal(data.valor_assinatura);
+  perfilVencimento.textContent = formatarData(data.vencimento_assinatura);
+}
+async function uploadAvatar(input) {
+  const file = input.files[0];
+  if (!file || !userId) return;
+
+  const img = new Image();
+  img.src = URL.createObjectURL(file);
+  await new Promise(r => img.onload = r);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 512;
+  canvas.getContext("2d").drawImage(img, 0, 0, 512, 512);
+
+  const blob = await new Promise(r =>
+    canvas.toBlob(r, "image/jpeg", 0.9)
+  );
+
+  const nome = `${userId}_${Date.now()}.jpg`;
+
+  const uploadUrl =
+    `https://br.storage.bunnycdn.com/sessao99/avatars/${nome}`;
+
+  await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "AccessKey": "SUA_ACCESS_KEY_BUNNY",
+      "Content-Type": "application/octet-stream"
+    },
+    body: blob
+  });
+
+  const avatarUrl = `https://sessao99.b-cdn.net/avatars/${nome}`;
+
+  await sb.from("usuarios")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", userId);
+
+  avatarImg.src = avatarUrl;
+  carregarAvatarHeader();
+}
+async function validarUsername() {
+  const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
+  usernameInput.value = u;
+
+  if (u.length < 3) {
+    usernameStatus.textContent = "Muito curto";
+    usernameStatus.style.color = "#ff5555";
+    return false;
+  }
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("id")
+    .eq("username", u)
+    .neq("id", userId);
+
+  if (data.length) {
+    usernameStatus.textContent = "Já em uso";
+    usernameStatus.style.color = "#ff5555";
+    return false;
+  }
+
+  usernameStatus.textContent = "Disponível";
+  usernameStatus.style.color = "#00ff99";
+  return true;
+}
+async function salvarPerfil() {
+  if (!(await validarUsername())) return;
+
+  await sb.from("usuarios")
+    .update({
+      nome_usuario: nomeUsuario.value,
+      username: usernameInput.value
+    })
+    .eq("id", userId);
+
+  fecharPerfil();
+}
+
 
 /* ================= PERFIL PREMIUM ================= */
 
@@ -1345,151 +1450,15 @@ const usernameInput = document.getElementById("username");
 const usernameStatus = document.getElementById("usernameStatus");
 const perfilBtn = document.getElementById("perfilBtn");
 
-async function carregarAvatarHeader() {
-  const email = localStorage.getItem("usuario_email");
-  if (!email) return;
-
-  const res = await fetch("/api/perfil", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email })
-  });
-
-  const data = await res.json();
-  if (!res.ok) return;
-
-  const avatarUrl =
-    data.avatar_url
-      ? data.avatar_url + "?v=" + Date.now() // 🔥 quebra cache
-      : `https://ui-avatars.com/api/?name=${(data.nome_usuario || "U")[0]}&background=e50914&color=fff`;
-
-  perfilBtn.innerHTML = `
-    <img src="${avatarUrl}"
-         style="width:36px;height:36px;border-radius:50%;object-fit:cover">
-  `;
-}
-
-
-
-async function carregarPerfil() {
-  const res = await fetch("/api/perfil", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: usuario.email })
-  });
-
-  const data = await res.json();
-  if (!res.ok) return;
-
-  userId = data.id;
-
-  perfilEmail.textContent = data.email;
-  nomeUsuario.value = data.nome_usuario || "Usuário";
-  usernameInput.value = data.username || "";
-
-  avatarImg.src =
-    data.avatar_url ||
-    `https://ui-avatars.com/api/?name=${nomeUsuario.value[0]}&background=e50914&color=fff`;
-
-  perfilPlano.textContent = data.tipo_assinatura || "-";
-  perfilValor.textContent = formatarReal(data.valor_assinatura);
-  perfilVencimento.textContent = formatarData(data.vencimento_assinatura);
-}
-
-async function uploadAvatar(input) {
-  const file = input.files[0];
-  if (!file || !usuario?.email) {
-    alert("Sessão inválida");
-    return;
-  }
-
-  const form = new FormData();
-  form.append("file", file);
-  form.append("email", usuario.email); // 🔥 IDENTIFICA O USUÁRIO
-
-  const res = await fetch("/api/upload-avatar", {
-    method: "POST",
-    body: form
-  });
-
-  if (!res.ok) {
-    alert("Erro ao enviar avatar");
-    return;
-  }
-
-  const { avatarUrl } = await res.json();
-
-  // 🔥 ANTI-CACHE
-  const finalUrl = avatarUrl + "?v=" + Date.now();
-
-  avatarImg.src = finalUrl;
-  await carregarAvatarHeader(); // atualiza bolinha do topo
-}
-
-
-
-
-async function validarUsername() {
-  const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g, "");
-  usernameInput.value = u;
-
-  if (u.length < 3) {
-    usernameStatus.textContent = "Muito curto";
-    usernameStatus.style.color = "#ff5555";
-    return false;
-  }
-
-  const res = await fetch("/api/validar-username", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: usuario.email,
-      username: u
-    })
-  });
-
-  const json = await res.json();
-
-  if (!res.ok || !json.disponivel) {
-    usernameStatus.textContent = "Já em uso";
-    usernameStatus.style.color = "#ff5555";
-    return false;
-  }
-
-  usernameStatus.textContent = "Disponível";
-  usernameStatus.style.color = "#00ff99";
-  return true;
-}
-
-
-async function salvarPerfil() {
-  if (!(await validarUsername())) return;
-
-  await fetch("/api/atualizar-perfil", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: usuario.email,
-      nome_usuario: nomeUsuario.value,
-      username: usernameInput.value
-    })
-  });
-
-  fecharPerfil();
-}
-
 (async () => {
 
-  const email = localStorage.getItem("usuario_email");
+  const ok = await validarSessao();
+  if (!ok) return;
 
-  if (!email) {
-    location.replace("login.html");
-    return;
-  }
-
-  usuario = { email };
-
+  await carregarAvatarHeader();
   iniciarApp();
+
+  setInterval(validarSessao, 15000);
 
 })();
 
