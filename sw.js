@@ -28,33 +28,18 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
-  // 🚨 NUNCA INTERCEPTAR MÉTODOS QUE NÃO SEJAM GET
-  if (event.request.method !== "GET") {
-    return;
-  }
-
   const url = new URL(event.request.url);
 
-  // ❌ NÃO CACHEAR API / SUPABASE
+  // 🚫 NÃO CACHEAR AVATAR
   if (
-    url.pathname.startsWith("/api") ||
-    url.hostname.includes("supabase.co") ||
-    url.hostname.includes("b-cdn.net")
+    url.pathname.includes("/storage/v1/object/public/avatars")
   ) {
-    event.respondWith(fetch(event.request));
-    return;
+    return; // sempre da rede
   }
 
-  // ✅ NETWORK FIRST
   event.respondWith(
-    fetch(event.request)
-      .then(res => {
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, clone);
-        });
-        return res;
-      })
-      .catch(() => caches.match(event.request))
+    caches.match(event.request).then(res => {
+      return res || fetch(event.request);
+    })
   );
 });
