@@ -783,50 +783,41 @@ const ID_PRINCIPAL = "649a1523-e49b-49d8-a34a-452a54b04ba";
 
 async function iniciarApp() {
 
-  // aqui o usuario JÁ EXISTE (veio do validarSessao)
   perfilEmail.textContent = usuario.email;
 
-  const { data } = await sb
+  const { data, error } = await sb
     .from("filmes")
     .select("*")
     .eq("ativo", true);
 
+  if (error) {
+    console.error("❌ Erro ao carregar filmes:", error);
+    alert("Erro ao carregar catálogo");
+    return;
+  }
+
+  console.log("🎬 FILMES CARREGADOS:", data);
+
   dados = data || [];
   dadosCarregados = true;
 
-heroItem =
-  dados.find(d => d.id === ID_PRINCIPAL) ||
-  dados[0];
+  if (!dados.length) {
+    console.warn("⚠️ Nenhum filme ativo encontrado");
+    return;
+  }
 
-if (!heroItem) {
-  console.warn("Nenhum filme encontrado");
-  return;
-}
-
+  heroItem =
+    dados.find(d => d.id === ID_PRINCIPAL) ||
+    dados[0];
 
   hero.style.backgroundImage = `url(${heroItem.capa_url})`;
   heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
   heroMeta.textContent = `${heroItem.categoria} • ${heroItem.tipo}`;
   heroDesc.textContent = heroItem.descricao || "";
 
-  // 🔍 botão "ler mais"
-  setTimeout(() => {
-    const lerMais = document.getElementById("lerMais");
-    lerMais.style.display =
-      heroDesc.scrollHeight > heroDesc.clientHeight + 4
-        ? "inline-block"
-        : "none";
-  }, 50);
-
-  // ▶️ preview de fundo
-  const heroVideo = document.getElementById("heroVideo");
-  if (heroItem.video_url) {
-    heroVideo.src = heroItem.video_url;
-    heroVideo.play().catch(() => {});
-  }
-
   render();
 }
+
 
 
 
