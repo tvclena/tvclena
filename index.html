@@ -865,6 +865,39 @@ ${error.message}
   heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
   heroMeta.textContent = `${heroItem.categoria} • ${heroItem.tipo}`;
   heroDesc.textContent = heroItem.descricao || "";
+// 🎬 AUTOPLAY DO VÍDEO PRINCIPAL (HERO)
+const heroVideo = document.getElementById("heroVideo");
+
+if (heroItem.video_url) {
+  heroVideo.pause();
+  heroVideo.removeAttribute("src"); // reset completo
+  heroVideo.load();
+
+  heroVideo.src = heroItem.video_url;
+  heroVideo.muted = true;
+  heroVideo.playsInline = true;
+  heroVideo.autoplay = true;
+  heroVideo.loop = true;
+
+  heroVideo.addEventListener(
+    "loadedmetadata",
+    () => {
+      const p = heroVideo.play();
+      if (p !== undefined) {
+        p.catch(() => {
+          // fallback (Safari / mobile)
+          setTimeout(() => {
+            heroVideo.play().catch(() => {});
+          }, 300);
+        });
+      }
+    },
+    { once: true }
+  );
+}
+
+
+  
 
   render();
 }
