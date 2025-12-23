@@ -1313,6 +1313,43 @@ async function validarSessao() {
   usuario = { email };
   return true;
 }
+
+
+
+  async function carregarPerfil() {
+  const email = localStorage.getItem("usuario_email");
+
+  const { data, error } = await sb
+    .from("usuarios")
+    .select("*")
+    .eq("email", email)
+    .single();
+
+  if (error || !data) {
+    console.error(error);
+    return;
+  }
+
+  // 🔑 DEFINE O userId (ESSENCIAL)
+  userId = data.id;
+
+  // dados básicos
+  nomeUsuario.value = data.nome_usuario || "";
+  usernameInput.value = data.username || "";
+  perfilEmail.textContent = data.email;
+  perfilPlano.textContent = data.plano || "-";
+  perfilValor.textContent = formatarReal(data.valor);
+  perfilVencimento.textContent = formatarData(data.trial_expires_at);
+
+  // avatar
+  if (data.avatar_url) {
+    avatarImg.src = data.avatar_url;
+    perfilBtn.innerHTML = `<img src="${data.avatar_url}" style="width:36px;height:36px;border-radius:50%">`;
+  } else {
+    perfilBtn.innerHTML = `<span>US</span>`;
+  }
+}
+
 async function uploadAvatar(input) {
   const file = input.files[0];
   if (!file || !userId) return;
@@ -1431,7 +1468,7 @@ const perfilBtn = document.getElementById("perfilBtn");
   const ok = await validarSessao();
   if (!ok) return;
 
-  await carregarAvatarHeader();
+await carregarPerfil();
   iniciarApp();
 
   setInterval(validarSessao, 15000);
