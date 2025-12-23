@@ -1317,7 +1317,6 @@ async function uploadAvatar(input) {
   const file = input.files[0];
   if (!file || !userId) return;
 
-  // 🔹 valida tipo
   if (!file.type.startsWith("image/")) {
     alert("Arquivo inválido");
     return;
@@ -1343,10 +1342,9 @@ async function uploadAvatar(input) {
 
   // 🔹 nome único
   const fileName = `${userId}.jpg`;
-  const filePath = `avatars/${fileName}`;
 
   // 🔹 upload no Supabase Storage
-  const { error: uploadError } = await sb
+  const { error } = await sb
     .storage
     .from("avatars")
     .upload(fileName, blob, {
@@ -1354,8 +1352,8 @@ async function uploadAvatar(input) {
       contentType: "image/jpeg"
     });
 
-  if (uploadError) {
-    console.error(uploadError);
+  if (error) {
+    console.error(error);
     alert("Erro ao enviar avatar");
     return;
   }
