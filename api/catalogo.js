@@ -1,4 +1,3 @@
-// api/catalogo.js
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -16,5 +15,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: error.message });
   }
 
-  res.json(data);
+  res.status(200).json(data);
 }
