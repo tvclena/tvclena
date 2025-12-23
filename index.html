@@ -1066,7 +1066,7 @@ function render(buscaTxt = "") {
 
   // 📺 SÉRIES (AGRUPADAS)
   if (filtro === "todos" || filtro === "serie") {
-    const seriesAgrupadas = [
+    const series = [
       ...new Map(
         dados
           .filter(d => (d.tipo || "").toLowerCase() === "serie")
@@ -1074,7 +1074,7 @@ function render(buscaTxt = "") {
       ).values()
     ];
 
-    seriesAgrupadas
+    series
       .filter(s => JSON.stringify(s).toLowerCase().includes(buscaTxt))
       .forEach(s => grid.innerHTML += card(s));
   }
