@@ -1,6 +1,9 @@
 (() => {
-  const SUPABASE_URL = "https://dxkszikemntfusfyrzos.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed";
+const sb = supabase.createClient(
+  window.NEXT_PUBLIC_SUPABASE_URL,
+  window.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
