@@ -256,41 +256,27 @@ btnLogin.onclick = async () => {
     return;
   }
 
-  const { data, error } = await sb
-    .from("usuarios")
-    .select("email, senha, status, trial_expires_at")
-    .eq("email", emailVal)
-    .maybeSingle(); // 👈 importante
+  const res = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: emailVal,
+      senha: senhaVal
+    })
+  });
 
+  const json = await res.json();
   btnLogin.classList.remove("loading");
 
-  if (error) {
-    msg.textContent = "Erro ao consultar usuário";
-    console.error(error);
+  if (!res.ok) {
+    msg.textContent = json.error || "Erro ao fazer login";
     return;
   }
 
-  if (!data) {
-    msg.textContent = "Usuário não encontrado";
-    return;
-  }
-
-  if (data.senha !== senhaVal) {
-    msg.textContent = "Senha incorreta";
-    return;
-  }
-
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
-
-  if (data.status === "aprovado" || agora <= expira) {
-    localStorage.setItem("usuario_email", data.email);
-    console.log("LOGIN OK:", data.email); // 👈 debug
-    location.replace("index.html"); // 👈 evita histórico bugado
-  } else {
-    msg.textContent = "Seu teste expirou. Aguarde aprovação.";
-  }
+  localStorage.setItem("usuario_email", json.email);
+  location.replace("index.html");
 };
+
 
 
 /* CADASTRO */
