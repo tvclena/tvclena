@@ -1,5 +1,5 @@
 // 🔴 MUDE A VERSÃO SEMPRE QUE ATUALIZAR
-const CACHE_NAME = "sessao-cache-v5";
+const CACHE_NAME = "sessao-cache-v6";
 
 // ✅ SOMENTE ARQUIVOS ESTÁTICOS
 const FILES_TO_CACHE = [
@@ -8,7 +8,8 @@ const FILES_TO_CACHE = [
   "/login.html",
   "/player.html",
   "/manifest.json",
-  "/logo1.png"
+  "/logo1.png",
+  "/env.js"
 ];
 
 /* ================= INSTALL ================= */
@@ -41,65 +42,42 @@ self.addEventListener("activate", event => {
 
 /* ================= FETCH ================= */
 self.addEventListener("fetch", event => {
-  const req = event.request;
-  const url = new URL(req.url);
+  const url = new URL(event.request.url);
 
-  // 🚫 NUNCA interceptar métodos que NÃO sejam GET
-  if (req.method !== "GET") {
-    return; // deixa o browser cuidar
-  }
-
-  /**
-   * ❌ NUNCA CACHEAR:
-   * - Supabase
-   * - APIs
-   * - Analytics
-   */
-  if (
-    url.hostname.includes("supabase.co") ||
-    url.pathname.startsWith("/api") ||
-    url.pathname.includes("/analytics") ||
-    url.pathname.includes("/metrics")
-  ) {
-    event.respondWith(fetch(req));
+  // ❌ NUNCA interceptar APIs
+  if (url.pathname.startsWith("/api/")) {
     return;
   }
 
-  /**
-   * 🎬 CDN / imagens / vídeos
-   * (online-first, sem cache manual)
-   */
+  // ❌ NÃO cachear Supabase
+  if (url.hostname.includes("supabase.co")) {
+    return;
+  }
+
+  // ❌ CDN / vídeos / imagens → sempre online
   if (url.hostname.includes("b-cdn.net")) {
-    event.respondWith(fetch(req));
     return;
   }
 
-  /**
-   * ✅ NETWORK FIRST (HTML, JS, CSS)
-   */
-  event.respondWith(
-    fetch(req)
-      .then(response => {
-        // só cacheia resposta válida
-        if (
-          !response ||
-          response.status !== 200 ||
-          response.type !== "basic"
-        ) {
-          return response;
-        }
+  // ❌ NÃO cachear POST / PUT / DELETE
+  if (event.request.method !== "GET") {
+    return;
+  }
 
+  // ✅ NETWORK FIRST para GET
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
         const responseClone = response.clone();
 
         caches.open(CACHE_NAME).then(cache => {
-          cache.put(req, responseClone);
+          cache.put(event.request, responseClone);
         });
 
         return response;
       })
       .catch(() => {
-        return caches.match(req);
+        return caches.match(event.request);
       })
   );
 });
-
