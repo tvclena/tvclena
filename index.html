@@ -874,15 +874,22 @@ const ID_PRINCIPAL = "649a1523-e49b-49d8-a34a-452a54b04ba";
 
 async function iniciarApp() {
 
+if (usuario?.email && perfilEmail) {
   perfilEmail.textContent = usuario.email;
+}
 
-  const res = await fetch("/api/catalogo");
-  const data = await res.json();
 
-  if (!res.ok) {
-    alert("Erro ao carregar catálogo");
-    return;
-  }
+const { data, error } = await sb
+  .from("filmes")
+  .select("*")
+  .eq("ativo", true);
+
+if (error) {
+  console.error(error);
+  alert("Erro ao carregar catálogo");
+  return;
+}
+
 
   console.log("🎬 FILMES CARREGADOS:", data);
 
