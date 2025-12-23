@@ -212,12 +212,13 @@ input:focus{border-color:var(--accent)}
     <div class="link" id="fecharCadastro">Cancelar</div>
   </div>
 </div>
-
+<script src="env.js"></script>
 <script>
 const sb = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+  window.ENV.SUPABASE_URL,
+  window.ENV.SUPABASE_ANON_KEY
 );
+
 
 /* MODAL */
 abrirCadastro.onclick=()=>modal.style.display="flex";
