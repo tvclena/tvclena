@@ -1,6 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
 import formidable from "formidable";
 import fs from "fs";
+import { createClient } from "@supabase/supabase-js";
 
 export const config = {
   api: { bodyParser: false }
@@ -12,28 +12,48 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  const form = formidable();
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const form = new formidable.IncomingForm();
 
   form.parse(req, async (err, fields, files) => {
+    if (err) {
+      return res.status(400).json({ error: "Erro no upload" });
+    }
+
     const email = fields.email;
     const file = files.file;
 
+    if (!email || !file) {
+      return res.status(400).json({ error: "Dados incompletos" });
+    }
+
     const buffer = fs.readFileSync(file.filepath);
-    const fileName = `${email}.jpg`;
 
-    await supabase.storage
+    const fileName = `${email}-${Date.now()}.png`;
+
+    const { data, error } = await supabase.storage
       .from("avatars")
-      .upload(fileName, buffer, { upsert: true });
+      .upload(fileName, buffer, {
+        contentType: file.mimetype,
+        upsert: true
+      });
 
-    const { data } = supabase.storage
+    if (error) {
+      return res.status(500).json({ error: "Erro ao salvar avatar" });
+    }
+
+    const { data: url } = supabase.storage
       .from("avatars")
       .getPublicUrl(fileName);
 
     await supabase
       .from("usuarios")
-      .update({ avatar_url: data.publicUrl })
+      .update({ avatar_url: url.publicUrl })
       .eq("email", email);
 
-    res.json({ avatarUrl: data.publicUrl });
+    return res.status(200).json({ avatarUrl: url.publicUrl });
   });
 }
