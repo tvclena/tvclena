@@ -280,31 +280,36 @@ btnLogin.onclick = async () => {
 
 
 /* CADASTRO */
-btnCadastro.onclick = async ()=>{
-  if(c_senha.value!==c_confirma.value){
+/* CADASTRO — VIA API (SEGURO) */
+btnCadastro.onclick = async () => {
+
+  if (c_senha.value !== c_confirma.value) {
     alert("Senhas não conferem");
     return;
   }
 
-  const trial=new Date(Date.now()+86400000);
-
-  const { error } = await sb.from("usuarios").insert({
-    email:c_email.value.trim(),
-    cpf:c_cpf.value.replace(/\D/g,""),
-    whatsapp:c_whats.value.replace(/\D/g,""),
-    senha:c_senha.value,
-    status:"pendente",
-    trial_expires_at:trial.toISOString()
+  const res = await fetch("/api/cadastro", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: c_email.value.trim(),
+      cpf: c_cpf.value.replace(/\D/g, ""),
+      whatsapp: c_whats.value.replace(/\D/g, ""),
+      senha: c_senha.value
+    })
   });
 
-  if(error){
-    alert("Erro ao cadastrar");
+  const json = await res.json();
+
+  if (!res.ok) {
+    alert(json.error || "Erro ao cadastrar");
     return;
   }
 
   alert("Cadastro criado! Aguarde aprovação.");
-  modal.style.display="none";
+  modal.style.display = "none";
 };
+
 </script>
 
 </body>
