@@ -6,12 +6,27 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
   const { email, nome_usuario, username } = req.body;
 
-  await supabase
+  if (!email) {
+    return res.status(400).json({ error: "Email obrigatório" });
+  }
+
+  const { error } = await supabase
     .from("usuarios")
-    .update({ nome_usuario, username })
+    .update({
+      nome_usuario,
+      username
+    })
     .eq("email", email);
 
-  res.json({ ok: true });
+  if (error) {
+    return res.status(500).json({ error: "Erro ao atualizar perfil" });
+  }
+
+  return res.status(200).json({ success: true });
 }
