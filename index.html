@@ -881,8 +881,8 @@ if (usuario?.email && perfilEmail) {
 
 const { data, error } = await sb
   .from("filmes")
-  .select("*")
-  .eq("ativo", true);
+  .select("*");
+
 
 if (error) {
   console.error(error);
@@ -1058,7 +1058,9 @@ function render(buscaTxt = "") {
   // FILMES (normal)
   if (filtro === "todos" || filtro === "filme") {
     dados
-      .filter(d => d.tipo === "filme")
+.filter(d => (d.tipo || "").toLowerCase() === "filme")
+.filter(d => (d.tipo || "").toLowerCase() === "serie")
+
       .filter(d => JSON.stringify(d).toLowerCase().includes(buscaTxt))
       .forEach(f => {
         grid.innerHTML += card(f);
@@ -1481,16 +1483,18 @@ async function salvarPerfil() {
   fecharPerfil();
 }
 
-
 (async () => {
 
-  const ok = await validarSessao();
-  if (!ok) return;
+  const email = localStorage.getItem("usuario_email");
 
-  await carregarAvatarHeader(); // ✅ mostra avatar salvo OU padrão
+  if (!email) {
+    location.replace("login.html");
+    return;
+  }
+
+  usuario = { email };
+
   iniciarApp();
-
-  setInterval(validarSessao, 15000);
 
 })();
 
