@@ -6,50 +6,49 @@ const supabase = createClient(
 );
 
 module.exports = async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  let body;
   try {
-    body = typeof req.body === "string"
-      ? JSON.parse(req.body)
-      : req.body;
-  } catch {
-    return res.status(400).json({ error: "JSON inválido" });
-  }
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
 
-  const { email, senha } = body;
+    const body =
+      typeof req.body === "string" ? JSON.parse(req.body) : req.body;
 
-  if (!email || !senha) {
-    return res.status(400).json({ error: "Dados inválidos" });
-  }
+    const { email, senha } = body || {};
 
-  const { data, error } = await supabase
-    .from("usuarios")
-    .select("email, senha, status, trial_expires_at")
-    .eq("email", email)
-    .maybeSingle();
+    if (!email || !senha) {
+      return res.status(400).json({ error: "Dados inválidos" });
+    }
 
-  if (error || !data) {
-    return res.status(401).json({ error: "Usuário não encontrado" });
-  }
+    const { data, error } = await supabase
+      .from("usuarios")
+      .select("email, senha, status, trial_expires_at")
+      .eq("email", email)
+      .single();
 
-  if (data.senha !== senha) {
-    return res.status(401).json({ error: "Senha incorreta" });
-  }
+    if (error || !data) {
+      return res.status(401).json({ error: "Usuário não encontrado" });
+    }
 
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
+    if (data.senha !== senha) {
+      return res.status(401).json({ error: "Senha incorreta" });
+    }
 
-  if (data.status !== "aprovado" && agora > expira) {
-    return res.status(403).json({
-      error: "Trial expirado. Aguarde aprovação."
+    const agora = new Date();
+    const expira = new Date(data.trial_expires_at);
+
+    if (data.status !== "aprovado" && agora > expira) {
+      return res.status(403).json({
+        error: "Trial expirado. Aguarde aprovação."
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      email: data.email
     });
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    return res.status(500).json({ error: "Erro interno" });
   }
-
-  return res.status(200).json({
-    ok: true,
-    email: data.email
-  });
 };
