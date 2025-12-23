@@ -37,16 +37,15 @@ body{
 
 /* ================= HEADER ================= */
 header{
-  height:64px;
-  padding:0 40px;
-  display:flex;
-  align-items:center;
-  gap:20px;
-  background:rgba(0,0,0,.85);
-  position:fixed;
-  top:0;left:0;right:0;
   z-index:100;
+  background:linear-gradient(
+    to bottom,
+    rgba(0,0,0,.85),
+    rgba(0,0,0,.45),
+    rgba(0,0,0,0)
+  );
 }
+
 header h1{color:var(--accent)}
 header input{
   flex:1;
@@ -87,7 +86,7 @@ input, textarea, select {
   display:flex;
   align-items:flex-end;
   position:relative;
-  margin-top:64px;
+  padding-top:64px; /* só afasta o conteúdo, não o vídeo */
   overflow:hidden; /* 🔥 FUNDAMENTAL */
 }
 
@@ -201,14 +200,15 @@ input, textarea, select {
 }
 #heroVideo{
   position:absolute;
-  top:-12%;          /* 🔥 sobe MUITO */
+  top:-18%;          /* sobe mais */
   left:0;
   width:100%;
-  height:120%;       /* 🔥 estica para não dar borda */
+  height:130%;
   object-fit:cover;
-  object-position:center 30%;
+  object-position:center 35%;
   z-index:0;
 }
+
 
 
 /* ================= FILTROS ================= */
