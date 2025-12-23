@@ -842,6 +842,10 @@ const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
 );
+const BUNNY_STORAGE_ZONE = "sessao99";
+const BUNNY_REGION = "br";
+const BUNNY_ACCESS_KEY = "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17"; // ⚠️ INSEGURO
+const BUNNY_PULL_ZONE = "https://sessao99.b-cdn.net";
 
 
 let dados=[], heroItem=null, filtro='todos', usuario=null;
@@ -1365,57 +1369,43 @@ async function uploadAvatar(input) {
   const file = input.files[0];
   if (!file || !userId) return;
 
-  const img = new Image();
-  img.src = URL.createObjectURL(file);
-  await new Promise(r => img.onload = r);
+  const ext = file.name.split(".").pop();
+  const fileName = `${userId}_${Date.now()}.${ext}`;
+  const path = `avatars/${fileName}`;
 
-  const size = 512;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
+  const uploadUrl = `https://${BUNNY_REGION}.storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/${path}`;
 
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0, size, size);
+  try {
+    const res = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "AccessKey": BUNNY_ACCESS_KEY,
+        "Content-Type": file.type
+      },
+      body: file
+    });
 
-  const blob = await new Promise(r =>
-    canvas.toBlob(r, "image/jpeg", 0.9)
-  );
+    if (!res.ok) {
+      throw new Error("Erro ao enviar avatar");
+    }
 
-  // 🔥 libera memória (evita imagem trocada)
-  URL.revokeObjectURL(img.src);
+    const avatarUrl = `${BUNNY_PULL_ZONE}/${path}`;
 
-  const nome = `${userId}_${Date.now()}.jpg`;
+    // Atualiza no Supabase
+    await sb
+      .from("usuarios")
+      .update({ avatar_url: avatarUrl })
+      .eq("id", userId);
 
-  const uploadUrl =
-    `https://br.storage.bunnycdn.com/sessao99/avatars/${nome}`;
+    // Atualiza UI
+    avatarImg.src = avatarUrl + "?v=" + Date.now();
+    carregarAvatarHeader();
 
-  const res = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: {
-      "AccessKey": "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
-      "Content-Type": "application/octet-stream"
-    },
-    body: blob
-  });
-
-  if (!res.ok) {
+  } catch (err) {
+    console.error(err);
     alert("Erro ao enviar avatar");
-    return;
   }
-
-  const avatarUrl = `https://sessao99.b-cdn.net/avatars/${nome}`;
-
-  await sb
-    .from("usuarios")
-    .update({ avatar_url: avatarUrl })
-    .eq("id", userId);
-
-  avatarImg.src = avatarUrl;
-  await carregarAvatarHeader();
 }
-
-
-
   
 async function validarUsername() {
   const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
