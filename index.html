@@ -602,13 +602,34 @@ body.search-open{
   margin-bottom:10px;
 }
 
+.logo{
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:1px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  user-select:none;
+}
+
+.logo-clena{
+  color:#fff;
+}
+
+.logo-tv{
+  color:var(--accent);
+}
 
 </style>
 </head>
 
 <body>
 <header>
-  <h1>CLENA TV</h1>
+  <h1 class="logo">
+  <span class="logo-clena">CLENA</span>
+  <span class="logo-tv">TV</span>
+</h1>
+
 
   <!-- desktop -->
   <input id="busca" placeholder="Buscar...">
