@@ -1,45 +1,27 @@
-const CACHE_NAME = "sessao-cache-v6";
+const CACHE_NAME = "clena-cache-v9";
 
-const FILES_TO_CACHE = [
-  "/",
-  "/index.html",
-  "/login.html",
-  "/player.html",
-  "/manifest.json",
-  "/logo1.png"
-];
-
-self.addEventListener("install", event => {
+self.addEventListener("install", e => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
-  );
 });
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
+self.addEventListener("activate", e => {
+  e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys.map(k => k !== CACHE_NAME && caches.delete(k))
-      )
+      Promise.all(keys.map(k=>{
+        if(k !== CACHE_NAME) return caches.delete(k);
+      }))
     )
   );
   self.clients.claim();
 });
 
-self.addEventListener("fetch", event => {
-  const url = new URL(event.request.url);
+self.addEventListener("fetch", e => {
+  const url = new URL(e.request.url);
 
-  // 🚫 NÃO CACHEAR AVATAR
-  if (
-    url.pathname.includes("/storage/v1/object/public/avatars")
-  ) {
-    return; // sempre da rede
+  // ❌ NÃO cache API
+  if (url.pathname.startsWith("/api/")) {
+    return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then(res => {
-      return res || fetch(event.request);
-    })
-  );
+  e.respondWith(fetch(e.request));
 });
