@@ -1365,30 +1365,47 @@ async function uploadAvatar(input) {
   const file = input.files[0];
   if (!file || !userId) return;
 
-  const reader = new FileReader();
-  reader.onload = async () => {
+  const img = new Image();
+  img.src = URL.createObjectURL(file);
+  await new Promise(r => img.onload = r);
 
-    const res = await fetch("/api/upload-avatar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        fileBase64: reader.result
-      })
-    });
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
 
-    const { avatarUrl } = await res.json();
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, 512, 512);
 
-    avatarImg.src = avatarUrl + "?v=" + Date.now();
+  const blob = await new Promise(r =>
+    canvas.toBlob(r, "image/jpeg", 0.9)
+  );
 
-    await sb.from("usuarios")
-      .update({ avatar_url: avatarUrl })
-      .eq("id", userId);
+  const nome = `${userId}_${Date.now()}.jpg`;
 
-    carregarAvatarHeader();
-  };
+  const uploadUrl =
+    `https://br.storage.bunnycdn.com/sessao99/avatars/${nome}`;
 
-  reader.readAsDataURL(file);
+  const res = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "AccessKey": "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
+      "Content-Type": "application/octet-stream"
+    },
+    body: blob
+  });
+
+  if (!res.ok) {
+    alert("Erro ao enviar avatar");
+    return;
+  }
+
+  const avatarUrl = `https://sessao99.b-cdn.net/avatars/${nome}`;
+
+  await sb.from("usuarios")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", userId);
+
+  avatarImg.src = avatarUrl + "?v=" + Date.now();
 }
 
 
