@@ -12,38 +12,22 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método inválido" });
-  }
-
   const form = formidable();
 
   form.parse(req, async (err, fields, files) => {
-    if (err) {
-      return res.status(500).json({ error: "Erro no upload" });
-    }
-
     const email = fields.email;
     const file = files.file;
 
-    if (!email || !file) {
-      return res.status(400).json({ error: "Dados incompletos" });
-    }
-
     const buffer = fs.readFileSync(file.filepath);
-    const ext = file.originalFilename.split(".").pop();
-    const path = `avatars/${email}.${ext}`;
+    const fileName = `${email}.jpg`;
 
     await supabase.storage
       .from("avatars")
-      .upload(path, buffer, {
-        upsert: true,
-        contentType: file.mimetype
-      });
+      .upload(fileName, buffer, { upsert: true });
 
     const { data } = supabase.storage
       .from("avatars")
-      .getPublicUrl(path);
+      .getPublicUrl(fileName);
 
     await supabase
       .from("usuarios")
