@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard • Sessão 99</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root{
+  --bg:#0f0f10;
+  --card:#1b1b1e;
+  --accent:#e50914;
+  --text:#fff;
+  --muted:#aaa;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial;background:var(--bg);color:var(--text)}
+header{padding:20px 32px;background:#000;position:sticky;top:0}
+h1{margin:0;color:var(--accent)}
+small{color:var(--muted)}
+main{padding:32px;display:grid;gap:32px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+.kpi{background:var(--card);padding:20px;border-radius:14px}
+.kpi span{color:var(--muted);font-size:13px}
+.kpi strong{font-size:34px}
+.section h2{margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:18px}
+.card{background:var(--card);border-radius:14px;overflow:hidden}
+.card img{width:100%;height:260px;object-fit:cover}
+.card-info{padding:12px}
+.card-info strong{display:block}
+.badge{font-size:12px;margin-top:6px;color:#fff}
+canvas{background:var(--card);border-radius:14px;padding:10px}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>📊 Dashboard • Sessão 99</h1>
+  <small id="ultimaAtualizacao">Última atualização: --:--:--</small>
+</header>
+
+<main>
+
+<div class="kpis">
+  <div class="kpi"><span>👀 Online agora</span><strong id="kpiOnline">0</strong></div>
+  <div class="kpi"><span>▶ Visualizações hoje</span><strong id="kpiHoje">0</strong></div>
+  <div class="kpi"><span>📅 Visualizações semana</span><strong id="kpiSemana">0</strong></div>
+</div>
+
+<div class="section">
+  <h2>🔥 Top 10 assistindo agora</h2>
+  <div class="grid" id="topAgora"></div>
+</div>
+
+<div class="section">
+  <h2>🏆 Top do dia</h2>
+  <div class="grid" id="topDia"></div>
+</div>
+
+<div class="section">
+  <h2>📅 Top da semana</h2>
+  <div class="grid" id="topSemana"></div>
+</div>
+
+<div class="section">
+  <h2>📊 Categorias mais assistidas</h2>
+  <canvas id="chartCategorias"></canvas>
+</div>
+
+<div class="section">
+  <h2>🎭 Gêneros mais assistidos</h2>
+  <canvas id="chartGeneros"></canvas>
+</div>
+
+</main>
+
+<script>
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+let chartCat, chartGen;
+
+async function loadDashboard(){
+  const agora = new Date();
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const semana = new Date(); semana.setDate(semana.getDate()-7);
+
+  ultimaAtualizacao.textContent =
+    "Última atualização: " + agora.toLocaleTimeString();
+
+  /* ONLINE AGORA */
+  const { data: online } = await sb
+    .from("assistindo_agora")
+    .select("filme_id, usuario_id")
+    .gte("last_ping", new Date(Date.now()-30000).toISOString());
+
+  kpiOnline.textContent = new Set(online.map(o=>o.usuario_id)).size;
+
+  /* FILMES */
+  const { data: filmes } = await sb.from("filmes").select("*");
+
+  /* TOP AGORA */
+  const mapAgora = {};
+  online.forEach(o=>{
+    mapAgora[o.filme_id]=(mapAgora[o.filme_id]||0)+1;
+  });
+  render(topAgora,
+    Object.entries(mapAgora)
+      .sort((a,b)=>b[1]-a[1])
+      .slice(0,10)
+      .map(([id,total])=>{
+        const f = filmes.find(x=>x.id===id);
+        return f ? {...f,total} : null;
+      }).filter(Boolean),
+    "👀 assistindo agora"
+  );
+
+  /* VISUALIZAÇÕES */
+  const { data: vis } = await sb.from("visualizacoes").select("filme_id,created_at");
+
+  kpiHoje.textContent = vis.filter(v=>new Date(v.created_at)>=hoje).length;
+  kpiSemana.textContent = vis.filter(v=>new Date(v.created_at)>=semana).length;
+
+  function topPorPeriodo(filtro){
+    const m={};
+    vis.filter(filtro).forEach(v=>{
+      m[v.filme_id]=(m[v.filme_id]||0)+1;
+    });
+    return Object.entries(m)
+      .sort((a,b)=>b[1]-a[1])
+      .slice(0,10)
+      .map(([id,total])=>{
+        const f=filmes.find(x=>x.id===id);
+        return f?{...f,total}:null;
+      }).filter(Boolean);
+  }
+
+  render(topDia, topPorPeriodo(v=>new Date(v.created_at)>=hoje), "👁 views");
+  render(topSemana, topPorPeriodo(v=>new Date(v.created_at)>=semana), "👁 views");
+
+  renderChart(chartCategorias,"categoria");
+  renderChart(chartGeneros,"genero");
+}
+
+function render(container,list,label){
+  container.innerHTML="";
+  list.forEach(f=>{
+    container.innerHTML+=`
+      <div class="card">
+        <img src="${f.capa_url}">
+        <div class="card-info">
+          <strong>${f.titulo}</strong>
+          <div class="badge">${label}: ${f.total}</div>
+        </div>
+      </div>`;
+  });
+}
+
+async function renderChart(chartRef, campo){
+  const { data } = await sb
+    .from("visualizacoes")
+    .select(`filme_id, filmes:${campo}`)
+    .join("filmes","visualizacoes.filme_id","filmes.id");
+
+  const map={};
+  data.forEach(d=>{
+    if(d.filmes) map[d.filmes]=(map[d.filmes]||0)+1;
+  });
+
+  const labels = Object.keys(map);
+  const values = Object.values(map);
+
+  if(chartRef) chartRef.destroy();
+
+  const ctx = campo==="categoria"?chartCategorias:chartGeneros;
+  chartRef = new Chart(ctx,{
+    type:"bar",
+    data:{labels,datasets:[{data:values,backgroundColor:"#e50914"}]},
+    options:{plugins:{legend:{display:false}}}
+  });
+}
+
+/* REALTIME */
+sb.channel("dashboard")
+  .on("postgres_changes",{event:"*",schema:"public",table:"assistindo_agora"},loadDashboard)
+  .on("postgres_changes",{event:"*",schema:"public",table:"visualizacoes"},loadDashboard)
+  .subscribe();
+
+loadDashboard();
+</script>
+
+</body>
+</html>
