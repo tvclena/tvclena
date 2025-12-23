@@ -1,59 +1,41 @@
-import formidable from "formidable";
-import fs from "fs";
-import { createClient } from "@supabase/supabase-js";
-
-export const config = {
-  api: { bodyParser: false }
-};
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import fetch from "node-fetch";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).end();
   }
 
-  const form = new formidable.IncomingForm();
+  const { fileBase64, userId } = req.body;
 
-  form.parse(req, async (err, fields, files) => {
-    if (err) {
-      return res.status(400).json({ error: "Erro no upload" });
-    }
+  if (!fileBase64 || !userId) {
+    return res.status(400).json({ error: "Dados inválidos" });
+  }
 
-    const email = fields.email;
-    const file = files.file;
+  const buffer = Buffer.from(
+    fileBase64.replace(/^data:image\/\w+;base64,/, ""),
+    "base64"
+  );
 
-    if (!email || !file) {
-      return res.status(400).json({ error: "Dados incompletos" });
-    }
+  const nome = `${userId}_${Date.now()}.jpg`;
 
-    const buffer = fs.readFileSync(file.filepath);
+  const uploadUrl =
+    `https://storage.bunnycdn.com/${process.env.BUNNY_STORAGE_ZONE}/avatars/${nome}`;
 
-    const fileName = `${email}-${Date.now()}.png`;
-
-    const { data, error } = await supabase.storage
-      .from("avatars")
-      .upload(fileName, buffer, {
-        contentType: file.mimetype,
-        upsert: true
-      });
-
-    if (error) {
-      return res.status(500).json({ error: "Erro ao salvar avatar" });
-    }
-
-    const { data: url } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(fileName);
-
-    await supabase
-      .from("usuarios")
-      .update({ avatar_url: url.publicUrl })
-      .eq("email", email);
-
-    return res.status(200).json({ avatarUrl: url.publicUrl });
+  const upload = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "AccessKey": process.env.BUNNY_STORAGE_KEY,
+      "Content-Type": "application/octet-stream"
+    },
+    body: buffer
   });
+
+  if (!upload.ok) {
+    return res.status(500).json({ error: "Erro Bunny" });
+  }
+
+  const avatarUrl =
+    `${process.env.BUNNY_CDN_URL}/avatars/${nome}`;
+
+  return res.json({ avatarUrl });
 }
