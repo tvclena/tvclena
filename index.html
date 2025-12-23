@@ -1168,29 +1168,25 @@ async function validarSessao() {
 
   if (!email) {
     location.replace("login.html");
-
     return false;
   }
 
-  const { data, error } = await sb
-    .from("usuarios")
-    .select("status, trial_expires_at, whatsapp")
-    .eq("email", email)
-    .maybeSingle()
+  const res = await fetch("/api/validar-sessao", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
 
-if (error || !data) {
-  console.warn("Sessão inválida", error);
-  localStorage.clear();
-  location.replace("login.html");
-  return false;
-}
+  const json = await res.json();
 
+  if (!res.ok) {
+    localStorage.clear();
+    location.replace("login.html");
+    return false;
+  }
 
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
-
-  // 🚫 BLOQUEIO IMEDIATO
-  if (data.status === "bloqueado") {
+  // 🚫 BLOQUEADO
+  if (json.bloqueado) {
     localStorage.clear();
 
     document.body.innerHTML = `
@@ -1210,7 +1206,7 @@ if (error || !data) {
             Seu acesso foi bloqueado.<br>
             Entre em contato para regularizar.
           </p>
-          <a href="https://wa.me/55${data.whatsapp || ""}"
+          <a href="https://wa.me/55${json.whatsapp || ""}"
              target="_blank"
              style="
                display:inline-block;
@@ -1230,17 +1226,17 @@ if (error || !data) {
     return false;
   }
 
-  // ⏰ trial expirado
-  if (agora > expira && data.status !== "aprovado") {
+  // ⏰ TRIAL EXPIRADO
+  if (json.expirado) {
     localStorage.clear();
     location.replace("login.html");
-
     return false;
   }
 
   usuario = { email };
   return true;
 }
+
 /* ================= PERFIL PREMIUM ================= */
 
 let userId = null;
