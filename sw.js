@@ -1,4 +1,4 @@
-const CACHE_NAME = "clena-cache-v9";
+const CACHE_NAME = "clena-cache-v12";
 
 self.addEventListener("install", e => {
   self.skipWaiting();
