@@ -876,71 +876,13 @@ async function iniciarApp() {
 
   perfilEmail.textContent = usuario.email;
 
-const res = await fetch("/api/catalogo");
-const data = await res.json();
+  const res = await fetch("/api/catalogo");
+  const data = await res.json();
 
-if (!res.ok) {
-  alert("Erro ao carregar catálogo");
-  return;
-}
-
-
-if (error) {
-  console.error("❌ Erro Supabase:", error);
-
-  let mensagem = "Erro ao carregar catálogo.";
-
-  // 🔐 Erro clássico de RLS / Policy
-  if (
-    error.code === "42501" || // permission denied
-    error.message?.toLowerCase().includes("permission") ||
-    error.message?.toLowerCase().includes("row level security")
-  ) {
-    mensagem = `
-❌ ACESSO BLOQUEADO PELO SUPABASE
-
-A tabela "filmes" está com RLS ativo,
-mas NÃO EXISTE uma policy permitindo SELECT.
-
-👉 SOLUÇÃO NO SUPABASE:
-
-1. Vá em: Authentication → Policies
-2. Tabela: filmes
-3. Crie esta policy:
-
---------------------------------
-FOR SELECT
-TO authenticated
-USING (ativo = true)
---------------------------------
-`;
+  if (!res.ok) {
+    alert("Erro ao carregar catálogo");
+    return;
   }
-
-  // ❌ Tabela não existe / nome errado
-  else if (error.code === "42P01") {
-    mensagem = `
-❌ TABELA "filmes" NÃO ENCONTRADA
-
-Verifique se:
-- A tabela se chama exatamente "filmes"
-- Está no schema "public"
-`;
-  }
-
-  // ❌ Erro genérico do Supabase
-  else {
-    mensagem = `
-❌ ERRO DO SUPABASE
-
-Mensagem:
-${error.message}
-`;
-  }
-
-  alert(mensagem);
-  return;
-}
-
 
   console.log("🎬 FILMES CARREGADOS:", data);
 
@@ -960,39 +902,21 @@ ${error.message}
   heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
   heroMeta.textContent = `${heroItem.categoria} • ${heroItem.tipo}`;
   heroDesc.textContent = heroItem.descricao || "";
-// 🎬 AUTOPLAY DO VÍDEO PRINCIPAL (HERO)
-const heroVideo = document.getElementById("heroVideo");
 
-if (heroItem.video_url) {
-  heroVideo.pause();
-  heroVideo.removeAttribute("src"); // reset completo
-  heroVideo.load();
+  const heroVideo = document.getElementById("heroVideo");
 
-  heroVideo.src = heroItem.video_url;
-  heroVideo.muted = true;
-  heroVideo.playsInline = true;
-  heroVideo.autoplay = true;
-  heroVideo.loop = true;
+  if (heroItem.video_url) {
+    heroVideo.pause();
+    heroVideo.removeAttribute("src");
+    heroVideo.load();
 
-  heroVideo.addEventListener(
-    "loadedmetadata",
-    () => {
-      const p = heroVideo.play();
-      if (p !== undefined) {
-        p.catch(() => {
-          // fallback (Safari / mobile)
-          setTimeout(() => {
-            heroVideo.play().catch(() => {});
-          }, 300);
-        });
-      }
-    },
-    { once: true }
-  );
-}
+    heroVideo.src = heroItem.video_url;
+    heroVideo.muted = true;
+    heroVideo.autoplay = true;
+    heroVideo.loop = true;
 
-
-  
+    heroVideo.play().catch(() => {});
+  }
 
   render();
 }
