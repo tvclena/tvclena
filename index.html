@@ -1251,20 +1251,18 @@ async function carregarAvatarHeader() {
   const email = localStorage.getItem("usuario_email");
   if (!email) return;
 
-  const { data, error } = await sb
-    .from("usuarios")
-    .select("avatar_url, nome_usuario")
-    .eq("email", email)
-    .single();
+  const res = await fetch("/api/perfil", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
 
-  if (error) {
-    console.warn("Erro avatar header:", error);
-    return;
-  }
+  const data = await res.json();
+  if (!res.ok) return;
 
   const avatarUrl =
-    data?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
+    data.avatar_url ||
+    `https://ui-avatars.com/api/?name=${(data.nome_usuario || "U")[0]}&background=e50914&color=fff`;
 
   perfilBtn.innerHTML = `
     <img src="${avatarUrl}"
@@ -1273,25 +1271,15 @@ async function carregarAvatarHeader() {
 }
 
 
-
-  
 async function carregarPerfil() {
-  const { data } = await sb
-    .from("usuarios")
-    .select(`
-      id,
-      email,
-      nome_usuario,
-      username,
-      avatar_url,
-      tipo_assinatura,
-      valor_assinatura,
-      vencimento_assinatura
-    `)
-    .eq("email", usuario.email)
-    .single();
+  const res = await fetch("/api/perfil", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: usuario.email })
+  });
 
-  if (!data) return;
+  const data = await res.json();
+  if (!res.ok) return;
 
   userId = data.id;
 
@@ -1306,12 +1294,8 @@ async function carregarPerfil() {
   perfilPlano.textContent = data.tipo_assinatura || "-";
   perfilValor.textContent = formatarReal(data.valor_assinatura);
   perfilVencimento.textContent = formatarData(data.vencimento_assinatura);
-
-  perfilBtn.innerHTML = `
-    <img src="${avatarImg.src}"
-         style="width:36px;height:36px;border-radius:50%;object-fit:cover">
-  `;
 }
+
 async function uploadAvatar(input) {
   const file = input.files[0];
   if (!file || !userId) return;
@@ -1331,18 +1315,14 @@ async function uploadAvatar(input) {
 
   const { avatarUrl } = await res.json();
 
-  await sb
-    .from("usuarios")
-    .update({ avatar_url: avatarUrl })
-    .eq("id", userId);
-
   avatarImg.src = avatarUrl;
   await carregarAvatarHeader();
 }
 
 
+
 async function validarUsername() {
-  const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
+  const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g, "");
   usernameInput.value = u;
 
   if (u.length < 3) {
@@ -1351,13 +1331,18 @@ async function validarUsername() {
     return false;
   }
 
-  const { data } = await sb
-    .from("usuarios")
-    .select("id")
-    .eq("username", u)
-    .neq("id", userId);
+  const res = await fetch("/api/validar-username", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: usuario.email,
+      username: u
+    })
+  });
 
-  if (data.length) {
+  const json = await res.json();
+
+  if (!res.ok || !json.disponivel) {
     usernameStatus.textContent = "Já em uso";
     usernameStatus.style.color = "#ff5555";
     return false;
@@ -1368,16 +1353,20 @@ async function validarUsername() {
   return true;
 }
 
+
 async function salvarPerfil() {
   if (!(await validarUsername())) return;
 
-  await sb.from("usuarios")
-    .update({
+  await fetch("/api/atualizar-perfil", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: usuario.email,
       nome_usuario: nomeUsuario.value,
       username: usernameInput.value
     })
-    .eq("id", userId);
-  
+  });
+
   fecharPerfil();
 }
 
