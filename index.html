@@ -884,6 +884,7 @@ const { data, error } = await sb
   .select("*");
 
 
+
 if (error) {
   console.error(error);
   alert("Erro ao carregar catálogo");
@@ -1055,33 +1056,27 @@ function card(i){
 function render(buscaTxt = "") {
   grid.innerHTML = "";
 
-  // FILMES (normal)
+  // 🎬 FILMES
   if (filtro === "todos" || filtro === "filme") {
     dados
-.filter(d => (d.tipo || "").toLowerCase() === "filme")
-.filter(d => (d.tipo || "").toLowerCase() === "serie")
-
+      .filter(d => (d.tipo || "").toLowerCase() === "filme")
       .filter(d => JSON.stringify(d).toLowerCase().includes(buscaTxt))
-      .forEach(f => {
-        grid.innerHTML += card(f);
-      });
+      .forEach(f => grid.innerHTML += card(f));
   }
 
-  // SÉRIES (AGRUPADAS POR serie_nome)
+  // 📺 SÉRIES (AGRUPADAS)
   if (filtro === "todos" || filtro === "serie") {
     const seriesAgrupadas = [
       ...new Map(
         dados
-          .filter(d => d.tipo === "serie")
+          .filter(d => (d.tipo || "").toLowerCase() === "serie")
           .map(s => [s.serie_nome, s])
       ).values()
     ];
 
     seriesAgrupadas
       .filter(s => JSON.stringify(s).toLowerCase().includes(buscaTxt))
-      .forEach(s => {
-        grid.innerHTML += card(s);
-      });
+      .forEach(s => grid.innerHTML += card(s));
   }
 }
 
