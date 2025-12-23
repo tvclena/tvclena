@@ -1,4 +1,4 @@
 window.ENV = {
-  SUPABASE_URL: window.__ENV__.SUPABASE_URL,
-  SUPABASE_ANON_KEY: window.__ENV__.SUPABASE_ANON_KEY
+  SUPABASE_URL: "https://dxkszikemntfusfyrzos.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 };
