@@ -215,8 +215,8 @@ input:focus{border-color:var(--accent)}
 <script src="env.js"></script>
 <script>
 const sb = supabase.createClient(
-  window.ENV.SUPABASE_URL,
-  window.ENV.SUPABASE_ANON_KEY
+  window.NEXT_PUBLIC_SUPABASE_URL,
+  window.ENV.SUPABASE_SERVICE_ROLE_KEY
 );
 
 
