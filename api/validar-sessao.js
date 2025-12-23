@@ -23,12 +23,12 @@ export default async function handler(req, res) {
   }
 
   if (data.status === "bloqueado") {
-    return res.status(403).json({ bloqueado:true });
+    return res.status(403).json({ bloqueado: true });
   }
 
-  if (new Date() > new Date(data.trial_expires_at)) {
-    return res.status(403).json({ expirado:true });
+  if (data.trial_expires_at && new Date() > new Date(data.trial_expires_at)) {
+    return res.status(403).json({ expirado: true });
   }
 
-  res.json({ ok:true });
+  res.json({ ok: true });
 }
