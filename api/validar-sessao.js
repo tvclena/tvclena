@@ -7,10 +7,7 @@ const supabase = createClient(
 
 export default async function handler(req, res) {
   const { email } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ error: "Email ausente" });
-  }
+  if (!email) return res.status(400).json({ error: "Email ausente" });
 
   const { data } = await supabase
     .from("usuarios")
@@ -18,15 +15,13 @@ export default async function handler(req, res) {
     .eq("email", email)
     .maybeSingle();
 
-  if (!data) {
-    return res.status(401).json({ error: "Sessão inválida" });
-  }
+  if (!data) return res.status(401).json({ error: "Sessão inválida" });
 
   if (data.status === "bloqueado") {
     return res.status(403).json({ bloqueado: true });
   }
 
-  if (data.trial_expires_at && new Date() > new Date(data.trial_expires_at)) {
+  if (new Date() > new Date(data.trial_expires_at)) {
     return res.status(403).json({ expirado: true });
   }
 
