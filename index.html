@@ -619,6 +619,52 @@ body.search-open{
 .logo-tv{
   color:var(--accent);
 }
+.search-box{
+  flex:1;
+  max-width:420px;
+  height:40px;
+
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  padding:0 16px;
+  border-radius:999px;
+
+  background:rgba(255,255,255,.08);
+  backdrop-filter: blur(10px);
+
+  border:1px solid rgba(255,255,255,.12);
+  transition:.25s;
+}
+
+.search-box:hover{
+  background:rgba(255,255,255,.12);
+}
+
+.search-box:focus-within{
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px rgba(229,9,20,.35);
+}
+
+.search-icon{
+  font-size:16px;
+  opacity:.7;
+}
+
+.search-box input{
+  flex:1;
+  height:100%;
+  background:none;
+  border:none;
+  outline:none;
+  color:#fff;
+  font-size:15px;
+}
+
+.search-box input::placeholder{
+  color:#bbb;
+}
 
 </style>
 </head>
@@ -632,7 +678,14 @@ body.search-open{
 
 
   <!-- desktop -->
-  <input id="busca" placeholder="Buscar...">
+<div class="search-box">
+  <span class="search-icon">🔍</span>
+  <input
+    id="busca"
+    placeholder="Buscar filmes e séries..."
+    autocomplete="off"
+  >
+</div>
 
   <div id="perfilBtn" onclick="abrirPerfil()"><span>US</span></div>
 
