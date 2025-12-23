@@ -1,4 +1,5 @@
-window.ENV = {
-  SUPABASE_URL: "https://dxkszikemntfusfyrzos.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-};
+fetch("/api/env")
+  .then(r => r.json())
+  .then(env => {
+    window.ENV = env;
+  });
