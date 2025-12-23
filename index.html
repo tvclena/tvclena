@@ -790,11 +790,62 @@ async function iniciarApp() {
     .select("*")
     .eq("ativo", true);
 
-  if (error) {
-    console.error("❌ Erro ao carregar filmes:", error);
-    alert("Erro ao carregar catálogo");
-    return;
+if (error) {
+  console.error("❌ Erro Supabase:", error);
+
+  let mensagem = "Erro ao carregar catálogo.";
+
+  // 🔐 Erro clássico de RLS / Policy
+  if (
+    error.code === "42501" || // permission denied
+    error.message?.toLowerCase().includes("permission") ||
+    error.message?.toLowerCase().includes("row level security")
+  ) {
+    mensagem = `
+❌ ACESSO BLOQUEADO PELO SUPABASE
+
+A tabela "filmes" está com RLS ativo,
+mas NÃO EXISTE uma policy permitindo SELECT.
+
+👉 SOLUÇÃO NO SUPABASE:
+
+1. Vá em: Authentication → Policies
+2. Tabela: filmes
+3. Crie esta policy:
+
+--------------------------------
+FOR SELECT
+TO authenticated
+USING (ativo = true)
+--------------------------------
+`;
   }
+
+  // ❌ Tabela não existe / nome errado
+  else if (error.code === "42P01") {
+    mensagem = `
+❌ TABELA "filmes" NÃO ENCONTRADA
+
+Verifique se:
+- A tabela se chama exatamente "filmes"
+- Está no schema "public"
+`;
+  }
+
+  // ❌ Erro genérico do Supabase
+  else {
+    mensagem = `
+❌ ERRO DO SUPABASE
+
+Mensagem:
+${error.message}
+`;
+  }
+
+  alert(mensagem);
+  return;
+}
+
 
   console.log("🎬 FILMES CARREGADOS:", data);
 
