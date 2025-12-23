@@ -1427,14 +1427,16 @@ async function carregarAvatarHeader() {
   if (!res.ok) return;
 
   const avatarUrl =
-    data.avatar_url ||
-    `https://ui-avatars.com/api/?name=${(data.nome_usuario || "U")[0]}&background=e50914&color=fff`;
+    data.avatar_url
+      ? data.avatar_url + "?v=" + Date.now() // 🔥 quebra cache
+      : `https://ui-avatars.com/api/?name=${(data.nome_usuario || "U")[0]}&background=e50914&color=fff`;
 
   perfilBtn.innerHTML = `
     <img src="${avatarUrl}"
          style="width:36px;height:36px;border-radius:50%;object-fit:cover">
   `;
 }
+
 
 
 async function carregarPerfil() {
@@ -1464,10 +1466,14 @@ async function carregarPerfil() {
 
 async function uploadAvatar(input) {
   const file = input.files[0];
-  if (!file || !userId) return;
+  if (!file || !usuario?.email) {
+    alert("Sessão inválida");
+    return;
+  }
 
   const form = new FormData();
   form.append("file", file);
+  form.append("email", usuario.email); // 🔥 IDENTIFICA O USUÁRIO
 
   const res = await fetch("/api/upload-avatar", {
     method: "POST",
@@ -1481,9 +1487,13 @@ async function uploadAvatar(input) {
 
   const { avatarUrl } = await res.json();
 
-  avatarImg.src = avatarUrl;
-  await carregarAvatarHeader();
+  // 🔥 ANTI-CACHE
+  const finalUrl = avatarUrl + "?v=" + Date.now();
+
+  avatarImg.src = finalUrl;
+  await carregarAvatarHeader(); // atualiza bolinha do topo
 }
+
 
 
 
