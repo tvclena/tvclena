@@ -842,9 +842,7 @@ const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
 );
-const BUNNY_STORAGE = "https://storage.bunnycdn.com/sessao99";
-const BUNNY_PULL = "https://sessao99.b-cdn.net";
-const BUNNY_ACCESS_KEY = "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17";
+
 
 
 let dados=[], heroItem=null, filtro='todos', usuario=null;
@@ -1375,29 +1373,29 @@ async function uploadAvatar(input) {
 
   URL.revokeObjectURL(img.src);
 
-  // 🔹 nome único (igual ao que funciona)
+  // 🔹 nome único
   const nome = `${userId}_${Date.now()}.jpg`;
 
-  // 🔹 endpoint Bunny
-  const uploadUrl = `${BUNNY_STORAGE}/avatars/${nome}`;
+  // 🔹 URL DO STORAGE (CORRETA)
+  const uploadUrl = `https://br.storage.bunnycdn.com/sessao99/avatars/${nome}`;
 
   const res = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
-      "AccessKey": BUNNY_ACCESS_KEY,
+      "Access-Key": "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
       "Content-Type": "application/octet-stream"
     },
     body: blob
   });
 
   if (!res.ok) {
-    console.error("Erro Bunny:", res.status);
+    console.error("Bunny erro:", res.status, await res.text());
     alert("Erro ao enviar avatar");
     return;
   }
 
-  // 🔹 URL pública
-  const avatarUrl = `${BUNNY_PULL}/avatars/${nome}`;
+  // 🔹 URL PÚBLICA (CDN)
+  const avatarUrl = `https://sessao99.b-cdn.net/avatars/${nome}`;
 
   // 🔹 salva no Supabase
   await sb
@@ -1405,7 +1403,6 @@ async function uploadAvatar(input) {
     .update({ avatar_url: avatarUrl })
     .eq("id", userId);
 
-  // 🔹 atualiza UI
   avatarImg.src = avatarUrl;
   await carregarAvatarHeader();
 }
