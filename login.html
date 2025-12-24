@@ -279,8 +279,6 @@ btnLogin.onclick = async () => {
 
 
 
-/* CADASTRO */
-/* CADASTRO — VIA API (SEGURO) */
 btnCadastro.onclick = async () => {
 
   if (c_senha.value !== c_confirma.value) {
@@ -288,28 +286,34 @@ btnCadastro.onclick = async () => {
     return;
   }
 
-  const res = await fetch("/api/cadastro", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: c_email.value.trim(),
-      cpf: c_cpf.value.replace(/\D/g, ""),
-      whatsapp: c_whats.value.replace(/\D/g, ""),
-      senha: c_senha.value
-    })
-  });
-
-  const json = await res.json();
-
-  if (!res.ok) {
-    alert(json.error || "Erro ao cadastrar");
+  if (!c_email.value || !c_senha.value) {
+    alert("Preencha email e senha");
     return;
   }
 
-  alert("Cadastro criado! Aguarde aprovação.");
+  btnCadastro.classList.add("loading");
+
+  const { data, error } = await sb.auth.signUp({
+    email: c_email.value.trim(),
+    password: c_senha.value,
+    options: {
+      data: {
+        cpf: c_cpf.value.replace(/\D/g, ""),
+        whatsapp: c_whats.value.replace(/\D/g, "")
+      }
+    }
+  });
+
+  btnCadastro.classList.remove("loading");
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Conta criada! Verifique seu email.");
   modal.style.display = "none";
 };
-
 </script>
 
 </body>
