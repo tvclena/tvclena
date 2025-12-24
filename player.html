@@ -2,273 +2,224 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Player</title>
+<title>Sessão • Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{
-  width:100%;
-  height:100%;
-  background:#000;
-  font-family:Inter,Arial,sans-serif;
-  overflow:hidden;
-  touch-action:none;
-  overscroll-behavior:none;
+body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
+#player{position:fixed;inset:0;background:#000}
+#close{
+  position:absolute;top:16px;left:16px;
+  padding:10px 16px;background:rgba(0,0,0,.65);
+  color:#fff;border:none;border-radius:999px;
+  cursor:pointer;z-index:90;font-size:14px
 }
-
-/* ===== PLAYER ===== */
-#player{
-  position:fixed;
-  inset:0;
-  background:#000;
+#layout{display:grid;grid-template-columns:3fr 1.4fr;height:100%}
+@media(max-width:900px){#layout{grid-template-columns:1fr}#side{display:none}}
+#playerArea{position:relative}
+video,iframe{width:100%;height:100%;border:none;background:#000}
+#iframeFallback{
+  display:none;position:absolute;inset:0;
+  align-items:center;justify-content:center;
+  flex-direction:column;text-align:center;
+  background:#000;color:#aaa;padding:30px
 }
-
-video{
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  background:#000;
+#iframeFallback a{margin-top:12px;color:#e50914;font-weight:700}
+#side{background:#111;padding:28px;overflow-y:auto}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;background:#222}
+.badge.tipo{background:#e50914}
+select{
+  width:100%;padding:12px;margin-bottom:10px;
+  background:#1c1c1c;border:1px solid #333;
+  border-radius:10px;color:#fff
 }
-
-/* ===== OVERLAY CONTROLES ===== */
-#overlay{
-  position:absolute;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  background:linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,.1),rgba(0,0,0,.7));
-  opacity:1;
-  transition:.25s;
-}
-
-#player.hide #overlay{opacity:0;pointer-events:none}
-
-/* ===== TOPO ===== */
-#topBar{
-  display:flex;
-  align-items:center;
-  padding:18px;
-}
-
-#back{
-  background:none;
-  border:none;
-  color:#fff;
-  font-size:22px;
-  cursor:pointer;
-}
-
-/* ===== CENTRO ===== */
-#center{
-  display:flex;
-  justify-content:center;
-  gap:40px;
-}
-
-.controlBtn{
-  background:rgba(0,0,0,.6);
-  border:none;
-  color:#fff;
-  width:64px;
-  height:64px;
-  border-radius:50%;
-  font-size:26px;
-  cursor:pointer;
-}
-
-/* ===== BOTTOM ===== */
-#bottom{
-  padding:14px;
-}
-
-#progressWrap{
-  height:6px;
-  background:rgba(255,255,255,.25);
-  border-radius:999px;
-  cursor:pointer;
-  position:relative;
-}
-
-#progress{
-  height:100%;
-  width:0%;
-  background:#e50914;
-  border-radius:999px;
-}
-
-#timeRow{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-top:10px;
-}
-
-#time{
-  font-size:13px;
-  color:#ddd;
-}
-
-#controlsRight{
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
-
-input[type=range]{
-  width:90px;
-}
-
-/* ===== MOBILE DOUBLE TAP ===== */
-.tapZone{
-  position:absolute;
-  top:0;
-  bottom:0;
-  width:33%;
-}
-#tapLeft{left:0}
-#tapRight{right:0}
 </style>
 </head>
 
 <body>
 
 <div id="player">
-  <video id="video" playsinline></video>
+  <button id="close" onclick="sair()">←</button>
 
-  <!-- DOUBLE TAP -->
-  <div id="tapLeft" class="tapZone"></div>
-  <div id="tapRight" class="tapZone"></div>
+  <div id="layout">
+    <div id="playerArea">
+      <video id="video" controls autoplay playsinline></video>
+      <iframe id="iframe" allowfullscreen></iframe>
 
-  <div id="overlay">
-    <!-- TOPO -->
-    <div id="topBar">
-      <button id="back">←</button>
-    </div>
-
-    <!-- CENTRO -->
-    <div id="center">
-      <button class="controlBtn" id="rew">⏪</button>
-      <button class="controlBtn" id="play">▶</button>
-      <button class="controlBtn" id="fwd">⏩</button>
-    </div>
-
-    <!-- BOTTOM -->
-    <div id="bottom">
-      <div id="progressWrap">
-        <div id="progress"></div>
+      <div id="iframeFallback">
+        ⚠️ Este conteúdo não permite reprodução externa
+        <a id="openExternal" target="_blank">Abrir na plataforma oficial</a>
       </div>
+    </div>
 
-      <div id="timeRow">
-        <div id="time">00:00 / 00:00</div>
+    <div id="side">
+      <h2 id="titulo"></h2>
+      <div id="meta"></div>
+      <p id="desc"></p>
 
-        <div id="controlsRight">
-          <button id="mute">🔊</button>
-          <input id="volume" type="range" min="0" max="1" step="0.05" value="1">
-          <button id="fs">⛶</button>
-        </div>
+      <div id="serieControls" style="display:none">
+        <select id="selTemporada"></select>
+        <select id="selEpisodio"></select>
       </div>
     </div>
   </div>
 </div>
 
 <script>
+/* ================= SUPABASE ================= */
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+/* ================= ITEM ================= */
+const item = JSON.parse(
+  decodeURIComponent(new URLSearchParams(location.search).get("item"))
+);
+
+/* ================= VARIÁVEIS ================= */
+let watchingId=null, heartbeat=null;
+let serie=[], episodioIndex=0;
+
+/* ================= ELEMENTOS ================= */
 const video=document.getElementById("video");
-const player=document.getElementById("player");
-const overlay=document.getElementById("overlay");
+const iframe=document.getElementById("iframe");
+const fallback=document.getElementById("iframeFallback");
+const openExternal=document.getElementById("openExternal");
+const titulo=document.getElementById("titulo");
+const meta=document.getElementById("meta");
+const desc=document.getElementById("desc");
+const serieControls=document.getElementById("serieControls");
+const selTemporada=document.getElementById("selTemporada");
+const selEpisodio=document.getElementById("selEpisodio");
 
-const playBtn=document.getElementById("play");
-const rew=document.getElementById("rew");
-const fwd=document.getElementById("fwd");
-const back=document.getElementById("back");
-const fs=document.getElementById("fs");
-const mute=document.getElementById("mute");
-const volume=document.getElementById("volume");
+/* ================= UI ================= */
+titulo.textContent=item.titulo||item.serie_nome||"Conteúdo";
+desc.textContent=item.descricao||"";
+meta.innerHTML=`
+  <span class="badge">${item.categoria||"Geral"}</span>
+  <span class="badge tipo">${item.tipo}</span>
+`;
 
-const progress=document.getElementById("progress");
-const progressWrap=document.getElementById("progressWrap");
-const time=document.getElementById("time");
+/* ================= FUNÇÕES REALTIME ================= */
+async function registrar(extra={}){
+  const email=localStorage.getItem("usuario_email");
+  if(!email) return;
 
-/* ===== VIDEO ===== */
-video.src="SEU_VIDEO_AQUI.mp4";
-video.play();
+  if(watchingId){
+    await sb.from("assistindo_agora").delete().eq("id",watchingId);
+  }
 
-/* ===== CONTROLES ===== */
-playBtn.onclick=()=>video.paused?video.play():video.pause();
-video.onplay=()=>playBtn.textContent="⏸";
-video.onpause=()=>playBtn.textContent="▶";
+  const {data}=await sb.from("assistindo_agora").insert({
+    usuario_email:email,
+    item_id:item.id,
+    titulo:item.titulo||item.serie_nome,
+    tipo:item.tipo,
+    serie_nome:item.serie_nome||null,
+    temporada:extra.temporada||null,
+    episodio:extra.episodio||null,
+    status:"assistindo"
+  }).select().single();
 
-rew.onclick=()=>video.currentTime-=10;
-fwd.onclick=()=>video.currentTime+=10;
+  watchingId=data.id;
 
-back.onclick=()=>location.href="index.html";
-
-fs.onclick=()=>document.body.requestFullscreen?.();
-
-mute.onclick=()=>{
-  video.muted=!video.muted;
-  mute.textContent=video.muted?"🔇":"🔊";
-};
-
-volume.oninput=()=>video.volume=volume.value;
-
-/* ===== PROGRESS ===== */
-video.ontimeupdate=()=>{
-  const p=(video.currentTime/video.duration)*100;
-  progress.style.width=p+"%";
-  time.textContent=format(video.currentTime)+" / "+format(video.duration);
-};
-
-progressWrap.onclick=e=>{
-  const r=progressWrap.getBoundingClientRect();
-  video.currentTime=((e.clientX-r.left)/r.width)*video.duration;
-};
-
-/* ===== AUTO HIDE ===== */
-let hideTimer;
-["mousemove","touchstart"].forEach(ev=>{
-  document.addEventListener(ev,()=>{
-    player.classList.remove("hide");
-    clearTimeout(hideTimer);
-    hideTimer=setTimeout(()=>player.classList.add("hide"),3000);
-  });
-});
-
-/* ===== DOUBLE TAP ===== */
-let lastTap=0;
-document.getElementById("tapLeft").ontouchend=()=>{
-  const now=Date.now();
-  if(now-lastTap<300) video.currentTime-=10;
-  lastTap=now;
-};
-document.getElementById("tapRight").ontouchend=()=>{
-  const now=Date.now();
-  if(now-lastTap<300) video.currentTime+=10;
-  lastTap=now;
-};
-
-/* ===== KEYBOARD ===== */
-document.onkeydown=e=>{
-  if(e.key===" ") video.paused?video.play():video.pause();
-  if(e.key==="ArrowLeft") video.currentTime-=5;
-  if(e.key==="ArrowRight") video.currentTime+=5;
-  if(e.key==="f") document.body.requestFullscreen?.();
-  if(e.key==="m") video.muted=!video.muted;
-};
-
-/* ===== UTILS ===== */
-function format(s){
-  if(!s) return "00:00";
-  const m=Math.floor(s/60);
-  const ss=Math.floor(s%60).toString().padStart(2,"0");
-  return m+":"+ss;
+  clearInterval(heartbeat);
+  heartbeat=setInterval(()=>{
+    sb.from("assistindo_agora")
+      .update({updated_at:new Date()})
+      .eq("id",watchingId);
+  },15000);
 }
 
-/* LANDSCAPE MOBILE */
-video.onplay=()=>{
-  screen.orientation?.lock("landscape").catch(()=>{});
-};
+async function atualizar(status){
+  if(!watchingId) return;
+  await sb.from("assistindo_agora")
+    .update({status,updated_at:new Date()})
+    .eq("id",watchingId);
+}
+
+async function remover(){
+  clearInterval(heartbeat);
+  if(!watchingId) return;
+  await sb.from("assistindo_agora").delete().eq("id",watchingId);
+  watchingId=null;
+}
+
+/* ================= PLAYER ================= */
+function isIframe(url){
+  return !url.match(/\.(mp4|m3u8|webm)$/i);
+}
+
+if(isIframe(item.video_url)){
+  video.style.display="none";
+  iframe.src=item.video_url;
+  openExternal.href=item.video_url;
+  setTimeout(()=>{
+    try{iframe.contentWindow.location.href}
+    catch{iframe.style.display="none";fallback.style.display="flex"}
+  },2000);
+}else{
+  iframe.style.display="none";
+  video.src=item.video_url;
+}
+
+/* PLAY / PAUSE */
+video.addEventListener("play",()=>registrar());
+video.addEventListener("pause",()=>atualizar("pausado"));
+
+/* MOBILE FULLSCREEN */
+video.addEventListener("play",()=>{
+  if(video.requestFullscreen) video.requestFullscreen().catch(()=>{});
+  if(screen.orientation?.lock) screen.orientation.lock("landscape").catch(()=>{});
+});
+
+/* ================= SÉRIES ================= */
+if(item.tipo==="serie") carregarSerie();
+
+async function carregarSerie(){
+  const {data}=await sb.from("filmes")
+    .select("*")
+    .eq("serie_nome",item.serie_nome)
+    .order("temporada")
+    .order("episodio");
+
+  serie=data||[];
+  if(!serie.length) return;
+
+  serieControls.style.display="block";
+  const temps=[...new Set(serie.map(e=>e.temporada))];
+  selTemporada.innerHTML=temps.map(t=>`<option>${t}</option>`).join("");
+  selTemporada.onchange=montarEpisodios;
+  selEpisodio.onchange=()=>{episodioIndex=+selEpisodio.value;tocarEpisodio()};
+  montarEpisodios();
+}
+
+function montarEpisodios(){
+  const eps=serie.filter(e=>e.temporada==selTemporada.value);
+  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Ep ${e.episodio}</option>`).join("");
+  episodioIndex=0;
+  tocarEpisodio();
+}
+
+function tocarEpisodio(){
+  const ep=serie.filter(e=>e.temporada==selTemporada.value)[episodioIndex];
+  if(!ep) return;
+  video.src=ep.video_url;
+  video.play().catch(()=>{});
+  registrar({temporada:selTemporada.value,episodio:ep.episodio});
+}
+
+/* ================= SAIR ================= */
+async function sair(){
+  await remover();
+  video.pause();
+  location.replace("index.html");
+}
+
+window.addEventListener("beforeunload",remover);
 </script>
 
 </body>
