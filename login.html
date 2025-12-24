@@ -242,7 +242,6 @@ c_whats.oninput = e=>{
     .slice(0,15);
 };
 
-/* LOGIN */
 btnLogin.onclick = async () => {
   msg.textContent = "";
   btnLogin.classList.add("loading");
@@ -256,27 +255,21 @@ btnLogin.onclick = async () => {
     return;
   }
 
-  const res = await fetch("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: emailVal,
-      senha: senhaVal
-    })
+  const { data, error } = await sb.auth.signInWithPassword({
+    email: emailVal,
+    password: senhaVal
   });
 
-  const json = await res.json();
   btnLogin.classList.remove("loading");
 
-  if (!res.ok) {
-    msg.textContent = json.error || "Erro ao fazer login";
+  if (error) {
+    msg.textContent = error.message;
     return;
   }
 
-  localStorage.setItem("usuario_email", json.email);
+  localStorage.setItem("usuario_email", data.user.email);
   location.replace("index.html");
 };
-
 
 
 btnCadastro.onclick = async () => {
