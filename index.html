@@ -1352,6 +1352,7 @@ async function uploadAvatar(input) {
     return;
   }
 
+  // 🔧 redimensiona
   const img = new Image();
   img.src = URL.createObjectURL(file);
   await new Promise(r => img.onload = r);
@@ -1359,7 +1360,6 @@ async function uploadAvatar(input) {
   const canvas = document.createElement("canvas");
   canvas.width = 512;
   canvas.height = 512;
-
   const ctx = canvas.getContext("2d");
   ctx.drawImage(img, 0, 0, 512, 512);
 
@@ -1369,35 +1369,39 @@ async function uploadAvatar(input) {
 
   URL.revokeObjectURL(img.src);
 
-  const nome = `${userId}_${Date.now()}.jpg`;
-
-  const uploadUrl =
-    `https://br.storage.bunnycdn.com/sessao99/avatars/${nome}`;
-
-  const res = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: {
-      "AccessKey": "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
-      "Content-Type": "application/octet-stream"
-    },
-    body: blob
+  // 🔐 converte para base64
+  const base64 = await new Promise(r => {
+    const reader = new FileReader();
+    reader.onload = () => r(reader.result.split(",")[1]);
+    reader.readAsDataURL(blob);
   });
 
-  if (!res.ok) {
-    console.error("Bunny erro:", res.status, await res.text());
+  const filename = `${userId}_${Date.now()}.jpg`;
+
+  // 🚀 envia para a API
+  const res = await fetch("/api/upload-avatar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fileBase64: base64,
+      filename
+    })
+  });
+
+  const data = await res.json();
+
+  if (!data.url) {
     alert("Erro ao enviar avatar");
     return;
   }
 
-  const avatarUrl =
-    `https://sessao99.b-cdn.net/avatars/${nome}`;
-
+  // 💾 salva no Supabase
   await sb
     .from("usuarios")
-    .update({ avatar_url: avatarUrl })
+    .update({ avatar_url: data.url })
     .eq("id", userId);
 
-  avatarImg.src = avatarUrl;
+  avatarImg.src = data.url;
   await carregarAvatarHeader();
 }
 
