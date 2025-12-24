@@ -8,17 +8,11 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
-*{
-  box-sizing:border-box;
-  font-family:Inter,Arial,sans-serif;
-}
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
 
 html,body{
-  margin:0;
-  height:100%;
-  overflow:hidden;
-  background:#0f0f10;
-  color:#fff;
+  margin:0;height:100%;
+  background:#0f0f10;color:#fff;
 }
 
 :root{
@@ -36,8 +30,7 @@ body{
   align-items:center;
   justify-content:center;
   background:
-    radial-gradient(70% 60% at 50% 25%, #1a1a1a 0%, #0f0f10 60%),
-    linear-gradient(180deg,#0f0f10,#000);
+    radial-gradient(70% 60% at 50% 25%, #1a1a1a 0%, #0f0f10 60%);
 }
 
 /* CARD */
@@ -62,13 +55,7 @@ h1 span{color:var(--accent)}
 
 /* CAMPOS */
 .group{margin-bottom:22px}
-
-label{
-  font-size:14px;
-  color:var(--muted);
-  margin-bottom:6px;
-  display:block;
-}
+label{font-size:14px;color:var(--muted);margin-bottom:6px;display:block}
 
 input{
   width:100%;
@@ -80,10 +67,7 @@ input{
   color:#fff;
 }
 
-input:focus{
-  outline:none;
-  border-color:var(--accent);
-}
+input:focus{outline:none;border-color:var(--accent)}
 
 /* BOTÃO + OVERLAY */
 .btn{
@@ -101,10 +85,7 @@ input:focus{
   overflow:hidden;
 }
 
-.btn.loading{
-  pointer-events:none;
-  opacity:.85;
-}
+.btn.loading{pointer-events:none;opacity:.85}
 
 .btn.loading::after{
   content:"";
@@ -116,10 +97,8 @@ input:focus{
 .btn.loading::before{
   content:"";
   position:absolute;
-  top:50%;
-  left:50%;
-  width:22px;
-  height:22px;
+  top:50%;left:50%;
+  width:22px;height:22px;
   border:3px solid #fff;
   border-top-color:transparent;
   border-radius:50%;
@@ -141,18 +120,13 @@ input:focus{
 }
 
 /* MSG */
-.msg{
-  margin-top:14px;
-  min-height:20px;
-  font-size:14px;
-}
+.msg{margin-top:14px;min-height:20px;font-size:14px}
 .msg.error{color:var(--error)}
 .msg.success{color:var(--success)}
 
 /* MODAL */
 .modal{
-  position:fixed;
-  inset:0;
+  position:fixed;inset:0;
   background:rgba(0,0,0,.85);
   display:none;
   align-items:center;
@@ -228,61 +202,42 @@ input:focus{
 
 <script>
 /* MODAL */
-abrirCadastro.onclick = () => modal.style.display = "flex";
-fecharCadastro.onclick = () => modal.style.display = "none";
+abrirCadastro.onclick=()=>modal.style.display="flex";
+fecharCadastro.onclick=()=>modal.style.display="none";
 
-/* LOGIN */
-btnLogin.onclick = async () => {
-  msg.textContent = "";
-  btnLogin.classList.add("loading");
+/* MÁSCARAS */
+c_cpf.oninput=e=>{
+  e.target.value=e.target.value
+    .replace(/\D/g,"")
+    .replace(/(\d{3})(\d)/,"$1.$2")
+    .replace(/(\d{3})(\d)/,"$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/,"$1-$2")
+    .slice(0,14);
+};
 
-  try{
-    const res = await fetch("/api/login",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        email:email.value.trim(),
-        senha:senha.value
-      })
-    });
-
-    const text = await res.text();
-    let data;
-    try{ data = JSON.parse(text); }catch{}
-
-    if(!res.ok){
-      msg.textContent = (data && data.error) || "Erro ao fazer login";
-      return;
-    }
-
-    localStorage.setItem("usuario_email", data.email);
-    location.replace("index.html");
-
-  }catch(e){
-    msg.textContent = "Falha de conexão";
-    console.error(e);
-  }finally{
-    btnLogin.classList.remove("loading");
-  }
+c_whats.oninput=e=>{
+  e.target.value=e.target.value
+    .replace(/\D/g,"")
+    .replace(/^(\d{2})(\d)/,"($1) $2")
+    .replace(/(\d{5})(\d)/,"$1-$2")
+    .slice(0,15);
 };
 
 /* CADASTRO */
-btnCadastro.onclick = async () => {
+btnCadastro.onclick=async()=>{
   msgCadastro.textContent="";
   msgCadastro.className="msg";
   btnCadastro.classList.add("loading");
-  btnCadastro.disabled=true;
 
-  if(c_senha.value !== c_confirma.value){
+  if(c_senha.value!==c_confirma.value){
     msgCadastro.textContent="As senhas não conferem";
     msgCadastro.classList.add("error");
     btnCadastro.classList.remove("loading");
-    btnCadastro.disabled=false;
     return;
   }
 
   try{
-    const res = await fetch("/api/cadastro",{
+    const res=await fetch("/api/cadastro",{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
       body:JSON.stringify({
@@ -293,30 +248,25 @@ btnCadastro.onclick = async () => {
       })
     });
 
-    const text = await res.text();
+    const text=await res.text();
     let data;
-    try{ data = JSON.parse(text); }catch{}
+    try{data=JSON.parse(text)}catch{}
 
     if(!res.ok){
-      msgCadastro.textContent =
-        (data && data.error) || "Erro interno do servidor";
+      msgCadastro.textContent=(data&&data.error)||"Erro interno do servidor";
       msgCadastro.classList.add("error");
-      console.error(text);
       return;
     }
 
     msgCadastro.textContent="Cadastro criado! Aguarde aprovação.";
     msgCadastro.classList.add("success");
-
     setTimeout(()=>modal.style.display="none",2000);
 
   }catch(e){
     msgCadastro.textContent="Falha de conexão";
     msgCadastro.classList.add("error");
-    console.error(e);
   }finally{
     btnCadastro.classList.remove("loading");
-    btnCadastro.disabled=false;
   }
 };
 </script>
