@@ -2,247 +2,227 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Jogo ao vivo • Player</title>
+<title>CLENA • Jogos ao Vivo</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
-
-#player{position:fixed;inset:0;background:#000}
-#close{
-  position:absolute;top:16px;left:16px;
-  padding:10px 16px;
-  background:rgba(0,0,0,.6);
-  color:#fff;border:none;border-radius:999px;
-  cursor:pointer;z-index:50
+:root{
+  --bg:#0b0b0c;
+  --panel:#111;
+  --card:#1b1b1f;
+  --accent:#e50914;
+  --text:#fff;
+  --muted:#9a9a9a;
 }
 
-#layout{
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  height:100vh;
+  overflow:hidden;
+}
+
+/* ================= LAYOUT ================= */
+main{
   display:grid;
   grid-template-columns:3fr 1.4fr;
-  height:100%;
+  height:100vh;
 }
 @media(max-width:900px){
-  #layout{grid-template-columns:1fr}
+  main{grid-template-columns:1fr}
 }
 
-/* PLAYER AREA */
+/* ================= PLAYER ================= */
 #playerArea{
   position:relative;
+  background:#000;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:#000;
 }
 
 /* PLACEHOLDER */
-#livePlaceholder{
+#playerPlaceholder{
   text-align:center;
-  color:#aaa;
 }
-#livePlaceholder h2{
-  margin-bottom:12px;
+#playerPlaceholder h2{
   font-size:22px;
+  margin-bottom:8px;
 }
-#livePlaceholder p{
-  font-size:14px;
+#playerPlaceholder p{
+  color:var(--muted);
+  margin-bottom:20px;
+}
+
+/* BOTÃO */
+.btn{
+  padding:14px 26px;
+  border-radius:999px;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  font-weight:700;
+  font-size:15px;
+  cursor:pointer;
+}
+
+/* ================= OVERLAY ================= */
+#ytOverlay{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.92);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:10;
+}
+
+#ytBox{
+  background:var(--card);
+  padding:34px;
+  border-radius:20px;
+  max-width:420px;
+  width:90%;
+  text-align:center;
+}
+
+#ytBox h2{
+  margin-bottom:8px;
+}
+#ytBox p{
+  color:var(--muted);
   margin-bottom:22px;
 }
 
-/* SIDE */
+/* ================= SIDE ================= */
 #side{
-  background:#111;
+  background:linear-gradient(180deg,#111,#0c0c0e);
   padding:28px;
   overflow-y:auto;
 }
 
-#titulo{font-size:26px;margin-bottom:8px}
-#meta{margin-bottom:12px;font-size:14px}
-
 .badge{
   display:inline-block;
   padding:4px 10px;
-  margin-right:6px;
   border-radius:999px;
   font-size:12px;
+  font-weight:600;
   background:#222;
+  margin-right:6px;
 }
-.badge.tipo{background:#e50914}
-.badge.categoria{background:#333}
+.badge.live{background:var(--accent)}
+
+#title{
+  font-size:26px;
+  margin:10px 0 6px;
+}
 
 #desc{
+  color:var(--muted);
   font-size:14px;
-  color:#ccc;
-  line-height:1.5;
   margin-bottom:20px;
 }
 
-/* APOSTAS */
-#apostasBox{margin-top:18px}
-#apostasFrame{
-  width:100%;
-  height:380px;
-  border-radius:12px;
-  border:1px solid #222;
-  background:#000;
+/* ================= APOSTAS ================= */
+#betBox{
+  margin-top:18px;
+}
+#betBox h3{
+  margin-bottom:10px;
 }
 
-/* MODAL YOUTUBE */
-#ytModal{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.88);
-  z-index:9999;
-  align-items:center;
-  justify-content:center;
-}
-#ytBox{
-  background:#111;
-  padding:32px;
-  border-radius:18px;
-  width:90%;
-  max-width:420px;
-  text-align:center;
-}
-#ytBox h2{margin-bottom:10px}
-#ytBox p{color:#aaa;margin-bottom:22px}
-#ytBox a{
-  display:block;
-  padding:14px;
-  background:#e50914;
-  color:#fff;
-  font-weight:700;
-  border-radius:12px;
-  text-decoration:none;
-}
-#ytBox button{
-  margin-top:14px;
-  background:none;
-  border:none;
-  color:#777;
-  cursor:pointer;
+#betFrame{
+  width:100%;
+  height:380px;
+  border-radius:14px;
+  border:1px solid #222;
+  background:#000;
 }
 </style>
 </head>
 
 <body>
 
-<div id="player">
-  <button id="close" onclick="voltar()">←</button>
+<main>
 
-  <div id="layout">
+  <!-- PLAYER -->
+  <section id="playerArea">
 
-    <!-- PLAYER -->
-    <div id="playerArea">
-      <div id="livePlaceholder">
-        <h2>🔴 Jogo ao vivo</h2>
-        <p>Este evento é transmitido no YouTube</p>
-        <button onclick="abrirYoutube()"
-          style="
-            padding:14px 26px;
-            border:none;
-            border-radius:999px;
-            font-size:16px;
-            font-weight:700;
-            background:#e50914;
-            color:#fff;
-            cursor:pointer;
-          ">
-          ▶ Assistir agora
+    <div id="playerPlaceholder">
+      <div style="font-size:40px;margin-bottom:10px">🔴</div>
+      <h2>Jogo ao vivo</h2>
+      <p>Este evento é transmitido no YouTube</p>
+      <button class="btn" onclick="abrirOverlay()">▶ Assistir agora</button>
+    </div>
+
+    <!-- OVERLAY -->
+    <div id="ytOverlay">
+      <div id="ytBox">
+        <h2>Transmissão ao vivo</h2>
+        <p>Por direitos de transmissão, o jogo é exibido no YouTube.</p>
+
+        <a id="ytLink"
+           target="_blank"
+           class="btn"
+           style="display:block;text-decoration:none">
+          ▶ Abrir no YouTube
+        </a>
+
+        <button onclick="fecharOverlay()"
+          style="margin-top:16px;background:none;border:none;color:#777;cursor:pointer">
+          Fechar
         </button>
       </div>
     </div>
 
-    <!-- LATERAL -->
-    <div id="side">
-      <h2 id="titulo"></h2>
-      <div id="meta"></div>
-      <p id="desc"></p>
+  </section>
 
-      <div id="apostasBox">
-        <h3 style="margin-bottom:10px">📊 Apostas ao vivo</h3>
-        <iframe id="apostasFrame"></iframe>
-      </div>
+  <!-- LATERAL -->
+  <aside id="side">
+    <span class="badge">Futebol</span>
+    <span class="badge live">AO VIVO</span>
+
+    <h1 id="title">Palmeiras VS Flamengo</h1>
+    <p id="desc">Teste de jogos</p>
+
+    <div id="betBox">
+      <h3>📊 Apostas ao vivo</h3>
+      <iframe id="betFrame"></iframe>
     </div>
+  </aside>
 
-  </div>
-</div>
-
-<!-- MODAL YOUTUBE -->
-<div id="ytModal">
-  <div id="ytBox">
-    <h2>Transmissão ao vivo</h2>
-    <p>Você será redirecionado para o YouTube</p>
-    <a id="ytLink" target="_blank">▶ Abrir no YouTube</a>
-    <button onclick="fecharYoutube()">Fechar</button>
-  </div>
-</div>
+</main>
 
 <script>
-/* ================= SUPABASE ================= */
-const sb = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-);
-
-/* ================= SESSÃO ================= */
-async function validarSessaoPlayer(){
-  const email = localStorage.getItem("usuario_email");
-  if (!email) location.replace("login.html");
-
-  const { data } = await sb
-    .from("usuarios")
-    .select("status, trial_expires_at")
-    .eq("email", email)
-    .maybeSingle();
-
-  if (!data || data.status === "bloqueado") {
-    localStorage.clear();
-    location.replace("login.html");
-  }
-
-  if (data.trial_expires_at && new Date() > new Date(data.trial_expires_at)) {
-    localStorage.clear();
-    location.replace("login.html");
-  }
-}
-
-/* ================= ITEM ================= */
+/* ================= ITEM (SIMULADO OU VIA URL) ================= */
 const item = JSON.parse(
-  decodeURIComponent(new URLSearchParams(location.search).get("item"))
+  decodeURIComponent(
+    new URLSearchParams(location.search).get("item") ||
+    '{"titulo":"Palmeiras VS Flamengo","descricao":"Teste de jogos","capa_url":"https://www.youtube.com/live/ijPsXyFBBOI"}'
+  )
 );
 
 /* ================= UI ================= */
-titulo.textContent = item.titulo || "Jogo ao vivo";
-desc.textContent = item.descricao || "";
-meta.innerHTML = `
-  <span class="badge categoria">${item.categoria || "Esporte"}</span>
-  <span class="badge tipo">AO VIVO</span>
-`;
+document.getElementById("title").textContent = item.titulo;
+document.getElementById("desc").textContent = item.descricao;
+document.getElementById("ytLink").href = item.capa_url;
+
+/* ================= OVERLAY ================= */
+function abrirOverlay(){
+  document.getElementById("ytOverlay").style.display = "flex";
+}
+function fecharOverlay(){
+  document.getElementById("ytOverlay").style.display = "none";
+}
 
 /* ================= APOSTAS ================= */
-apostasFrame.src = item.capa_url_apostas || "";
-
-/* ================= YOUTUBE ================= */
-function abrirYoutube(){
-  document.getElementById("ytLink").href = item.capa_url;
-  document.getElementById("ytModal").style.display="flex";
-}
-function fecharYoutube(){
-  document.getElementById("ytModal").style.display="none";
-}
-
-/* ================= VOLTAR ================= */
-function voltar(){
-  location.replace("index.html");
-}
-
-/* ================= INIT ================= */
-validarSessaoPlayer();
+document.getElementById("betFrame").src =
+  item.apostas_url || "about:blank";
 </script>
 
 </body>
