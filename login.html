@@ -6,6 +6,7 @@
 
 <meta name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
@@ -201,6 +202,12 @@ input:focus{outline:none;border-color:var(--accent)}
 </div>
 
 <script>
+
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
 /* MODAL */
 abrirCadastro.onclick=()=>modal.style.display="flex";
 fecharCadastro.onclick=()=>modal.style.display="none";
@@ -223,44 +230,37 @@ c_whats.oninput=e=>{
     .slice(0,15);
 };
 
-/* CADASTRO */
-btnCadastro.onclick=async()=>{
-  msgCadastro.textContent="";
-  msgCadastro.className="msg";
-  btnCadastro.classList.add("loading");
-
-  if(c_senha.value!==c_confirma.value){
-    msgCadastro.textContent="As senhas não conferem";
-    msgCadastro.classList.add("error");
-    btnCadastro.classList.remove("loading");
+btnCadastro.onclick = async () => {
+  if (c_senha.value !== c_confirma.value) {
+    msgCadastro.textContent = "As senhas não conferem";
+    msgCadastro.className = "msg error";
     return;
   }
 
-  try{
-    const res=await fetch("/api/cadastro",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        email:c_email.value.trim(),
-        cpf:c_cpf.value.replace(/\D/g,""),
-        whatsapp:c_whats.value.replace(/\D/g,""),
-        senha:c_senha.value
-      })
-    });
+  const trial = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    const text=await res.text();
-    let data;
-    try{data=JSON.parse(text)}catch{}
+  const { error } = await sb.from("usuarios").insert({
+    email: c_email.value.trim(),
+    cpf: c_cpf.value.replace(/\D/g, ""),
+    whatsapp: c_whats.value.replace(/\D/g, ""),
+    senha: c_senha.value, // ⚠️ ver nota de segurança abaixo
+    status: "pendente",
+    trial_expires_at: trial.toISOString()
+  });
 
-    if(!res.ok){
-      msgCadastro.textContent=(data&&data.error)||"Erro interno do servidor";
-      msgCadastro.classList.add("error");
-      return;
-    }
+  if (error) {
+    console.error(error);
+    msgCadastro.textContent = "Erro ao cadastrar";
+    msgCadastro.className = "msg error";
+    return;
+  }
 
-    msgCadastro.textContent="Cadastro criado! Aguarde aprovação.";
-    msgCadastro.classList.add("success");
-    setTimeout(()=>modal.style.display="none",2000);
+  msgCadastro.textContent = "Cadastro criado! Aguarde aprovação.";
+  msgCadastro.className = "msg success";
+
+  setTimeout(() => modal.style.display = "none", 2000);
+};
+
 
   }catch(e){
     msgCadastro.textContent="Falha de conexão";
