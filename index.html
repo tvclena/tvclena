@@ -1353,19 +1353,16 @@ async function uploadAvatar(input) {
     return;
   }
 
-  // 🔹 cria imagem
   const img = new Image();
   img.src = URL.createObjectURL(file);
   await new Promise(r => img.onload = r);
 
-  // 🔹 canvas 512x512
-  const size = 512;
   const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = 512;
+  canvas.height = 512;
 
   const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0, size, size);
+  ctx.drawImage(img, 0, 0, 512, 512);
 
   const blob = await new Promise(r =>
     canvas.toBlob(r, "image/jpeg", 0.9)
@@ -1373,16 +1370,15 @@ async function uploadAvatar(input) {
 
   URL.revokeObjectURL(img.src);
 
-  // 🔹 nome único
   const nome = `${userId}_${Date.now()}.jpg`;
 
-  // 🔹 URL DO STORAGE (CORRETA)
-  const uploadUrl = `https://br.storage.bunnycdn.com/sessao99/avatars/${nome}`;
+  const uploadUrl =
+    `https://br.storage.bunnycdn.com/sessao99/avatars/${nome}`;
 
   const res = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
-      "Access-Key": "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
+      "AccessKey": "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
       "Content-Type": "application/octet-stream"
     },
     body: blob
@@ -1394,10 +1390,9 @@ async function uploadAvatar(input) {
     return;
   }
 
-  // 🔹 URL PÚBLICA (CDN)
-  const avatarUrl = `https://sessao99.b-cdn.net/avatars/${nome}`;
+  const avatarUrl =
+    `https://sessao99.b-cdn.net/avatars/${nome}`;
 
-  // 🔹 salva no Supabase
   await sb
     .from("usuarios")
     .update({ avatar_url: avatarUrl })
@@ -1406,6 +1401,10 @@ async function uploadAvatar(input) {
   avatarImg.src = avatarUrl;
   await carregarAvatarHeader();
 }
+
+
+
+  
 
 async function carregarAvatarHeader() {
   const email = localStorage.getItem("usuario_email");
