@@ -1344,13 +1344,6 @@ async function validarSessao() {
   perfilValor.textContent = formatarReal(data.valor);
   perfilVencimento.textContent = formatarData(data.trial_expires_at);
 
-  // avatar
-  if (data.avatar_url) {
-    avatarImg.src = data.avatar_url;
-    perfilBtn.innerHTML = `<img src="${data.avatar_url}" style="width:36px;height:36px;border-radius:50%">`;
-  } else {
-    perfilBtn.innerHTML = `<span>US</span>`;
-  }
 }
 
 async function uploadAvatar(input) {
@@ -1439,6 +1432,7 @@ async function carregarAvatarHeader() {
 
 
 
+
   
 async function validarUsername() {
   const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
@@ -1495,12 +1489,14 @@ const perfilBtn = document.getElementById("perfilBtn");
   const ok = await validarSessao();
   if (!ok) return;
 
-await carregarPerfil();
+  await carregarPerfil();
+  await carregarAvatarHeader(); // ✅ ESSENCIAL
   iniciarApp();
 
   setInterval(validarSessao, 15000);
 
 })();
+
 
 </script>
 </body>
