@@ -2,296 +2,273 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Sessão • Player</title>
+<title>Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{
+  width:100%;
+  height:100%;
   background:#000;
-  color:#fff;
   font-family:Inter,Arial,sans-serif;
-  height:100%;
   overflow:hidden;
-  overscroll-behavior:none;
   touch-action:none;
+  overscroll-behavior:none;
 }
 
-#player{position:fixed;inset:0;background:#000}
-
-#layout{
-  display:grid;
-  grid-template-columns:3fr 1.4fr;
-  height:100%;
-}
-
-@media(max-width:900px){
-  #layout{grid-template-columns:1fr}
-  #side{display:none}
-}
-
-#playerArea{
-  position:relative;
-  width:100%;
-  height:100%;
-  background:#000;
-}
-
-video,iframe{
-  width:100%;
-  height:100%;
-  background:#000;
-  border:none;
-}
-
-#iframeFallback{
-  display:none;
-  position:absolute;
+/* ===== PLAYER ===== */
+#player{
+  position:fixed;
   inset:0;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  text-align:center;
-  color:#aaa;
-  padding:30px;
+  background:#000;
 }
 
-#iframeFallback a{
-  margin-top:12px;
-  color:#e50914;
-  font-weight:700;
+video{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  background:#000;
 }
 
-/* ===== CONTROLES ===== */
-#controls{
+/* ===== OVERLAY CONTROLES ===== */
+#overlay{
   position:absolute;
   inset:0;
   display:flex;
   flex-direction:column;
   justify-content:space-between;
-  pointer-events:none;
+  background:linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,.1),rgba(0,0,0,.7));
+  opacity:1;
+  transition:.25s;
 }
 
-#controls button{
-  pointer-events:auto;
-  background:rgba(0,0,0,.65);
+#player.hide #overlay{opacity:0;pointer-events:none}
+
+/* ===== TOPO ===== */
+#topBar{
+  display:flex;
+  align-items:center;
+  padding:18px;
+}
+
+#back{
+  background:none;
   border:none;
   color:#fff;
-  border-radius:50%;
+  font-size:22px;
   cursor:pointer;
 }
 
-#btnBack{
-  position:absolute;
-  top:16px;
-  left:16px;
-  padding:12px 16px;
-  font-size:16px;
-}
-
-#btnFull{
-  position:absolute;
-  top:16px;
-  right:16px;
-  padding:12px;
-  font-size:16px;
-}
-
-#centerControls{
-  flex:1;
+/* ===== CENTRO ===== */
+#center{
   display:flex;
-  align-items:center;
   justify-content:center;
+  gap:40px;
 }
 
-#btnPlay{
-  font-size:30px;
-  padding:20px 24px;
+.controlBtn{
+  background:rgba(0,0,0,.6);
+  border:none;
+  color:#fff;
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  font-size:26px;
+  cursor:pointer;
 }
 
-#progressContainer{
+/* ===== BOTTOM ===== */
+#bottom{
+  padding:14px;
+}
+
+#progressWrap{
   height:6px;
   background:rgba(255,255,255,.25);
-  margin:14px;
   border-radius:999px;
-  overflow:hidden;
-  pointer-events:auto;
+  cursor:pointer;
+  position:relative;
 }
 
 #progress{
   height:100%;
   width:0%;
   background:#e50914;
-}
-
-/* ===== LATERAL ===== */
-#side{
-  background:#111;
-  padding:28px;
-  overflow-y:auto;
-}
-
-.badge{
-  display:inline-block;
-  padding:4px 10px;
   border-radius:999px;
-  font-size:12px;
-  background:#222;
-  margin-right:6px;
 }
 
-.badge.tipo{background:#e50914}
-
-select{
-  width:100%;
-  padding:12px;
-  margin-bottom:10px;
-  background:#1c1c1c;
-  border:1px solid #333;
-  border-radius:10px;
-  color:#fff;
+#timeRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:10px;
 }
+
+#time{
+  font-size:13px;
+  color:#ddd;
+}
+
+#controlsRight{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+input[type=range]{
+  width:90px;
+}
+
+/* ===== MOBILE DOUBLE TAP ===== */
+.tapZone{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:33%;
+}
+#tapLeft{left:0}
+#tapRight{right:0}
 </style>
 </head>
 
 <body>
 
 <div id="player">
-  <div id="layout">
-    <div id="playerArea">
-      <video id="video" autoplay playsinline></video>
-      <iframe id="iframe" allowfullscreen></iframe>
+  <video id="video" playsinline></video>
 
-      <div id="iframeFallback">
-        ⚠️ Este conteúdo não permite reprodução externa
-        <a id="openExternal" target="_blank">Abrir na plataforma oficial</a>
-      </div>
+  <!-- DOUBLE TAP -->
+  <div id="tapLeft" class="tapZone"></div>
+  <div id="tapRight" class="tapZone"></div>
 
-      <!-- CONTROLES -->
-      <div id="controls">
-        <button id="btnBack">←</button>
-        <button id="btnFull">⛶</button>
-
-        <div id="centerControls">
-          <button id="btnPlay">▶</button>
-        </div>
-
-        <div id="progressContainer">
-          <div id="progress"></div>
-        </div>
-      </div>
+  <div id="overlay">
+    <!-- TOPO -->
+    <div id="topBar">
+      <button id="back">←</button>
     </div>
 
-    <div id="side">
-      <h2 id="titulo"></h2>
-      <div id="meta"></div>
-      <p id="desc"></p>
+    <!-- CENTRO -->
+    <div id="center">
+      <button class="controlBtn" id="rew">⏪</button>
+      <button class="controlBtn" id="play">▶</button>
+      <button class="controlBtn" id="fwd">⏩</button>
+    </div>
 
-      <div id="serieControls" style="display:none">
-        <select id="selTemporada"></select>
-        <select id="selEpisodio"></select>
+    <!-- BOTTOM -->
+    <div id="bottom">
+      <div id="progressWrap">
+        <div id="progress"></div>
+      </div>
+
+      <div id="timeRow">
+        <div id="time">00:00 / 00:00</div>
+
+        <div id="controlsRight">
+          <button id="mute">🔊</button>
+          <input id="volume" type="range" min="0" max="1" step="0.05" value="1">
+          <button id="fs">⛶</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-/* ===== SUPABASE ===== */
-const sb = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-);
-
-/* ===== ITEM ===== */
-const item = JSON.parse(
-  decodeURIComponent(new URLSearchParams(location.search).get("item"))
-);
-
-/* ===== ELEMENTOS ===== */
 const video=document.getElementById("video");
-const iframe=document.getElementById("iframe");
-const fallback=document.getElementById("iframeFallback");
-const openExternal=document.getElementById("openExternal");
-const btnPlay=document.getElementById("btnPlay");
-const btnFull=document.getElementById("btnFull");
-const btnBack=document.getElementById("btnBack");
+const player=document.getElementById("player");
+const overlay=document.getElementById("overlay");
+
+const playBtn=document.getElementById("play");
+const rew=document.getElementById("rew");
+const fwd=document.getElementById("fwd");
+const back=document.getElementById("back");
+const fs=document.getElementById("fs");
+const mute=document.getElementById("mute");
+const volume=document.getElementById("volume");
+
 const progress=document.getElementById("progress");
-const progressContainer=document.getElementById("progressContainer");
+const progressWrap=document.getElementById("progressWrap");
+const time=document.getElementById("time");
 
-const titulo=document.getElementById("titulo");
-const meta=document.getElementById("meta");
-const desc=document.getElementById("desc");
-
-/* ===== UI ===== */
-titulo.textContent=item.titulo||item.serie_nome||"Conteúdo";
-desc.textContent=item.descricao||"";
-meta.innerHTML=`
-  <span class="badge">${item.categoria||"Geral"}</span>
-  <span class="badge tipo">${item.tipo}</span>
-`;
-
-/* ===== PLAYER ===== */
-function isIframe(url){
-  return !url.match(/\.(mp4|m3u8|webm)$/i);
-}
-
-if(isIframe(item.video_url)){
-  video.style.display="none";
-  iframe.src=item.video_url;
-  openExternal.href=item.video_url;
-  setTimeout(()=>{
-    try{iframe.contentWindow.location.href}
-    catch{
-      iframe.style.display="none";
-      fallback.style.display="flex";
-    }
-  },2000);
-}else{
-  iframe.style.display="none";
-  video.src=item.video_url;
-}
+/* ===== VIDEO ===== */
+video.src="SEU_VIDEO_AQUI.mp4";
+video.play();
 
 /* ===== CONTROLES ===== */
-btnPlay.onclick=()=>{
-  video.paused ? video.play() : video.pause();
+playBtn.onclick=()=>video.paused?video.play():video.pause();
+video.onplay=()=>playBtn.textContent="⏸";
+video.onpause=()=>playBtn.textContent="▶";
+
+rew.onclick=()=>video.currentTime-=10;
+fwd.onclick=()=>video.currentTime+=10;
+
+back.onclick=()=>location.href="index.html";
+
+fs.onclick=()=>document.body.requestFullscreen?.();
+
+mute.onclick=()=>{
+  video.muted=!video.muted;
+  mute.textContent=video.muted?"🔇":"🔊";
 };
 
-video.addEventListener("play",()=>{
-  btnPlay.textContent="⏸";
-  document.body.requestFullscreen?.().catch(()=>{});
+volume.oninput=()=>video.volume=volume.value;
+
+/* ===== PROGRESS ===== */
+video.ontimeupdate=()=>{
+  const p=(video.currentTime/video.duration)*100;
+  progress.style.width=p+"%";
+  time.textContent=format(video.currentTime)+" / "+format(video.duration);
+};
+
+progressWrap.onclick=e=>{
+  const r=progressWrap.getBoundingClientRect();
+  video.currentTime=((e.clientX-r.left)/r.width)*video.duration;
+};
+
+/* ===== AUTO HIDE ===== */
+let hideTimer;
+["mousemove","touchstart"].forEach(ev=>{
+  document.addEventListener(ev,()=>{
+    player.classList.remove("hide");
+    clearTimeout(hideTimer);
+    hideTimer=setTimeout(()=>player.classList.add("hide"),3000);
+  });
+});
+
+/* ===== DOUBLE TAP ===== */
+let lastTap=0;
+document.getElementById("tapLeft").ontouchend=()=>{
+  const now=Date.now();
+  if(now-lastTap<300) video.currentTime-=10;
+  lastTap=now;
+};
+document.getElementById("tapRight").ontouchend=()=>{
+  const now=Date.now();
+  if(now-lastTap<300) video.currentTime+=10;
+  lastTap=now;
+};
+
+/* ===== KEYBOARD ===== */
+document.onkeydown=e=>{
+  if(e.key===" ") video.paused?video.play():video.pause();
+  if(e.key==="ArrowLeft") video.currentTime-=5;
+  if(e.key==="ArrowRight") video.currentTime+=5;
+  if(e.key==="f") document.body.requestFullscreen?.();
+  if(e.key==="m") video.muted=!video.muted;
+};
+
+/* ===== UTILS ===== */
+function format(s){
+  if(!s) return "00:00";
+  const m=Math.floor(s/60);
+  const ss=Math.floor(s%60).toString().padStart(2,"0");
+  return m+":"+ss;
+}
+
+/* LANDSCAPE MOBILE */
+video.onplay=()=>{
   screen.orientation?.lock("landscape").catch(()=>{});
-});
-
-video.addEventListener("pause",()=>{
-  btnPlay.textContent="▶";
-});
-
-btnFull.onclick=()=>{
-  document.body.requestFullscreen?.().catch(()=>{});
 };
-
-btnBack.onclick=()=>{
-  video.pause();
-  location.replace("index.html");
-};
-
-/* ===== PROGRESSO ===== */
-video.addEventListener("timeupdate",()=>{
-  if(video.duration){
-    progress.style.width=(video.currentTime/video.duration)*100+"%";
-  }
-});
-
-progressContainer.addEventListener("touchstart",e=>e.stopPropagation(),{passive:false});
-progressContainer.addEventListener("touchmove",e=>{
-  e.preventDefault();
-  const rect=progressContainer.getBoundingClientRect();
-  const x=e.touches[0].clientX-rect.left;
-  const percent=Math.max(0,Math.min(1,x/rect.width));
-  video.currentTime=video.duration*percent;
-},{passive:false});
 </script>
 
 </body>
