@@ -276,32 +276,75 @@ btnLogin.onclick = async () => {
   }
 };
 
-/* CADASTRO – IGUAL AO SEU */
 btnCadastro.onclick = async () => {
+  msgCadastro.textContent = "";
+  msgCadastro.className = "msg";
+  btnCadastro.classList.add("loading");
+  btnCadastro.disabled = true;
+
   if (c_senha.value !== c_confirma.value) {
-    alert("Senhas não conferem");
+    msgCadastro.textContent = "As senhas não conferem";
+    msgCadastro.classList.add("error");
+    btnCadastro.classList.remove("loading");
+    btnCadastro.disabled = false;
     return;
   }
 
-  const trial = new Date(Date.now() + 86400000);
+  try {
+    const res = await fetch("/api/cadastro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: c_email.value.trim(),
+        cpf: c_cpf.value.replace(/\D/g, ""),
+        whatsapp: c_whats.value.replace(/\D/g, ""),
+        senha: c_senha.value
+      })
+    });
 
-  const { error } = await sb.from("usuarios").insert({
-    email: c_email.value.trim(),
-    cpf: c_cpf.value.replace(/\D/g,""),
-    whatsapp: c_whats.value.replace(/\D/g,""),
-    senha: c_senha.value,
-    status: "pendente",
-    trial_expires_at: trial.toISOString()
-  });
+    // 🔑 NÃO ASSUMA JSON
+    const text = await res.text();
 
-  if (error) {
-    alert("Erro ao cadastrar");
-    return;
+    if (!res.ok) {
+      msgCadastro.textContent =
+        "Erro no servidor ao criar cadastro. Tente novamente.";
+      msgCadastro.classList.add("error");
+      console.error("Erro backend:", text);
+      return;
+    }
+
+    // tenta converter se for JSON
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      msgCadastro.textContent =
+        "Cadastro criado, mas resposta inesperada do servidor.";
+      msgCadastro.classList.add("success");
+      return;
+    }
+
+    if (data.error) {
+      msgCadastro.textContent = data.error;
+      msgCadastro.classList.add("error");
+      return;
+    }
+
+    msgCadastro.textContent = "Cadastro criado com sucesso!";
+    msgCadastro.classList.add("success");
+    setTimeout(() => modal.style.display = "none", 2000);
+
+  } catch (err) {
+    msgCadastro.textContent =
+      "Falha de conexão com o servidor.";
+    msgCadastro.classList.add("error");
+    console.error(err);
+  } finally {
+    btnCadastro.classList.remove("loading");
+    btnCadastro.disabled = false;
   }
-
-  alert("Cadastro criado! Aguarde aprovação.");
-  modal.style.display = "none";
 };
+
 </script>
 
 </body>
