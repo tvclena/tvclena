@@ -19,10 +19,24 @@ body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   color:#fff;border:none;border-radius:999px;
   cursor:pointer;z-index:10
 }
-#layout{display:grid;grid-template-columns:3fr 1.4fr;height:100%}
-video{width:100%;height:100%;object-fit:cover}
 
-#side{background:#111;padding:32px}
+#layout{display:grid;grid-template-columns:3fr 1.4fr;height:100%}
+
+/* PLAYER VIDEO / IFRAME */
+video, iframe.stream{
+  width:100%;
+  height:100%;
+  border:none;
+  background:#000;
+}
+
+/* LATERAL */
+#side{
+  background:#111;
+  padding:32px;
+  overflow-y:auto;
+}
+
 #titulo{font-size:26px;margin-bottom:8px}
 #meta{margin-bottom:12px;font-size:14px}
 
@@ -39,9 +53,16 @@ video{width:100%;height:100%;object-fit:cover}
 .badge.categoria{background:#333}
 .badge.classificacao{background:#444}
 
-#desc{font-size:14px;line-height:1.5;color:#ccc;margin-bottom:18px}
+#desc{
+  font-size:14px;
+  line-height:1.5;
+  color:#ccc;
+  margin-bottom:18px
+}
 
+/* CONTROLES DE SÉRIE */
 #serieControls{display:none;margin-top:12px}
+
 .select-box{position:relative;margin-bottom:10px}
 .select-box::after{
   content:"▾";
@@ -60,6 +81,25 @@ select{
   border:1px solid #333;
   border-radius:10px;
   color:#fff
+}
+
+/* PAINEL DE APOSTAS */
+#apostasBox{
+  display:none;
+  margin-top:16px;
+}
+
+#apostasBox h3{
+  font-size:16px;
+  margin-bottom:10px;
+}
+
+#apostasFrame{
+  width:100%;
+  height:420px;
+  border-radius:12px;
+  border:1px solid #222;
+  background:#000;
 }
 
 #btnProximo{
@@ -82,6 +122,7 @@ select{
 @media(max-width:768px){
   #layout{grid-template-columns:1fr}
   #side{padding:16px}
+  #apostasFrame{height:320px}
 }
 </style>
 </head>
@@ -92,14 +133,21 @@ select{
   <button id="close" onclick="voltar()">←</button>
 
   <div id="layout">
-    <video id="video" controls autoplay playsinline></video>
-    <button id="btnProximo" onclick="proximoEpisodio()">▶ Próximo episódio</button>
 
+    <!-- ÁREA DO PLAYER -->
+    <div id="playerArea">
+      <video id="video" controls autoplay playsinline></video>
+      <iframe id="streamIframe" class="stream" allowfullscreen></iframe>
+      <button id="btnProximo" onclick="proximoEpisodio()">▶ Próximo episódio</button>
+    </div>
+
+    <!-- LATERAL -->
     <div id="side">
       <h2 id="titulo"></h2>
       <div id="meta"></div>
       <p id="desc"></p>
 
+      <!-- CONTROLES SÉRIE -->
       <div id="serieControls">
         <div class="select-box">
           <select id="selTemporada"></select>
@@ -108,6 +156,13 @@ select{
           <select id="selEpisodio"></select>
         </div>
       </div>
+
+      <!-- PAINEL APOSTAS -->
+      <div id="apostasBox">
+        <h3>📊 Apostas ao vivo</h3>
+        <iframe id="apostasFrame"></iframe>
+      </div>
+
     </div>
   </div>
 </div>
@@ -122,7 +177,7 @@ const sb = supabase.createClient(
 /* ================= SESSÃO ================= */
 async function validarSessaoPlayer(){
   const email = localStorage.getItem("usuario_email");
-  if (!email) return location.replace("login.html");
+  if (!email) location.replace("login.html");
 
   const { data } = await sb
     .from("usuarios")
@@ -143,125 +198,42 @@ async function validarSessaoPlayer(){
 
 /* ================= ITEM ================= */
 const params = new URLSearchParams(location.search);
-const rawItem = params.get("item");
-if (!rawItem) location.replace("index.html");
-
-const item = JSON.parse(decodeURIComponent(rawItem));
+const item = JSON.parse(decodeURIComponent(params.get("item")));
 
 /* ================= ELEMENTOS ================= */
 const video = document.getElementById("video");
-const titulo = document.getElementById("titulo");
-const meta = document.getElementById("meta");
-const desc = document.getElementById("desc");
+const iframeStream = document.getElementById("streamIframe");
+const apostasBox = document.getElementById("apostasBox");
+const apostasFrame = document.getElementById("apostasFrame");
 const serieControls = document.getElementById("serieControls");
-const selTemporada = document.getElementById("selTemporada");
-const selEpisodio = document.getElementById("selEpisodio");
-const btnProximo = document.getElementById("btnProximo");
 
 /* ================= UI ================= */
-meta.innerHTML = `
+document.getElementById("titulo").textContent = item.titulo || item.serie_nome;
+document.getElementById("desc").textContent = item.descricao || "";
+
+document.getElementById("meta").innerHTML = `
   <span class="badge categoria">${item.categoria || "Geral"}</span>
   <span class="badge tipo">${item.tipo}</span>
-  ${item.classificacao ? `<span class="badge classificacao">${item.classificacao}</span>` : ""}
 `;
-titulo.textContent = item.titulo || item.serie_nome;
-desc.textContent = item.descricao || "";
-
-/* ================= CONTEXTO GLOBAL ================= */
-window.__CLENA_CONTEXT__ = {
-  email: localStorage.getItem("usuario_email"),
-  item,
-  video
-};
 
 /* ================= FILME ================= */
 if (item.tipo === "filme") {
+  iframeStream.style.display = "none";
   video.src = item.video_url;
-  video.load();
-  video.play().catch(()=>{});
 }
 
-/* ================= SÉRIE ================= */
-let serie = [];
-let episodioIndex = 0;
+/* ================= JOGOS AO VIVO ================= */
+if (item.tipo === "jogos_ao_vivo") {
+  video.style.display = "none";
+  iframeStream.style.display = "block";
+  iframeStream.src = item.video_url;
 
-if (item.tipo === "serie") carregarSerie();
-
-async function carregarSerie(){
-  const { data } = await sb
-    .from("filmes")
-    .select("*")
-    .eq("serie_nome", item.serie_nome)
-    .order("temporada")
-    .order("episodio");
-
-  serie = data || [];
-  if (!serie.length) return;
-
-  serieControls.style.display = "block";
-
-  const temporadas = [...new Set(serie.map(e => e.temporada))];
-  selTemporada.innerHTML = temporadas
-    .map(t => `<option value="${t}">Temporada ${t}</option>`)
-    .join("");
-
-  selTemporada.onchange = montarEpisodios;
-
-  selEpisodio.onchange = () => {
-    episodioIndex = Number(selEpisodio.value);
-    tocarEpisodio(
-      serie.filter(e => e.temporada == selTemporada.value),
-      episodioIndex
-    );
-  };
-
-  montarEpisodios();
+  serieControls.style.display = "none";
+  apostasBox.style.display = "block";
+  apostasFrame.src = item.apostas_iframe || "";
 }
 
-function montarEpisodios(){
-  const eps = serie.filter(e => e.temporada == selTemporada.value);
-
-  selEpisodio.innerHTML = eps
-    .map((e,i)=> `<option value="${i}">Episódio ${e.episodio}</option>`)
-    .join("");
-
-  episodioIndex = 0;
-  selEpisodio.value = 0;
-  tocarEpisodio(eps, episodioIndex);
-}
-
-function tocarEpisodio(eps, index){
-  const ep = eps[index];
-  if (!ep) return;
-
-  window.__CLENA_CONTEXT__.item = {
-    ...item,
-    temporada: ep.temporada,
-    episodio: ep.episodio
-  };
-
-  video.pause();
-  video.src = ep.video_url;
-  video.load();
-  video.play().catch(()=>{});
-}
-
-function proximoEpisodio(){
-  const eps = serie.filter(e => e.temporada == selTemporada.value);
-  if (episodioIndex + 1 < eps.length) {
-    episodioIndex++;
-    selEpisodio.value = episodioIndex;
-    tocarEpisodio(eps, episodioIndex);
-  }
-}
-
-/* ================= UI HELPERS ================= */
-video.addEventListener("timeupdate", () => {
-  if (item.tipo !== "serie" || !video.duration) return;
-  btnProximo.style.display =
-    (video.duration - video.currentTime <= 60) ? "block" : "none";
-});
-
+/* ================= VOLTAR ================= */
 function voltar(){
   video.pause();
   video.src = "";
@@ -273,10 +245,6 @@ function voltar(){
   await validarSessaoPlayer();
 })();
 </script>
-
-
-<!-- 📊 ANALYTICS -->
-<script src="/analytics/collector.js"></script>
 
 </body>
 </html>
