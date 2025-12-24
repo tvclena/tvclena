@@ -1,6 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error("Variáveis de ambiente do Supabase não configuradas");
+}
+
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -18,16 +22,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Dados incompletos" });
     }
 
-    // verifica se já existe
     const { data: existente, error: checkError } = await supabase
       .from("usuarios")
       .select("id")
       .eq("email", email)
       .maybeSingle();
 
-    if (checkError) {
-      throw checkError;
-    }
+    if (checkError) throw checkError;
 
     if (existente) {
       return res.status(400).json({ error: "Email já cadastrado" });
@@ -47,9 +48,7 @@ export default async function handler(req, res) {
         trial_expires_at: trial.toISOString()
       });
 
-    if (insertError) {
-      throw insertError;
-    }
+    if (insertError) throw insertError;
 
     return res.status(200).json({ ok: true });
 
