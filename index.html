@@ -1366,8 +1366,15 @@ function render(buscaTxt = "") {
       .filter(s => JSON.stringify(s).toLowerCase().includes(buscaTxt))
       .forEach(s => grid.innerHTML += card(s));
   }
-}
 
+  // 🔴 JOGOS AO VIVO
+  if (filtro === "todos" || filtro === "jogos_ao_vivo") {
+    dados
+      .filter(d => (d.tipo || "").toLowerCase() === "jogos_ao_vivo")
+      .filter(d => JSON.stringify(d).toLowerCase().includes(buscaTxt))
+      .forEach(j => grid.innerHTML += card(j));
+  }
+}
 
 
 
