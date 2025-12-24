@@ -799,6 +799,27 @@ body.search-open{
   }
 }
 
+body.search-open .hero,
+body.search-open .hero * {
+  pointer-events: none;
+}
+#searchResults {
+  pointer-events: auto;
+  position: fixed;
+  z-index: 99999;
+}
+
+.search-card {
+  pointer-events: auto;
+  cursor: pointer;
+}
+body.search-open {
+  overflow: hidden;
+}
+
+
+
+  
 </style>
 </head>
 
