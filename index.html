@@ -96,6 +96,16 @@ input, textarea, select {
   position:absolute;
   inset:0;
   z-index:1;
+.hero::before {
+  pointer-events: none;
+}
+body.search-open header {
+  pointer-events: none;
+}
+
+body.search-open #searchResults {
+  pointer-events: auto;
+}
 
   background:
     /* escurece forte onde tem texto */
