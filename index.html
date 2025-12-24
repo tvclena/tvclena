@@ -876,8 +876,7 @@ const ID_PRINCIPAL = "649a1523-e49b-49d8-a34a-452a54b04ba";
 async function iniciarApp() {
 
 if (usuario?.email && perfilEmail) {
-  perfilEmail.textContent = usuario.email;
-}
+perfilEmail.textContent = localStorage.getItem("usuario_email") || "";}
 
 
 const { data, error } = await sb
