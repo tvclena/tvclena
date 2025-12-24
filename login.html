@@ -11,7 +11,7 @@
 <style>
 *{
   box-sizing:border-box;
-  font-family:Inter, Arial, sans-serif;
+  font-family:Inter, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
 }
 
 html,body{
@@ -21,30 +21,34 @@ html,body{
   color:#fff;
 }
 
-/* FUNDO COM VINHETA */
+/* 🌑 FUNDO CINEMA PREMIUM */
 body{
   display:flex;
   align-items:center;
   justify-content:center;
   background:
-    radial-gradient(circle at center, #141414 0%, #000 70%);
+    radial-gradient(80% 60% at 50% 30%, #1a1a1a 0%, #000 70%),
+    linear-gradient(180deg, #0b0b0b, #000);
 }
 
-/* CARD */
+/* 🧊 CARD */
 .container{
-  width:360px;
-  padding:36px 34px 34px;
-  background:#111;
-  border-radius:18px;
-  box-shadow:0 30px 80px rgba(0,0,0,.85);
+  width:380px;
+  padding:42px 38px 36px;
+  background:linear-gradient(180deg,#141414,#0e0e0e);
+  border-radius:22px;
+  box-shadow:
+    0 40px 90px rgba(0,0,0,.9),
+    inset 0 1px 0 rgba(255,255,255,.04);
 }
 
 /* LOGO */
 .logo{
-  font-size:32px;
-  font-weight:800;
-  margin-bottom:26px;
-  letter-spacing:.5px;
+  text-align:center;
+  font-size:34px;
+  font-weight:900;
+  letter-spacing:.6px;
+  margin-bottom:34px;
 }
 
 .logo span{
@@ -53,65 +57,82 @@ body{
 
 /* CAMPOS */
 .group{
-  margin-bottom:18px;
+  margin-bottom:20px;
 }
 
 label{
   display:block;
-  font-size:14px;
-  color:#bdbdbd;
+  font-size:13px;
+  color:#a1a1aa;
   margin-bottom:6px;
 }
 
 input{
   width:100%;
-  height:46px;
-  border-radius:10px;
+  height:48px;
+  padding:0 16px;
+  border-radius:12px;
   border:none;
-  padding:0 14px;
+  background:#f1f5f9;
+  color:#020617;
   font-size:15px;
-  background:#e9eef6;
-  color:#000;
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,.15),
+    0 1px 0 rgba(255,255,255,.6);
 }
 
 input:focus{
-  outline:2px solid #e50914;
+  outline:none;
+  box-shadow:
+    0 0 0 3px rgba(229,9,20,.35),
+    inset 0 2px 4px rgba(0,0,0,.15);
 }
 
 /* BOTÃO */
 .btn{
   width:100%;
-  height:50px;
-  margin-top:14px;
+  height:54px;
+  margin-top:16px;
   border:none;
-  border-radius:12px;
-  background:#e50914;
+  border-radius:16px;
+  background:linear-gradient(180deg,#ff1a24,#c60711);
   color:#fff;
   font-size:16px;
-  font-weight:700;
+  font-weight:800;
   cursor:pointer;
+  box-shadow:
+    0 18px 40px rgba(229,9,20,.45),
+    inset 0 1px 0 rgba(255,255,255,.25);
 }
 
 .btn:active{
-  transform:scale(.98);
+  transform:translateY(1px);
+  box-shadow:
+    0 10px 25px rgba(229,9,20,.35),
+    inset 0 1px 0 rgba(255,255,255,.25);
 }
 
 /* LINK */
 .link{
-  margin-top:18px;
+  margin-top:22px;
   text-align:center;
   font-size:14px;
   color:#e5e5e5;
   cursor:pointer;
+  text-decoration:none;
+  opacity:.9;
+}
+
+.link:hover{
   text-decoration:underline;
 }
 
 /* MENSAGEM */
 .msg{
-  margin-top:12px;
+  margin-top:14px;
   font-size:14px;
-  color:#facc15;
   min-height:18px;
+  color:#facc15;
 }
 
 /* MODAL */
@@ -125,11 +146,11 @@ input:focus{
 }
 
 .modal-box{
-  width:360px;
-  padding:36px 34px 34px;
-  background:#111;
-  border-radius:18px;
-  box-shadow:0 30px 80px rgba(0,0,0,.9);
+  width:380px;
+  padding:42px 38px 36px;
+  background:linear-gradient(180deg,#141414,#0e0e0e);
+  border-radius:22px;
+  box-shadow:0 40px 90px rgba(0,0,0,.95);
 }
 </style>
 </head>
@@ -162,7 +183,7 @@ input:focus{
 <!-- CADASTRO -->
 <div class="modal" id="modal">
   <div class="modal-box">
-    <div class="logo" style="font-size:26px">Criar conta</div>
+    <div class="logo" style="font-size:28px">Criar conta</div>
 
     <div class="group">
       <label>Email</label>
