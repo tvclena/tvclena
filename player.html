@@ -10,126 +10,31 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
-
-/* CONTAINER */
 #player{position:fixed;inset:0;background:#000}
-
-/* BOTÃO FECHAR */
 #close{
-  position:absolute;
-  top:16px;
-  left:16px;
-  padding:10px 16px;
-  background:rgba(0,0,0,.65);
-  color:#fff;
-  border:none;
-  border-radius:999px;
-  cursor:pointer;
-  z-index:90;
-  font-size:14px;
+  position:absolute;top:16px;left:16px;
+  padding:10px 16px;background:rgba(0,0,0,.65);
+  color:#fff;border:none;border-radius:999px;
+  cursor:pointer;z-index:90;font-size:14px
 }
-
-/* LAYOUT */
-#layout{
-  display:grid;
-  grid-template-columns:3fr 1.4fr;
-  height:100%;
-}
-@media(max-width:900px){
-  #layout{grid-template-columns:1fr}
-  #side{display:none}
-}
-
-/* PLAYER */
-#playerArea{
-  position:relative;
-  width:100%;
-  height:100%;
-}
-video, iframe.stream{
-  width:100%;
-  height:100%;
-  border:none;
-  background:#000;
-}
-
-/* FALLBACK */
+#layout{display:grid;grid-template-columns:3fr 1.4fr;height:100%}
+@media(max-width:900px){#layout{grid-template-columns:1fr}#side{display:none}}
+#playerArea{position:relative}
+video,iframe{width:100%;height:100%;border:none;background:#000}
 #iframeFallback{
-  display:none;
-  position:absolute;
-  inset:0;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  text-align:center;
-  padding:32px;
-  background:#000;
-  color:#aaa;
+  display:none;position:absolute;inset:0;
+  align-items:center;justify-content:center;
+  flex-direction:column;text-align:center;
+  background:#000;color:#aaa;padding:30px
 }
-#iframeFallback a{
-  margin-top:14px;
-  color:#e50914;
-  font-weight:700;
-  text-decoration:none;
-}
-
-/* LATERAL */
-#side{
-  background:#111;
-  padding:28px;
-  overflow-y:auto;
-}
-#titulo{font-size:26px;margin-bottom:6px}
-#meta{margin-bottom:12px;font-size:14px}
-
-.badge{
-  display:inline-block;
-  padding:4px 10px;
-  margin-right:6px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:600;
-  background:#222
-}
+#iframeFallback a{margin-top:12px;color:#e50914;font-weight:700}
+#side{background:#111;padding:28px;overflow-y:auto}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;background:#222}
 .badge.tipo{background:#e50914}
-.badge.categoria{background:#333}
-
-#desc{
-  font-size:14px;
-  line-height:1.5;
-  color:#ccc;
-  margin-bottom:18px
-}
-
-/* SÉRIES */
-#serieControls{display:none}
-.select-box{position:relative;margin-bottom:10px}
-.select-box::after{
-  content:"▾";
-  position:absolute;
-  right:14px;
-  top:50%;
-  transform:translateY(-50%);
-  color:#aaa;
-}
 select{
-  width:100%;
-  padding:12px 14px;
-  background:#1c1c1c;
-  border:1px solid #333;
-  border-radius:10px;
-  color:#fff;
-  appearance:none;
-}
-
-/* APOSTAS */
-#apostasBox{display:none;margin-top:18px}
-#apostasFrame{
-  width:100%;
-  height:380px;
-  border-radius:12px;
-  border:1px solid #222;
-  background:#000;
+  width:100%;padding:12px;margin-bottom:10px;
+  background:#1c1c1c;border:1px solid #333;
+  border-radius:10px;color:#fff
 }
 </style>
 </head>
@@ -137,44 +42,29 @@ select{
 <body>
 
 <div id="player">
-  <button id="close" onclick="voltar()">←</button>
+  <button id="close" onclick="sair()">←</button>
 
   <div id="layout">
-
-    <!-- PLAYER -->
     <div id="playerArea">
       <video id="video" controls autoplay playsinline></video>
-      <iframe id="streamIframe" class="stream" allowfullscreen></iframe>
+      <iframe id="iframe" allowfullscreen></iframe>
 
       <div id="iframeFallback">
-        ⚠️ Este conteúdo não permite reprodução externa.<br>
-        <a id="openExternal" target="_blank">Assistir na plataforma oficial</a>
+        ⚠️ Este conteúdo não permite reprodução externa
+        <a id="openExternal" target="_blank">Abrir na plataforma oficial</a>
       </div>
     </div>
 
-    <!-- LATERAL -->
     <div id="side">
       <h2 id="titulo"></h2>
       <div id="meta"></div>
       <p id="desc"></p>
 
-      <!-- SÉRIES -->
-      <div id="serieControls">
-        <div class="select-box">
-          <select id="selTemporada"></select>
-        </div>
-        <div class="select-box">
-          <select id="selEpisodio"></select>
-        </div>
-      </div>
-
-      <!-- APOSTAS -->
-      <div id="apostasBox">
-        <h3>📊 Apostas ao vivo</h3>
-        <iframe id="apostasFrame"></iframe>
+      <div id="serieControls" style="display:none">
+        <select id="selTemporada"></select>
+        <select id="selEpisodio"></select>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -185,112 +75,114 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ================= SESSÃO ================= */
-async function validarSessaoPlayer(){
-  const email = localStorage.getItem("usuario_email");
-  if (!email) location.replace("login.html");
-
-  const { data } = await sb
-    .from("usuarios")
-    .select("status, trial_expires_at")
-    .eq("email", email)
-    .maybeSingle();
-
-  if (!data || data.status === "bloqueado") {
-    localStorage.clear();
-    location.replace("login.html");
-  }
-
-  if (data.trial_expires_at && new Date() > new Date(data.trial_expires_at)) {
-    localStorage.clear();
-    location.replace("login.html");
-  }
-}
-
 /* ================= ITEM ================= */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
 
+/* ================= VARIÁVEIS ================= */
+let watchingId=null, heartbeat=null;
+let serie=[], episodioIndex=0;
+
 /* ================= ELEMENTOS ================= */
-const video = document.getElementById("video");
-const iframeStream = document.getElementById("streamIframe");
-const fallback = document.getElementById("iframeFallback");
-const openExternal = document.getElementById("openExternal");
-const serieControls = document.getElementById("serieControls");
-const selTemporada = document.getElementById("selTemporada");
-const selEpisodio = document.getElementById("selEpisodio");
-const apostasBox = document.getElementById("apostasBox");
-const apostasFrame = document.getElementById("apostasFrame");
+const video=document.getElementById("video");
+const iframe=document.getElementById("iframe");
+const fallback=document.getElementById("iframeFallback");
+const openExternal=document.getElementById("openExternal");
+const titulo=document.getElementById("titulo");
+const meta=document.getElementById("meta");
+const desc=document.getElementById("desc");
+const serieControls=document.getElementById("serieControls");
+const selTemporada=document.getElementById("selTemporada");
+const selEpisodio=document.getElementById("selEpisodio");
 
 /* ================= UI ================= */
-titulo.textContent = item.titulo || item.serie_nome || "Ao vivo";
-desc.textContent = item.descricao || "";
-meta.innerHTML = `
-  <span class="badge categoria">${item.categoria || "Geral"}</span>
+titulo.textContent=item.titulo||item.serie_nome||"Conteúdo";
+desc.textContent=item.descricao||"";
+meta.innerHTML=`
+  <span class="badge">${item.categoria||"Geral"}</span>
   <span class="badge tipo">${item.tipo}</span>
 `;
 
-/* ================= DETECÇÃO ================= */
+/* ================= FUNÇÕES REALTIME ================= */
+async function registrar(extra={}){
+  const email=localStorage.getItem("usuario_email");
+  if(!email) return;
+
+  if(watchingId){
+    await sb.from("assistindo_agora").delete().eq("id",watchingId);
+  }
+
+  const {data}=await sb.from("assistindo_agora").insert({
+    usuario_email:email,
+    item_id:item.id,
+    titulo:item.titulo||item.serie_nome,
+    tipo:item.tipo,
+    serie_nome:item.serie_nome||null,
+    temporada:extra.temporada||null,
+    episodio:extra.episodio||null,
+    status:"assistindo"
+  }).select().single();
+
+  watchingId=data.id;
+
+  clearInterval(heartbeat);
+  heartbeat=setInterval(()=>{
+    sb.from("assistindo_agora")
+      .update({updated_at:new Date()})
+      .eq("id",watchingId);
+  },15000);
+}
+
+async function atualizar(status){
+  if(!watchingId) return;
+  await sb.from("assistindo_agora")
+    .update({status,updated_at:new Date()})
+    .eq("id",watchingId);
+}
+
+async function remover(){
+  clearInterval(heartbeat);
+  if(!watchingId) return;
+  await sb.from("assistindo_agora").delete().eq("id",watchingId);
+  watchingId=null;
+}
+
+/* ================= PLAYER ================= */
 function isIframe(url){
   return !url.match(/\.(mp4|m3u8|webm)$/i);
 }
 
-/* ================= PLAYER ================= */
-if (isIframe(item.video_url)) {
+if(isIframe(item.video_url)){
   video.style.display="none";
-  iframeStream.src=item.video_url;
-
-  openExternal.href =
-    item.video_url.includes("embed")
-      ? item.video_url.replace("/embed/","/watch?v=")
-      : item.video_url;
-
+  iframe.src=item.video_url;
+  openExternal.href=item.video_url;
   setTimeout(()=>{
-    try{ iframeStream.contentWindow.location.href }
-    catch{ iframeStream.style.display="none"; fallback.style.display="flex" }
+    try{iframe.contentWindow.location.href}
+    catch{iframe.style.display="none";fallback.style.display="flex"}
   },2000);
 }else{
-  iframeStream.style.display="none";
+  iframe.style.display="none";
   video.src=item.video_url;
 }
 
-/* ================= AUTO FULLSCREEN + ROTATE ================= */
-const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+/* PLAY / PAUSE */
+video.addEventListener("play",()=>registrar());
+video.addEventListener("pause",()=>atualizar("pausado"));
 
+/* MOBILE FULLSCREEN */
 video.addEventListener("play",()=>{
-  if(!isMobile) return;
-
-  // ANDROID
-  if(video.requestFullscreen){
-    video.requestFullscreen().catch(()=>{});
-  }
-  // SAFARI iOS
-  else if(video.webkitEnterFullscreen){
-    video.webkitEnterFullscreen();
-  }
-
-  if(screen.orientation?.lock){
-    screen.orientation.lock("landscape").catch(()=>{});
-  }
+  if(video.requestFullscreen) video.requestFullscreen().catch(()=>{});
+  if(screen.orientation?.lock) screen.orientation.lock("landscape").catch(()=>{});
 });
 
-/* ================= JOGOS AO VIVO ================= */
-if(item.tipo==="jogos_ao_vivo"){
-  apostasBox.style.display="block";
-  apostasFrame.src=item.capa_url||"";
-}
-
 /* ================= SÉRIES ================= */
-let serie=[], episodioIndex=0;
-
 if(item.tipo==="serie") carregarSerie();
 
 async function carregarSerie(){
-  const { data } = await sb
-    .from("filmes")
+  const {data}=await sb.from("filmes")
     .select("*")
-    .eq("serie_nome", item.serie_nome)
+    .eq("serie_nome",item.serie_nome)
     .order("temporada")
     .order("episodio");
 
@@ -298,25 +190,16 @@ async function carregarSerie(){
   if(!serie.length) return;
 
   serieControls.style.display="block";
-  iframeStream.style.display="none";
-  fallback.style.display="none";
-
-  const temporadas=[...new Set(serie.map(e=>e.temporada))];
-  selTemporada.innerHTML=temporadas.map(t=>
-    `<option value="${t}">Temporada ${t}</option>`
-  ).join("");
-
+  const temps=[...new Set(serie.map(e=>e.temporada))];
+  selTemporada.innerHTML=temps.map(t=>`<option>${t}</option>`).join("");
   selTemporada.onchange=montarEpisodios;
-  selEpisodio.onchange=()=>{ episodioIndex=+selEpisodio.value; tocarEpisodio() };
-
+  selEpisodio.onchange=()=>{episodioIndex=+selEpisodio.value;tocarEpisodio()};
   montarEpisodios();
 }
 
 function montarEpisodios(){
   const eps=serie.filter(e=>e.temporada==selTemporada.value);
-  selEpisodio.innerHTML=eps.map((e,i)=>
-    `<option value="${i}">Episódio ${e.episodio}</option>`
-  ).join("");
+  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Ep ${e.episodio}</option>`).join("");
   episodioIndex=0;
   tocarEpisodio();
 }
@@ -326,21 +209,17 @@ function tocarEpisodio(){
   if(!ep) return;
   video.src=ep.video_url;
   video.play().catch(()=>{});
+  registrar({temporada:selTemporada.value,episodio:ep.episodio});
 }
 
-/* ================= VOLTAR ================= */
-function voltar(){
-  if(document.fullscreenElement){
-    document.exitFullscreen();
-  }
+/* ================= SAIR ================= */
+async function sair(){
+  await remover();
   video.pause();
-  video.src="";
-  iframeStream.src="";
   location.replace("index.html");
 }
 
-/* INIT */
-validarSessaoPlayer();
+window.addEventListener("beforeunload",remover);
 </script>
 
 </body>
