@@ -11,7 +11,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
-/* CONTAINER */
+/* CONTAINER PRINCIPAL */
 #player{position:fixed;inset:0;background:#000}
 
 /* BOTÃO FECHAR */
@@ -26,6 +26,7 @@ body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   border-radius:999px;
   cursor:pointer;
   z-index:90;
+  font-size:14px;
 }
 
 /* LAYOUT */
@@ -52,7 +53,7 @@ video, iframe.stream{
   background:#000;
 }
 
-/* BOTÃO GIRAR (MOBILE ONLY) */
+/* BOTÃO GIRAR — APENAS MOBILE/TABLET */
 #rotate{
   position:absolute;
   bottom:16px;
@@ -93,7 +94,7 @@ video, iframe.stream{
 }
 #titulo{font-size:26px;margin-bottom:6px}
 #meta{margin-bottom:12px;font-size:14px}
-#desc{font-size:14px;color:#ccc}
+#desc{font-size:14px;line-height:1.5;color:#ccc}
 </style>
 </head>
 
@@ -104,6 +105,7 @@ video, iframe.stream{
 
   <div id="layout">
 
+    <!-- PLAYER -->
     <div id="playerArea">
       <video id="video" controls autoplay playsinline></video>
       <iframe id="streamIframe" class="stream" allowfullscreen></iframe>
@@ -112,10 +114,11 @@ video, iframe.stream{
       <button id="rotate" onclick="girarTela()">⟳</button>
 
       <div id="iframeFallback">
-        ⚠️ Conteúdo não permite reprodução externa
+        ⚠️ Este conteúdo não permite reprodução externa
       </div>
     </div>
 
+    <!-- LATERAL -->
     <div id="side">
       <h2 id="titulo"></h2>
       <div id="meta"></div>
@@ -132,18 +135,41 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
+/* ================= SESSÃO ================= */
+async function validarSessaoPlayer(){
+  const email = localStorage.getItem("usuario_email");
+  if(!email) location.replace("login.html");
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("status, trial_expires_at")
+    .eq("email", email)
+    .maybeSingle();
+
+  if(!data || data.status==="bloqueado"){
+    localStorage.clear();
+    location.replace("login.html");
+  }
+
+  if(data.trial_expires_at && new Date()>new Date(data.trial_expires_at)){
+    localStorage.clear();
+    location.replace("login.html");
+  }
+}
+
 /* ================= ITEM ================= */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
 
-titulo.textContent = item.titulo || "Ao vivo";
-desc.textContent = item.descricao || "";
-meta.innerHTML = `<span>${item.tipo || ""}</span>`;
-
 /* ================= ELEMENTOS ================= */
 const video = document.getElementById("video");
 const iframeStream = document.getElementById("streamIframe");
+
+/* ================= UI ================= */
+titulo.textContent = item.titulo || "Ao vivo";
+desc.textContent = item.descricao || "";
+meta.innerHTML = `<span>${item.tipo || ""}</span>`;
 
 /* ================= PLAYER ================= */
 function isIframe(url){
@@ -164,7 +190,6 @@ const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 function girarTela(){
   if(!isMobile) return;
 
-  // se for iframe, não há controle total
   if(video.style.display !== "none"){
     entrarFullscreenVideo(video);
   }else{
@@ -176,11 +201,9 @@ function entrarFullscreenVideo(el){
   if(el.requestFullscreen){
     el.requestFullscreen();
   }else if(el.webkitEnterFullscreen){
-    // SAFARI iOS
-    el.webkitEnterFullscreen();
+    el.webkitEnterFullscreen(); // Safari iOS
   }
 
-  // Android / Chrome
   if(screen.orientation?.lock){
     screen.orientation.lock("landscape").catch(()=>{});
   }
@@ -202,6 +225,9 @@ function voltar(){
   iframeStream.src="";
   location.replace("index.html");
 }
+
+/* INIT */
+validarSessaoPlayer();
 </script>
 
 </body>
