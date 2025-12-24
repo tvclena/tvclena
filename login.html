@@ -4,148 +4,115 @@
 <meta charset="UTF-8">
 <title>Login | CLENA TV</title>
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{
   box-sizing:border-box;
-  font-family:Inter,Arial,sans-serif;
+  font-family:Inter, Arial, sans-serif;
 }
 
 html,body{
   margin:0;
   height:100%;
-  overflow:hidden;
-  background:#070707;
+  background:#000;
   color:#fff;
 }
 
-:root{
-  --card:#1b1b1e;
-  --input:#111;
-  --border:#2b2b2b;
-  --accent:#e50914;
-  --muted:#9ca3af;
-  --error:#f87171;
-}
-
-/* 🔥 BACKGROUND CINEMA */
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:
-    radial-gradient(60% 50% at 80% 20%, rgba(229,9,20,.18), transparent 60%),
-    radial-gradient(40% 40% at 20% 80%, rgba(255,255,255,.04), transparent 60%),
-    linear-gradient(180deg,#060606,#0b0b0c,#060606);
-  z-index:-3;
-}
-
-/* 🌫️ NOISE / GRAIN */
-body::after{
-  content:"";
-  position:fixed;
-  inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
-  pointer-events:none;
-  z-index:-2;
-}
-
-/* CENTRALIZA */
+/* FUNDO COM VINHETA */
 body{
   display:flex;
   align-items:center;
   justify-content:center;
+  background:
+    radial-gradient(circle at center, #141414 0%, #000 70%);
 }
 
 /* CARD */
 .container{
-  width:420px;
-  max-width:92%;
-  background:rgba(27,27,30,.78);
-  backdrop-filter:blur(18px);
-  padding:36px 34px 32px;
-  border-radius:20px;
-  box-shadow:
-    0 40px 90px rgba(0,0,0,.8),
-    0 0 0 1px rgba(255,255,255,.04);
+  width:360px;
+  padding:36px 34px 34px;
+  background:#111;
+  border-radius:18px;
+  box-shadow:0 30px 80px rgba(0,0,0,.85);
 }
 
-/* TITULOS */
-h1,h2{
-  margin:0 0 26px;
-  font-size:26px;
-  font-weight:700;
+/* LOGO */
+.logo{
+  font-size:32px;
+  font-weight:800;
+  margin-bottom:26px;
+  letter-spacing:.5px;
 }
 
-/* INPUTS */
-.group{margin-bottom:18px}
+.logo span{
+  color:#e50914;
+}
+
+/* CAMPOS */
+.group{
+  margin-bottom:18px;
+}
 
 label{
-  font-size:13px;
-  color:var(--muted);
-  margin-bottom:6px;
   display:block;
+  font-size:14px;
+  color:#bdbdbd;
+  margin-bottom:6px;
 }
 
 input{
   width:100%;
-  height:48px;
+  height:46px;
+  border-radius:10px;
+  border:none;
   padding:0 14px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:rgba(0,0,0,.55);
-  color:#fff;
   font-size:15px;
+  background:#e9eef6;
+  color:#000;
 }
 
 input:focus{
-  outline:none;
-  border-color:var(--accent);
-  box-shadow:0 0 0 2px rgba(229,9,20,.15);
+  outline:2px solid #e50914;
 }
 
 /* BOTÃO */
 .btn{
   width:100%;
-  height:52px;
+  height:50px;
+  margin-top:14px;
   border:none;
-  border-radius:14px;
-  background:linear-gradient(180deg,#ff1a24,#c60711);
+  border-radius:12px;
+  background:#e50914;
   color:#fff;
   font-size:16px;
   font-weight:700;
   cursor:pointer;
-  margin-top:10px;
-  box-shadow:0 10px 30px rgba(229,9,20,.35);
 }
 
-.btn.loading{
-  opacity:.7;
-  pointer-events:none;
+.btn:active{
+  transform:scale(.98);
 }
 
-/* LINKS */
+/* LINK */
 .link{
-  text-align:center;
   margin-top:18px;
+  text-align:center;
   font-size:14px;
-  text-decoration:underline;
+  color:#e5e5e5;
   cursor:pointer;
+  text-decoration:underline;
 }
 
-/* MENSAGENS */
+/* MENSAGEM */
 .msg{
-  margin-top:14px;
+  margin-top:12px;
   font-size:14px;
+  color:#facc15;
   min-height:18px;
 }
-
-.msg.error{color:var(--error)}
-.msg.warn{color:#facc15}
 
 /* MODAL */
 .modal{
@@ -155,30 +122,14 @@ input:focus{
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:10;
 }
 
 .modal-box{
-  width:420px;
-  max-width:92%;
-  background:rgba(27,27,30,.85);
-  backdrop-filter:blur(20px);
-  padding:36px 34px 32px;
-  border-radius:20px;
-  box-shadow:0 40px 90px rgba(0,0,0,.85);
-}
-
-/* LOADING */
-.loading-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.75);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:20;
-  font-size:18px;
-  font-weight:600;
+  width:360px;
+  padding:36px 34px 34px;
+  background:#111;
+  border-radius:18px;
+  box-shadow:0 30px 80px rgba(0,0,0,.9);
 }
 </style>
 </head>
@@ -187,7 +138,7 @@ input:focus{
 
 <!-- LOGIN -->
 <div class="container">
-  <h1>Entrar</h1>
+  <div class="logo">CLENA <span>TV</span></div>
 
   <div class="group">
     <label>Email</label>
@@ -199,15 +150,19 @@ input:focus{
     <input id="senha" type="password">
   </div>
 
-  <button id="btnLogin" class="btn">Entrar</button>
-  <div class="link" id="abrirCadastro">Criar conta</div>
-  <div class="msg warn" id="msgLogin"></div>
+  <button class="btn" id="btnLogin">Entrar</button>
+
+  <div class="link" id="abrirCadastro">
+    Ainda não tenho uma conta
+  </div>
+
+  <div class="msg" id="msgLogin"></div>
 </div>
 
 <!-- CADASTRO -->
 <div class="modal" id="modal">
   <div class="modal-box">
-    <h2>Criar conta</h2>
+    <div class="logo" style="font-size:26px">Criar conta</div>
 
     <div class="group">
       <label>Email</label>
@@ -234,14 +189,10 @@ input:focus{
       <input id="c_confirma" type="password">
     </div>
 
-    <button id="btnCadastro" class="btn">Cadastrar</button>
+    <button class="btn" id="btnCadastro">Cadastrar</button>
     <div class="link" id="fecharCadastro">Cancelar</div>
-    <div class="msg error" id="msgCadastro"></div>
+    <div class="msg" id="msgCadastro"></div>
   </div>
-</div>
-
-<div class="loading-overlay" id="loading">
-  Criando sua conta...
 </div>
 
 <script src="env.js"></script>
@@ -297,8 +248,6 @@ btnCadastro.onclick=async()=>{
     return;
   }
 
-  loading.style.display="flex";
-
   const {error}=await sb.auth.signUp({
     email:c_email.value.trim(),
     password:c_senha.value,
@@ -310,17 +259,12 @@ btnCadastro.onclick=async()=>{
     }
   });
 
-  loading.style.display="none";
-
   if(error){
-    msgCadastro.textContent =
-      error.message.toLowerCase().includes("already")
-      ? "Este email já está cadastrado"
-      : "Erro ao criar conta. Tente novamente";
+    msgCadastro.textContent="Erro ao criar conta";
     return;
   }
 
-  msgCadastro.style.color="#4ade80";
+  msgCadastro.style.color="#22c55e";
   msgCadastro.textContent="Conta criada! Verifique seu email.";
 };
 </script>
