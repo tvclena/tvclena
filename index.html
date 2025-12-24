@@ -692,7 +692,7 @@ body.search-open{
     >
   </div>
 
-  <div id="perfilBtn" onclick="abrirPerfil()"><span>US</span></div>
+<div id="perfilBtn" onclick="perfilAbrir()"><span>US</span></div>
 
   <!-- mobile -->
   <div id="searchBtn" onclick="toggleSearch()">🔍</div>
@@ -791,57 +791,150 @@ body.search-open{
 </div>
 
 
-<div id="perfilOverlay">
-  <div id="perfilPopup" class="perfil-premium">
+<!-- ================= PERFIL MODULAR NOVO ================= -->
+<div id="perfilOverlayNovo">
+  <div id="perfilPopupNovo">
 
-    <!-- AVATAR -->
-    <div class="avatar-box">
-      <img id="avatarImg" src="" alt="Avatar">
-      <label class="avatar-upload">
+    <div class="perfil-col avatar-col">
+      <img id="perfilAvatarNovo" src="" alt="Avatar">
+      <label class="avatar-upload-novo">
         Alterar foto
-        <input type="file" accept="image/*" onchange="uploadAvatar(this)">
+        <input type="file" accept="image/*" onchange="perfilUploadAvatar(this)">
       </label>
     </div>
 
-    <!-- NOME -->
-    <input
-      id="nomeUsuario"
-      placeholder="Nome de exibição"
-      maxlength="40"
-    >
+    <div class="perfil-col dados-col">
+      <h3>Meu Perfil</h3>
 
-    <!-- USERNAME -->
-    <div class="username-box">
-      <span>@</span>
-      <input
-        id="username"
-        placeholder="usuario"
-        oninput="validarUsername()"
-      >
+      <label>Nome</label>
+      <input id="perfilNomeNovo">
+
+      <label>Usuário</label>
+      <div class="username-box-novo">
+        <span>@</span>
+        <input id="perfilUsernameNovo" oninput="perfilValidarUsername()">
+      </div>
+      <small id="perfilUsernameStatus"></small>
+
+      <div class="perfil-info-novo">
+        <div><strong>Email:</strong> <span id="perfilEmailNovo"></span></div>
+        <div><strong>Plano:</strong> <span id="perfilPlanoNovo"></span></div>
+        <div><strong>Valor:</strong> <span id="perfilValorNovo"></span></div>
+        <div><strong>Vencimento:</strong> <span id="perfilVencimentoNovo"></span></div>
+      </div>
+
+      <div class="perfil-acoes">
+        <button class="btn-salvar" onclick="perfilSalvar()">Salvar</button>
+        <button class="btn-sair" onclick="logout()">Sair</button>
+        <button class="btn-fechar" onclick="perfilFechar()">Fechar</button>
+      </div>
     </div>
-    <small id="usernameStatus"></small>
-
-    <!-- INFO -->
-    <div class="perfil-info">
-      <div><strong>Email:</strong> <span id="perfilEmail"></span></div>
-      <div><strong>Plano:</strong> <span id="perfilPlano"></span></div>
-      <div><strong>Valor:</strong> <span id="perfilValor"></span></div>
-      <div><strong>Vencimento:</strong> <span id="perfilVencimento"></span></div>
-    </div>
-
-    <button onclick="salvarPerfil()">Salvar alterações</button>
-    <button id="sair" onclick="logout()">Sair</button>
-    <button id="fecharPerfil" onclick="fecharPerfil()">Fechar</button>
 
   </div>
 </div>
 
+
+
+
+
+
+
+
+  
 <script src="env.js"></script>
 <script>
 const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
 );
+/* ================= PERFIL NOVO ISOLADO ================= */
+let perfilUserId = null;
+
+const pAvatar = document.getElementById("perfilAvatarNovo");
+const pNome = document.getElementById("perfilNomeNovo");
+const pUser = document.getElementById("perfilUsernameNovo");
+const pStatus = document.getElementById("perfilUsernameStatus");
+const pEmail = document.getElementById("perfilEmailNovo");
+const pPlano = document.getElementById("perfilPlanoNovo");
+const pValor = document.getElementById("perfilValorNovo");
+const pVenc = document.getElementById("perfilVencimentoNovo");
+
+function perfilAbrir(){
+  document.getElementById("perfilOverlayNovo").style.display="flex";
+  perfilCarregar();
+}
+function perfilFechar(){
+  document.getElementById("perfilOverlayNovo").style.display="none";
+}
+
+async function perfilCarregar(){
+  const email = localStorage.getItem("usuario_email");
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("*")
+    .eq("email", email)
+    .single();
+
+  if(!data) return;
+
+  perfilUserId = data.id;
+
+  pEmail.textContent = data.email;
+  pNome.value = data.nome_usuario || "";
+  pUser.value = data.username || "";
+  pPlano.textContent = data.tipo_assinatura || "-";
+  pValor.textContent = data.valor_assinatura
+    ? data.valor_assinatura.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+    : "-";
+  pVenc.textContent = data.vencimento_assinatura
+    ? new Date(data.vencimento_assinatura).toLocaleDateString("pt-BR")
+    : "-";
+
+  pAvatar.src =
+    data.avatar_url ||
+    `https://ui-avatars.com/api/?name=${(pNome.value||"U")[0]}&background=e50914&color=fff`;
+}
+
+async function perfilValidarUsername(){
+  const u = pUser.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
+  pUser.value = u;
+
+  if(u.length < 3){
+    pStatus.textContent="Muito curto";
+    pStatus.style.color="#ff5555";
+    return false;
+  }
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("id")
+    .eq("username", u)
+    .neq("id", perfilUserId);
+
+  if(data.length){
+    pStatus.textContent="Já em uso";
+    pStatus.style.color="#ff5555";
+    return false;
+  }
+
+  pStatus.textContent="Disponível";
+  pStatus.style.color="#00ff99";
+  return true;
+}
+
+async function perfilSalvar(){
+  if(!(await perfilValidarUsername())) return;
+
+  await sb.from("usuarios")
+    .update({
+      nome_usuario: pNome.value,
+      username: pUser.value
+    })
+    .eq("id", perfilUserId);
+
+  perfilFechar();
+}
 
 
 
@@ -1146,10 +1239,7 @@ function fechar(){
   document.getElementById("perfilBtn").style.display="block";
 }
 
-function abrirPerfil(){
-  carregarPerfil();
-  perfilOverlay.style.display="flex";
-}
+
 
 function fecharPerfil(){perfilOverlay.style.display="none";}
 function logout(){
@@ -1316,94 +1406,7 @@ async function validarSessao() {
 
 
 
-  async function carregarPerfil() {
-  const email = localStorage.getItem("usuario_email");
 
-  const { data, error } = await sb
-    .from("usuarios")
-    .select("*")
-    .eq("email", email)
-    .single();
-
-  if (error || !data) {
-    console.error(error);
-    return;
-  }
-
-  // 🔑 DEFINE O userId (ESSENCIAL)
-  userId = data.id;
-
-  // dados básicos
-  nomeUsuario.value = data.nome_usuario || "";
-  usernameInput.value = data.username || "";
-  perfilEmail.textContent = data.email;
-  perfilPlano.textContent = data.plano || "-";
-  perfilValor.textContent = formatarReal(data.valor);
-  perfilVencimento.textContent = formatarData(data.trial_expires_at);
-
-}
-
-async function uploadAvatar(input) {
-  const file = input.files[0];
-  if (!file || !userId) return;
-
-  if (!file.type.startsWith("image/")) {
-    alert("Arquivo inválido");
-    return;
-  }
-
-  // 🔧 redimensiona
-  const img = new Image();
-  img.src = URL.createObjectURL(file);
-  await new Promise(r => img.onload = r);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0, 512, 512);
-
-  const blob = await new Promise(r =>
-    canvas.toBlob(r, "image/jpeg", 0.9)
-  );
-
-  URL.revokeObjectURL(img.src);
-
-  // 🔐 converte para base64
-  const base64 = await new Promise(r => {
-    const reader = new FileReader();
-    reader.onload = () => r(reader.result.split(",")[1]);
-    reader.readAsDataURL(blob);
-  });
-
-  const filename = `${userId}_${Date.now()}.jpg`;
-
-  // 🚀 envia para a API
-  const res = await fetch("/api/upload-avatar", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      fileBase64: base64,
-      filename
-    })
-  });
-
-  const data = await res.json();
-
-  if (!data.url) {
-    alert("Erro ao enviar avatar");
-    return;
-  }
-
-  // 💾 salva no Supabase
-  await sb
-    .from("usuarios")
-    .update({ avatar_url: data.url })
-    .eq("id", userId);
-
-  avatarImg.src = data.url;
-  await carregarAvatarHeader();
-}
 
 
 
@@ -1433,44 +1436,7 @@ async function carregarAvatarHeader() {
 
 
   
-async function validarUsername() {
-  const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
-  usernameInput.value = u;
 
-  if (u.length < 3) {
-    usernameStatus.textContent = "Muito curto";
-    usernameStatus.style.color = "#ff5555";
-    return false;
-  }
-
-  const { data } = await sb
-    .from("usuarios")
-    .select("id")
-    .eq("username", u)
-    .neq("id", userId);
-
-  if (data.length) {
-    usernameStatus.textContent = "Já em uso";
-    usernameStatus.style.color = "#ff5555";
-    return false;
-  }
-
-  usernameStatus.textContent = "Disponível";
-  usernameStatus.style.color = "#00ff99";
-  return true;
-}
-async function salvarPerfil() {
-  if (!(await validarUsername())) return;
-
-  await sb.from("usuarios")
-    .update({
-      nome_usuario: nomeUsuario.value,
-      username: usernameInput.value
-    })
-    .eq("id", userId);
-
-  fecharPerfil();
-}
 
 
 /* ================= PERFIL PREMIUM ================= */
