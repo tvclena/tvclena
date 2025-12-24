@@ -1438,8 +1438,9 @@ function fechar(){
 function logout(){
   localStorage.clear();
   sessionStorage.clear();
-  location.replace("login.html");
+  location.replace("https://tvclena.github.io/cadastro/index.html");
 }
+
 
 function irProximoEpisodio(){
   btnProximo.style.display = "none";
@@ -1546,10 +1547,11 @@ if ("serviceWorker" in navigator) {
 async function validarSessao() {
   const email = localStorage.getItem("usuario_email");
 
-  if (!email) {
-    location.replace("login.html");
-    return false;
-  }
+ if (!email) {
+  location.replace("https://tvclena.github.io/cadastro/index.html");
+  return false;
+}
+
 
   const { data, error } = await sb
     .from("usuarios")
@@ -1557,11 +1559,12 @@ async function validarSessao() {
     .eq("email", email)
     .maybeSingle();
 
-  if (error || !data) {
-    localStorage.clear();
-    location.replace("login.html");
-    return false;
-  }
+if (error || !data) {
+  localStorage.clear();
+  location.replace("https://tvclena.github.io/cadastro/index.html");
+  return false;
+}
+
 
   const agora = new Date();
   const expira = new Date(data.trial_expires_at);
@@ -1587,11 +1590,12 @@ async function validarSessao() {
     return false;
   }
 
-  if (agora > expira && data.status !== "aprovado") {
-    localStorage.clear();
-    location.replace("login.html");
-    return false;
-  }
+ if (agora > expira && data.status !== "aprovado") {
+  localStorage.clear();
+  location.replace("https://tvclena.github.io/cadastro/index.html");
+  return false;
+}
+
 
   usuario = { email };
   return true;
