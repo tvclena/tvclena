@@ -11,7 +11,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
-/* CONTAINER PRINCIPAL */
+/* CONTAINER */
 #player{position:fixed;inset:0;background:#000}
 
 /* BOTÃO FECHAR */
@@ -53,25 +53,6 @@ video, iframe.stream{
   background:#000;
 }
 
-/* BOTÃO GIRAR — APENAS MOBILE/TABLET */
-#rotate{
-  position:absolute;
-  bottom:16px;
-  right:16px;
-  padding:12px 14px;
-  background:rgba(0,0,0,.65);
-  color:#fff;
-  border:none;
-  border-radius:999px;
-  cursor:pointer;
-  z-index:80;
-  font-size:16px;
-  display:none;
-}
-@media(max-width:900px){
-  #rotate{display:block}
-}
-
 /* FALLBACK */
 #iframeFallback{
   display:none;
@@ -109,9 +90,6 @@ video, iframe.stream{
     <div id="playerArea">
       <video id="video" controls autoplay playsinline></video>
       <iframe id="streamIframe" class="stream" allowfullscreen></iframe>
-
-      <!-- BOTÃO GIRAR -->
-      <button id="rotate" onclick="girarTela()">⟳</button>
 
       <div id="iframeFallback">
         ⚠️ Este conteúdo não permite reprodução externa
@@ -184,36 +162,25 @@ if(isIframe(item.video_url)){
   video.src=item.video_url;
 }
 
-/* ================= GIRAR TELA (FUNCIONAL) ================= */
+/* ================= AUTO ROTATE AO PLAY ================= */
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-function girarTela(){
+video.addEventListener("play",()=>{
   if(!isMobile) return;
 
-  if(video.style.display !== "none"){
-    entrarFullscreenVideo(video);
-  }else{
-    entrarFullscreenIframe(iframeStream);
+  // ANDROID / CHROME
+  if(video.requestFullscreen){
+    video.requestFullscreen().catch(()=>{});
   }
-}
-
-function entrarFullscreenVideo(el){
-  if(el.requestFullscreen){
-    el.requestFullscreen();
-  }else if(el.webkitEnterFullscreen){
-    el.webkitEnterFullscreen(); // Safari iOS
+  // SAFARI iOS
+  else if(video.webkitEnterFullscreen){
+    video.webkitEnterFullscreen();
   }
 
   if(screen.orientation?.lock){
     screen.orientation.lock("landscape").catch(()=>{});
   }
-}
-
-function entrarFullscreenIframe(el){
-  if(el.requestFullscreen){
-    el.requestFullscreen();
-  }
-}
+});
 
 /* ================= VOLTAR ================= */
 function voltar(){
