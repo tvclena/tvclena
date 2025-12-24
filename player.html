@@ -9,32 +9,149 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
+html,body{
+  background:#000;
+  color:#fff;
+  font-family:Inter,Arial,sans-serif;
+  height:100%;
+  overflow:hidden;
+  overscroll-behavior:none;
+  touch-action:none;
+}
+
 #player{position:fixed;inset:0;background:#000}
-#close{
-  position:absolute;top:16px;left:16px;
-  padding:10px 16px;background:rgba(0,0,0,.65);
-  color:#fff;border:none;border-radius:999px;
-  cursor:pointer;z-index:90;font-size:14px
+
+#layout{
+  display:grid;
+  grid-template-columns:3fr 1.4fr;
+  height:100%;
 }
-#layout{display:grid;grid-template-columns:3fr 1.4fr;height:100%}
-@media(max-width:900px){#layout{grid-template-columns:1fr}#side{display:none}}
-#playerArea{position:relative}
-video,iframe{width:100%;height:100%;border:none;background:#000}
+
+@media(max-width:900px){
+  #layout{grid-template-columns:1fr}
+  #side{display:none}
+}
+
+#playerArea{
+  position:relative;
+  width:100%;
+  height:100%;
+  background:#000;
+}
+
+video,iframe{
+  width:100%;
+  height:100%;
+  background:#000;
+  border:none;
+}
+
 #iframeFallback{
-  display:none;position:absolute;inset:0;
-  align-items:center;justify-content:center;
-  flex-direction:column;text-align:center;
-  background:#000;color:#aaa;padding:30px
+  display:none;
+  position:absolute;
+  inset:0;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+  color:#aaa;
+  padding:30px;
 }
-#iframeFallback a{margin-top:12px;color:#e50914;font-weight:700}
-#side{background:#111;padding:28px;overflow-y:auto}
-.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;background:#222}
+
+#iframeFallback a{
+  margin-top:12px;
+  color:#e50914;
+  font-weight:700;
+}
+
+/* ===== CONTROLES ===== */
+#controls{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  pointer-events:none;
+}
+
+#controls button{
+  pointer-events:auto;
+  background:rgba(0,0,0,.65);
+  border:none;
+  color:#fff;
+  border-radius:50%;
+  cursor:pointer;
+}
+
+#btnBack{
+  position:absolute;
+  top:16px;
+  left:16px;
+  padding:12px 16px;
+  font-size:16px;
+}
+
+#btnFull{
+  position:absolute;
+  top:16px;
+  right:16px;
+  padding:12px;
+  font-size:16px;
+}
+
+#centerControls{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+#btnPlay{
+  font-size:30px;
+  padding:20px 24px;
+}
+
+#progressContainer{
+  height:6px;
+  background:rgba(255,255,255,.25);
+  margin:14px;
+  border-radius:999px;
+  overflow:hidden;
+  pointer-events:auto;
+}
+
+#progress{
+  height:100%;
+  width:0%;
+  background:#e50914;
+}
+
+/* ===== LATERAL ===== */
+#side{
+  background:#111;
+  padding:28px;
+  overflow-y:auto;
+}
+
+.badge{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  background:#222;
+  margin-right:6px;
+}
+
 .badge.tipo{background:#e50914}
+
 select{
-  width:100%;padding:12px;margin-bottom:10px;
-  background:#1c1c1c;border:1px solid #333;
-  border-radius:10px;color:#fff
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  background:#1c1c1c;
+  border:1px solid #333;
+  border-radius:10px;
+  color:#fff;
 }
 </style>
 </head>
@@ -42,16 +159,28 @@ select{
 <body>
 
 <div id="player">
-  <button id="close" onclick="sair()">←</button>
-
   <div id="layout">
     <div id="playerArea">
-      <video id="video" controls autoplay playsinline></video>
+      <video id="video" autoplay playsinline></video>
       <iframe id="iframe" allowfullscreen></iframe>
 
       <div id="iframeFallback">
         ⚠️ Este conteúdo não permite reprodução externa
         <a id="openExternal" target="_blank">Abrir na plataforma oficial</a>
+      </div>
+
+      <!-- CONTROLES -->
+      <div id="controls">
+        <button id="btnBack">←</button>
+        <button id="btnFull">⛶</button>
+
+        <div id="centerControls">
+          <button id="btnPlay">▶</button>
+        </div>
+
+        <div id="progressContainer">
+          <div id="progress"></div>
+        </div>
       </div>
     </div>
 
@@ -69,34 +198,33 @@ select{
 </div>
 
 <script>
-/* ================= SUPABASE ================= */
+/* ===== SUPABASE ===== */
 const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ================= ITEM ================= */
+/* ===== ITEM ===== */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
 
-/* ================= VARIÁVEIS ================= */
-let watchingId=null, heartbeat=null;
-let serie=[], episodioIndex=0;
-
-/* ================= ELEMENTOS ================= */
+/* ===== ELEMENTOS ===== */
 const video=document.getElementById("video");
 const iframe=document.getElementById("iframe");
 const fallback=document.getElementById("iframeFallback");
 const openExternal=document.getElementById("openExternal");
+const btnPlay=document.getElementById("btnPlay");
+const btnFull=document.getElementById("btnFull");
+const btnBack=document.getElementById("btnBack");
+const progress=document.getElementById("progress");
+const progressContainer=document.getElementById("progressContainer");
+
 const titulo=document.getElementById("titulo");
 const meta=document.getElementById("meta");
 const desc=document.getElementById("desc");
-const serieControls=document.getElementById("serieControls");
-const selTemporada=document.getElementById("selTemporada");
-const selEpisodio=document.getElementById("selEpisodio");
 
-/* ================= UI ================= */
+/* ===== UI ===== */
 titulo.textContent=item.titulo||item.serie_nome||"Conteúdo";
 desc.textContent=item.descricao||"";
 meta.innerHTML=`
@@ -104,51 +232,7 @@ meta.innerHTML=`
   <span class="badge tipo">${item.tipo}</span>
 `;
 
-/* ================= FUNÇÕES REALTIME ================= */
-async function registrar(extra={}){
-  const email=localStorage.getItem("usuario_email");
-  if(!email) return;
-
-  if(watchingId){
-    await sb.from("assistindo_agora").delete().eq("id",watchingId);
-  }
-
-  const {data}=await sb.from("assistindo_agora").insert({
-    usuario_email:email,
-    item_id:item.id,
-    titulo:item.titulo||item.serie_nome,
-    tipo:item.tipo,
-    serie_nome:item.serie_nome||null,
-    temporada:extra.temporada||null,
-    episodio:extra.episodio||null,
-    status:"assistindo"
-  }).select().single();
-
-  watchingId=data.id;
-
-  clearInterval(heartbeat);
-  heartbeat=setInterval(()=>{
-    sb.from("assistindo_agora")
-      .update({updated_at:new Date()})
-      .eq("id",watchingId);
-  },15000);
-}
-
-async function atualizar(status){
-  if(!watchingId) return;
-  await sb.from("assistindo_agora")
-    .update({status,updated_at:new Date()})
-    .eq("id",watchingId);
-}
-
-async function remover(){
-  clearInterval(heartbeat);
-  if(!watchingId) return;
-  await sb.from("assistindo_agora").delete().eq("id",watchingId);
-  watchingId=null;
-}
-
-/* ================= PLAYER ================= */
+/* ===== PLAYER ===== */
 function isIframe(url){
   return !url.match(/\.(mp4|m3u8|webm)$/i);
 }
@@ -159,67 +243,55 @@ if(isIframe(item.video_url)){
   openExternal.href=item.video_url;
   setTimeout(()=>{
     try{iframe.contentWindow.location.href}
-    catch{iframe.style.display="none";fallback.style.display="flex"}
+    catch{
+      iframe.style.display="none";
+      fallback.style.display="flex";
+    }
   },2000);
 }else{
   iframe.style.display="none";
   video.src=item.video_url;
 }
 
-/* PLAY / PAUSE */
-video.addEventListener("play",()=>registrar());
-video.addEventListener("pause",()=>atualizar("pausado"));
+/* ===== CONTROLES ===== */
+btnPlay.onclick=()=>{
+  video.paused ? video.play() : video.pause();
+};
 
-/* MOBILE FULLSCREEN */
 video.addEventListener("play",()=>{
-  if(video.requestFullscreen) video.requestFullscreen().catch(()=>{});
-  if(screen.orientation?.lock) screen.orientation.lock("landscape").catch(()=>{});
+  btnPlay.textContent="⏸";
+  document.body.requestFullscreen?.().catch(()=>{});
+  screen.orientation?.lock("landscape").catch(()=>{});
 });
 
-/* ================= SÉRIES ================= */
-if(item.tipo==="serie") carregarSerie();
+video.addEventListener("pause",()=>{
+  btnPlay.textContent="▶";
+});
 
-async function carregarSerie(){
-  const {data}=await sb.from("filmes")
-    .select("*")
-    .eq("serie_nome",item.serie_nome)
-    .order("temporada")
-    .order("episodio");
+btnFull.onclick=()=>{
+  document.body.requestFullscreen?.().catch(()=>{});
+};
 
-  serie=data||[];
-  if(!serie.length) return;
-
-  serieControls.style.display="block";
-  const temps=[...new Set(serie.map(e=>e.temporada))];
-  selTemporada.innerHTML=temps.map(t=>`<option>${t}</option>`).join("");
-  selTemporada.onchange=montarEpisodios;
-  selEpisodio.onchange=()=>{episodioIndex=+selEpisodio.value;tocarEpisodio()};
-  montarEpisodios();
-}
-
-function montarEpisodios(){
-  const eps=serie.filter(e=>e.temporada==selTemporada.value);
-  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Ep ${e.episodio}</option>`).join("");
-  episodioIndex=0;
-  tocarEpisodio();
-}
-
-function tocarEpisodio(){
-  const ep=serie.filter(e=>e.temporada==selTemporada.value)[episodioIndex];
-  if(!ep) return;
-  video.src=ep.video_url;
-  video.play().catch(()=>{});
-  registrar({temporada:selTemporada.value,episodio:ep.episodio});
-}
-
-/* ================= SAIR ================= */
-async function sair(){
-  await remover();
+btnBack.onclick=()=>{
   video.pause();
   location.replace("index.html");
-}
+};
 
-window.addEventListener("beforeunload",remover);
+/* ===== PROGRESSO ===== */
+video.addEventListener("timeupdate",()=>{
+  if(video.duration){
+    progress.style.width=(video.currentTime/video.duration)*100+"%";
+  }
+});
+
+progressContainer.addEventListener("touchstart",e=>e.stopPropagation(),{passive:false});
+progressContainer.addEventListener("touchmove",e=>{
+  e.preventDefault();
+  const rect=progressContainer.getBoundingClientRect();
+  const x=e.touches[0].clientX-rect.left;
+  const percent=Math.max(0,Math.min(1,x/rect.width));
+  video.currentTime=video.duration*percent;
+},{passive:false});
 </script>
 
 </body>
