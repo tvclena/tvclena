@@ -842,6 +842,9 @@ const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
 );
+const BUNNY_STORAGE = "https://br.storage.bunnycdn.com/sessao99";
+const BUNNY_PULL = "https://sessao99.b-cdn.net";
+const BUNNY_ACCESS_KEY = "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17";
 
 
 let dados=[], heroItem=null, filtro='todos', usuario=null;
@@ -1359,17 +1362,19 @@ async function uploadAvatar(input) {
     return;
   }
 
-  // 🔹 redimensiona para 512x512
+  // 🔹 cria imagem
   const img = new Image();
   img.src = URL.createObjectURL(file);
   await new Promise(r => img.onload = r);
 
+  // 🔹 canvas 512x512
+  const size = 512;
   const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 512;
+  canvas.width = size;
+  canvas.height = size;
 
   const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0, 512, 512);
+  ctx.drawImage(img, 0, 0, size, size);
 
   const blob = await new Promise(r =>
     canvas.toBlob(r, "image/jpeg", 0.9)
@@ -1377,33 +1382,31 @@ async function uploadAvatar(input) {
 
   URL.revokeObjectURL(img.src);
 
-  // 🔹 nome único
-  const fileName = `${userId}.jpg`;
+  // 🔹 nome único (igual ao que funciona)
+  const nome = `${userId}_${Date.now()}.jpg`;
 
-  // 🔹 upload no Supabase Storage
-  const { error } = await sb
-    .storage
-    .from("avatars")
-    .upload(fileName, blob, {
-      upsert: true,
-      contentType: "image/jpeg"
-    });
+  // 🔹 endpoint Bunny
+  const uploadUrl = `${BUNNY_STORAGE}/avatars/${nome}`;
 
-  if (error) {
-    console.error(error);
+  const res = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "AccessKey": BUNNY_ACCESS_KEY,
+      "Content-Type": "application/octet-stream"
+    },
+    body: blob
+  });
+
+  if (!res.ok) {
+    console.error("Erro Bunny:", res.status);
     alert("Erro ao enviar avatar");
     return;
   }
 
   // 🔹 URL pública
-  const { data } = sb
-    .storage
-    .from("avatars")
-    .getPublicUrl(fileName);
+  const avatarUrl = `${BUNNY_PULL}/avatars/${nome}`;
 
-  const avatarUrl = data.publicUrl + "?v=" + Date.now();
-
-  // 🔹 salva no usuário
+  // 🔹 salva no Supabase
   await sb
     .from("usuarios")
     .update({ avatar_url: avatarUrl })
@@ -1411,8 +1414,32 @@ async function uploadAvatar(input) {
 
   // 🔹 atualiza UI
   avatarImg.src = avatarUrl;
-
+  await carregarAvatarHeader();
 }
+
+async function carregarAvatarHeader() {
+  const email = localStorage.getItem("usuario_email");
+  if (!email) return;
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("avatar_url, nome_usuario")
+    .eq("email", email)
+    .single();
+
+  const avatarUrl =
+    data?.avatar_url ||
+    `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
+
+  perfilBtn.innerHTML = `
+    <img src="${avatarUrl}"
+         style="width:36px;height:36px;border-radius:50%;object-fit:cover">
+  `;
+}
+
+
+
+  
 async function validarUsername() {
   const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
   usernameInput.value = u;
