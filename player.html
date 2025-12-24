@@ -2,42 +2,39 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>CLENA • Jogos ao Vivo</title>
+<title>Sessão • Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-:root{
-  --bg:#0b0b0c;
-  --panel:#111;
-  --card:#1b1b1f;
-  --accent:#e50914;
-  --text:#fff;
-  --muted:#9a9a9a;
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
+
+#player{position:fixed;inset:0;background:#000}
+
+/* FECHAR */
+#close{
+  position:absolute;top:16px;left:16px;
+  padding:10px 16px;
+  background:rgba(0,0,0,.6);
+  color:#fff;border:none;border-radius:999px;
+  cursor:pointer;z-index:50
 }
 
-*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
-
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  height:100vh;
-  overflow:hidden;
-}
-
-/* ================= LAYOUT ================= */
-main{
+/* LAYOUT */
+#layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
-  height:100vh;
+  height:100%;
 }
 @media(max-width:900px){
-  main{grid-template-columns:1fr}
+  #layout{grid-template-columns:1fr}
 }
 
-/* ================= PLAYER ================= */
+/* PLAYER */
 #playerArea{
   position:relative;
   background:#000;
@@ -46,62 +43,33 @@ main{
   justify-content:center;
 }
 
-/* PLACEHOLDER */
-#playerPlaceholder{
-  text-align:center;
-}
-#playerPlaceholder h2{
-  font-size:22px;
-  margin-bottom:8px;
-}
-#playerPlaceholder p{
-  color:var(--muted);
-  margin-bottom:20px;
+video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  background:#000;
 }
 
-/* BOTÃO */
+/* PLACEHOLDER JOGO */
+#livePlaceholder{
+  text-align:center;
+}
+#livePlaceholder h2{margin-bottom:6px}
+#livePlaceholder p{color:#aaa;margin-bottom:18px}
+
 .btn{
-  padding:14px 26px;
+  padding:14px 28px;
   border-radius:999px;
-  background:var(--accent);
+  background:#e50914;
   color:#fff;
-  border:none;
   font-weight:700;
-  font-size:15px;
+  border:none;
   cursor:pointer;
 }
 
-/* ================= OVERLAY ================= */
-#ytOverlay{
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.92);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:10;
-}
-
-#ytBox{
-  background:var(--card);
-  padding:34px;
-  border-radius:20px;
-  max-width:420px;
-  width:90%;
-  text-align:center;
-}
-
-#ytBox h2{
-  margin-bottom:8px;
-}
-#ytBox p{
-  color:var(--muted);
-  margin-bottom:22px;
-}
-
-/* ================= SIDE ================= */
+/* LATERAL */
 #side{
-  background:linear-gradient(180deg,#111,#0c0c0e);
+  background:#111;
   padding:28px;
   overflow-y:auto;
 }
@@ -109,34 +77,32 @@ main{
 .badge{
   display:inline-block;
   padding:4px 10px;
+  margin-right:6px;
   border-radius:999px;
   font-size:12px;
   font-weight:600;
-  background:#222;
-  margin-right:6px;
+  background:#222
 }
-.badge.live{background:var(--accent)}
+.badge.live{background:#e50914}
 
-#title{
-  font-size:26px;
-  margin:10px 0 6px;
-}
+#titulo{font-size:26px;margin:10px 0 6px}
+#desc{font-size:14px;color:#aaa;margin-bottom:18px}
 
-#desc{
-  color:var(--muted);
-  font-size:14px;
-  margin-bottom:20px;
+/* CONTROLES SÉRIE */
+#serieControls{display:none;margin-top:14px}
+.select-box{position:relative;margin-bottom:10px}
+.select-box::after{
+  content:"▾";position:absolute;right:14px;top:50%;
+  transform:translateY(-50%);color:#aaa
 }
-
-/* ================= APOSTAS ================= */
-#betBox{
-  margin-top:18px;
-}
-#betBox h3{
-  margin-bottom:10px;
+select{
+  width:100%;padding:12px 14px;
+  background:#1c1c1c;border:1px solid #333;
+  border-radius:10px;color:#fff;appearance:none
 }
 
-#betFrame{
+/* IFRAME LATERAL (video_url) */
+#sideFrame{
   width:100%;
   height:380px;
   border-radius:14px;
@@ -148,81 +114,158 @@ main{
 
 <body>
 
-<main>
+<div id="player">
+<button id="close" onclick="voltar()">←</button>
 
-  <!-- PLAYER -->
-  <section id="playerArea">
+<div id="layout">
 
-    <div id="playerPlaceholder">
-      <div style="font-size:40px;margin-bottom:10px">🔴</div>
-      <h2>Jogo ao vivo</h2>
-      <p>Este evento é transmitido no YouTube</p>
-      <button class="btn" onclick="abrirOverlay()">▶ Assistir agora</button>
+<!-- PLAYER PRINCIPAL -->
+<div id="playerArea">
+
+  <video id="video" controls autoplay playsinline></video>
+
+  <div id="livePlaceholder" style="display:none">
+    <div style="font-size:40px;margin-bottom:10px">🔴</div>
+    <h2>Jogo ao vivo</h2>
+    <p>Transmissão disponível</p>
+    <button class="btn" onclick="abrirPopup()">▶ Assistir agora</button>
+  </div>
+
+</div>
+
+<!-- LATERAL -->
+<div id="side">
+  <span class="badge" id="badgeCategoria"></span>
+  <span class="badge live" id="badgeLive" style="display:none">AO VIVO</span>
+
+  <h2 id="titulo"></h2>
+  <p id="desc"></p>
+
+  <!-- CONTROLES DE SÉRIE -->
+  <div id="serieControls">
+    <div class="select-box">
+      <select id="selTemporada"></select>
     </div>
-
-    <!-- OVERLAY -->
-    <div id="ytOverlay">
-      <div id="ytBox">
-        <h2>Transmissão ao vivo</h2>
-        <p>Por direitos de transmissão, o jogo é exibido no YouTube.</p>
-
-        <a id="ytLink"
-           target="_blank"
-           class="btn"
-           style="display:block;text-decoration:none">
-          ▶ Abrir no YouTube
-        </a>
-
-        <button onclick="fecharOverlay()"
-          style="margin-top:16px;background:none;border:none;color:#777;cursor:pointer">
-          Fechar
-        </button>
-      </div>
+    <div class="select-box">
+      <select id="selEpisodio"></select>
     </div>
+  </div>
 
-  </section>
+  <!-- IFRAME DO LADO (video_url) -->
+  <iframe id="sideFrame"></iframe>
+</div>
 
-  <!-- LATERAL -->
-  <aside id="side">
-    <span class="badge">Futebol</span>
-    <span class="badge live">AO VIVO</span>
-
-    <h1 id="title">Palmeiras VS Flamengo</h1>
-    <p id="desc">Teste de jogos</p>
-
-    <div id="betBox">
-      <h3>📊 Apostas ao vivo</h3>
-      <iframe id="betFrame"></iframe>
-    </div>
-  </aside>
-
-</main>
+</div>
+</div>
 
 <script>
-/* ================= ITEM (SIMULADO OU VIA URL) ================= */
+/* ================= ITEM ================= */
 const item = JSON.parse(
-  decodeURIComponent(
-    new URLSearchParams(location.search).get("item") ||
-    '{"titulo":"Palmeiras VS Flamengo","descricao":"Teste de jogos","capa_url":"https://www.youtube.com/live/ijPsXyFBBOI"}'
-  )
+  decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
 
+/* ================= ELEMENTOS ================= */
+const video = document.getElementById("video");
+const livePlaceholder = document.getElementById("livePlaceholder");
+const sideFrame = document.getElementById("sideFrame");
+const serieControls = document.getElementById("serieControls");
+const selTemporada = document.getElementById("selTemporada");
+const selEpisodio = document.getElementById("selEpisodio");
+
 /* ================= UI ================= */
-document.getElementById("title").textContent = item.titulo;
-document.getElementById("desc").textContent = item.descricao;
-document.getElementById("ytLink").href = item.capa_url;
+titulo.textContent = item.titulo || item.serie_nome;
+desc.textContent = item.descricao || "";
+badgeCategoria.textContent = item.categoria || "Geral";
 
-/* ================= OVERLAY ================= */
-function abrirOverlay(){
-  document.getElementById("ytOverlay").style.display = "flex";
-}
-function fecharOverlay(){
-  document.getElementById("ytOverlay").style.display = "none";
+/* ================= FILME ================= */
+if(item.tipo === "filme"){
+  video.src = item.video_url;
 }
 
-/* ================= APOSTAS ================= */
-document.getElementById("betFrame").src =
-  item.apostas_url || "about:blank";
+/* ================= JOGOS AO VIVO ================= */
+if(item.tipo === "jogos_ao_vivo"){
+  badgeLive.style.display = "inline-block";
+
+  video.style.display = "none";
+  livePlaceholder.style.display = "block";
+
+  // iframe lateral com site
+  sideFrame.src = item.video_url || "about:blank";
+}
+
+/* ================= POPUP YOUTUBE ================= */
+function abrirPopup(){
+  if(!item.capa_url){
+    alert("Transmissão indisponível");
+    return;
+  }
+
+  window.open(
+    item.capa_url,
+    "ytLive",
+    "width=1200,height=700,menubar=no,toolbar=no,location=no,status=no"
+  );
+}
+
+/* ================= SÉRIES ================= */
+let serie=[], episodioIndex=0;
+
+if(item.tipo === "serie") carregarSerie();
+
+async function carregarSerie(){
+  const sb = supabase.createClient(
+    "https://dxkszikemntfusfyrzos.supabase.co",
+    "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+  );
+
+  const { data } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("serie_nome", item.serie_nome)
+    .order("temporada")
+    .order("episodio");
+
+  serie = data || [];
+  if(!serie.length) return;
+
+  serieControls.style.display = "block";
+
+  const temporadas = [...new Set(serie.map(e=>e.temporada))];
+  selTemporada.innerHTML = temporadas
+    .map(t=>`<option value="${t}">Temporada ${t}</option>`).join("");
+
+  selTemporada.onchange = montarEpisodios;
+  selEpisodio.onchange = ()=>{
+    episodioIndex = Number(selEpisodio.value);
+    tocarEpisodio();
+  };
+
+  montarEpisodios();
+}
+
+function montarEpisodios(){
+  const eps = serie.filter(e=>e.temporada==selTemporada.value);
+  selEpisodio.innerHTML = eps
+    .map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`).join("");
+  episodioIndex=0;
+  tocarEpisodio();
+}
+
+function tocarEpisodio(){
+  const eps = serie.filter(e=>e.temporada==selTemporada.value);
+  const ep = eps[episodioIndex];
+  if(!ep) return;
+  video.src = ep.video_url;
+  video.play().catch(()=>{});
+}
+
+/* ================= VOLTAR ================= */
+function voltar(){
+  video.pause();
+  video.src="";
+  sideFrame.src="";
+  location.replace("index.html");
+}
 </script>
 
 </body>
