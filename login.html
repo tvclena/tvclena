@@ -100,6 +100,37 @@ input:focus{outline:none;border-color:var(--accent)}
   padding:36px;
   border-radius:20px;
 }
+
+/* ANIMAÇÃO SUCESSO */
+.success-anim{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  margin-top:20px;
+  animation:fadeUp .4s ease;
+}
+.check{
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  background:var(--success);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:38px;
+  color:#fff;
+  animation:pop .5s ease;
+}
+@keyframes pop{
+  0%{transform:scale(.3);opacity:0}
+  80%{transform:scale(1.1)}
+  100%{transform:scale(1);opacity:1}
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
 </style>
 </head>
 
@@ -121,7 +152,7 @@ input:focus{outline:none;border-color:var(--accent)}
 
   <button id="btnLogin" class="btn">Entrar</button>
   <div class="link" id="abrirCadastro">Ainda não tenho uma conta</div>
-  <div class="msg error" id="msg"></div>
+  <div class="msg" id="msg"></div>
 </div>
 
 <!-- CADASTRO -->
@@ -171,17 +202,16 @@ abrirCadastro.onclick = () => modal.style.display = "flex";
 fecharCadastro.onclick = () => modal.style.display = "none";
 
 /* MÁSCARAS */
-c_cpf.oninput = e => {
-  e.target.value = e.target.value
+c_cpf.oninput = e=>{
+  e.target.value=e.target.value
     .replace(/\D/g,"")
     .replace(/(\d{3})(\d)/,"$1.$2")
     .replace(/(\d{3})(\d)/,"$1.$2")
     .replace(/(\d{3})(\d{1,2})$/,"$1-$2")
     .slice(0,14);
 };
-
-c_whats.oninput = e => {
-  e.target.value = e.target.value
+c_whats.oninput = e=>{
+  e.target.value=e.target.value
     .replace(/\D/g,"")
     .replace(/^(\d{2})(\d)/,"($1) $2")
     .replace(/(\d{5})(\d)/,"$1-$2")
@@ -189,75 +219,73 @@ c_whats.oninput = e => {
 };
 
 /* LOGIN */
-btnLogin.onclick = async () => {
-  msg.textContent = "";
-
-  const emailVal = email.value.trim();
-  const senhaVal = senha.value;
-
-  if (!emailVal || !senhaVal) {
-    msg.textContent = "Preencha email e senha";
-    return;
-  }
-
-  const { data, error } = await sb
+btnLogin.onclick = async ()=>{
+  msg.textContent="";
+  const { data } = await sb
     .from("usuarios")
     .select("email, senha, status, trial_expires_at")
-    .eq("email", emailVal)
+    .eq("email", email.value.trim())
     .maybeSingle();
 
-  if (error || !data) {
-    msg.textContent = "Usuário não encontrado";
-    return;
-  }
+  if(!data){ msg.textContent="Usuário não encontrado"; return; }
+  if(data.senha!==senha.value){ msg.textContent="Senha incorreta"; return; }
 
-  if (data.senha !== senhaVal) {
-    msg.textContent = "Senha incorreta";
-    return;
-  }
+  const agora=new Date();
+  const expira=new Date(data.trial_expires_at);
 
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
-
-  if (data.status === "aprovado" || agora <= expira) {
-    localStorage.setItem("usuario_email", data.email);
+  if(agora<=expira){
+    localStorage.setItem("usuario_email",data.email);
     location.replace("index.html");
-  } else {
-    msg.textContent = "Trial expirado. Aguarde aprovação.";
+  }else{
+    msg.textContent="Período de teste expirado";
   }
 };
 
-/* CADASTRO */
-btnCadastro.onclick = async () => {
-  msgCadastro.textContent = "";
+/* CADASTRO – SALVA IGUAL ANTES */
+btnCadastro.onclick = async ()=>{
+  msgCadastro.textContent="";
 
-  if (c_senha.value !== c_confirma.value) {
-    msgCadastro.textContent = "As senhas não conferem";
-    msgCadastro.className = "msg error";
+  if(c_senha.value!==c_confirma.value){
+    msgCadastro.textContent="As senhas não conferem";
+    msgCadastro.className="msg error";
     return;
   }
 
-  const trial = new Date(Date.now() + 86400000);
+  const trial=new Date(Date.now()+10*24*60*60*1000);
+  const emailNovo=c_email.value.trim();
+  const senhaNova=c_senha.value;
 
   const { error } = await sb.from("usuarios").insert({
-    email: c_email.value.trim(),
+    email: emailNovo,
     cpf: c_cpf.value.replace(/\D/g,""),
     whatsapp: c_whats.value.replace(/\D/g,""),
-    senha: c_senha.value,
+    senha: senhaNova,
     status: "pendente",
     trial_expires_at: trial.toISOString()
   });
 
-  if (error) {
-    msgCadastro.textContent = "Erro ao cadastrar";
-    msgCadastro.className = "msg error";
+  if(error){
+    msgCadastro.textContent="Erro ao cadastrar";
+    msgCadastro.className="msg error";
     return;
   }
 
-  msgCadastro.textContent = "Cadastro criado! Aguarde aprovação.";
-  msgCadastro.className = "msg success";
+  msgCadastro.innerHTML=`
+    <div class="success-anim">
+      <div class="check">✓</div>
+      <strong>Teste liberado por 10 dias</strong>
+      <span>Voltando para login...</span>
+    </div>
+  `;
+  msgCadastro.className="msg success";
 
-  setTimeout(() => modal.style.display = "none", 2000);
+  setTimeout(()=>{
+    modal.style.display="none";
+    email.value=emailNovo;
+    senha.value=senhaNova;
+    msg.textContent="Conta criada! Clique em Entrar 🚀";
+    msg.className="msg success";
+  },2200);
 };
 </script>
 
