@@ -9,148 +9,96 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{
-  box-sizing:border-box;
-  font-family:Inter, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-}
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
 
 html,body{
-  margin:0;
-  height:100%;
-  background:#000;
-  color:#fff;
+  margin:0;height:100%;
+  background:#000;color:#fff;
 }
 
-/* 🌑 FUNDO CINEMA PREMIUM */
+/* FUNDO */
 body{
   display:flex;
   align-items:center;
   justify-content:center;
-  background:
-    radial-gradient(80% 60% at 50% 30%, #1a1a1a 0%, #000 70%),
-    linear-gradient(180deg, #0b0b0b, #000);
+  background:radial-gradient(circle at center,#141414 0%,#000 70%);
 }
 
-/* 🧊 CARD */
+/* CARD */
 .container{
   width:380px;
-  padding:42px 38px 36px;
-  background:linear-gradient(180deg,#141414,#0e0e0e);
-  border-radius:22px;
-  box-shadow:
-    0 40px 90px rgba(0,0,0,.9),
-    inset 0 1px 0 rgba(255,255,255,.04);
+  padding:40px 36px;
+  background:#111;
+  border-radius:20px;
+  box-shadow:0 40px 90px rgba(0,0,0,.9);
 }
 
 /* LOGO */
 .logo{
   text-align:center;
-  font-size:34px;
+  font-size:32px;
   font-weight:900;
-  letter-spacing:.6px;
-  margin-bottom:34px;
+  margin-bottom:30px;
 }
-
-.logo span{
-  color:#e50914;
-}
+.logo span{color:#e50914}
 
 /* CAMPOS */
-.group{
-  margin-bottom:20px;
-}
-
-label{
-  display:block;
-  font-size:13px;
-  color:#a1a1aa;
-  margin-bottom:6px;
-}
+.group{margin-bottom:18px}
+label{font-size:14px;color:#b5b5b5;margin-bottom:6px;display:block}
 
 input{
-  width:100%;
-  height:48px;
-  padding:0 16px;
-  border-radius:12px;
+  width:100%;height:46px;
+  padding:0 14px;
+  border-radius:10px;
   border:none;
-  background:#f1f5f9;
-  color:#020617;
+  background:#e9eef6;
+  color:#000;
   font-size:15px;
-  box-shadow:
-    inset 0 2px 4px rgba(0,0,0,.15),
-    0 1px 0 rgba(255,255,255,.6);
-}
-
-input:focus{
-  outline:none;
-  box-shadow:
-    0 0 0 3px rgba(229,9,20,.35),
-    inset 0 2px 4px rgba(0,0,0,.15);
 }
 
 /* BOTÃO */
 .btn{
-  width:100%;
-  height:54px;
+  width:100%;height:50px;
   margin-top:16px;
   border:none;
-  border-radius:16px;
-  background:linear-gradient(180deg,#ff1a24,#c60711);
+  border-radius:14px;
+  background:#e50914;
   color:#fff;
   font-size:16px;
   font-weight:800;
   cursor:pointer;
-  box-shadow:
-    0 18px 40px rgba(229,9,20,.45),
-    inset 0 1px 0 rgba(255,255,255,.25);
-}
-
-.btn:active{
-  transform:translateY(1px);
-  box-shadow:
-    0 10px 25px rgba(229,9,20,.35),
-    inset 0 1px 0 rgba(255,255,255,.25);
 }
 
 /* LINK */
 .link{
-  margin-top:22px;
+  margin-top:18px;
   text-align:center;
   font-size:14px;
-  color:#e5e5e5;
-  cursor:pointer;
-  text-decoration:none;
-  opacity:.9;
-}
-
-.link:hover{
   text-decoration:underline;
+  cursor:pointer;
 }
 
-/* MENSAGEM */
+/* MSG */
 .msg{
-  margin-top:14px;
-  font-size:14px;
+  margin-top:12px;
   min-height:18px;
+  font-size:14px;
   color:#facc15;
 }
 
 /* MODAL */
 .modal{
-  position:fixed;
-  inset:0;
+  position:fixed;inset:0;
   background:rgba(0,0,0,.85);
   display:none;
   align-items:center;
   justify-content:center;
 }
-
 .modal-box{
   width:380px;
-  padding:42px 38px 36px;
-  background:linear-gradient(180deg,#141414,#0e0e0e);
-  border-radius:22px;
-  box-shadow:0 40px 90px rgba(0,0,0,.95);
+  padding:36px;
+  background:#111;
+  border-radius:20px;
 }
 </style>
 </head>
@@ -163,7 +111,7 @@ input:focus{
 
   <div class="group">
     <label>Email</label>
-    <input id="email" type="email">
+    <input id="email">
   </div>
 
   <div class="group">
@@ -172,22 +120,18 @@ input:focus{
   </div>
 
   <button class="btn" id="btnLogin">Entrar</button>
-
-  <div class="link" id="abrirCadastro">
-    Ainda não tenho uma conta
-  </div>
-
-  <div class="msg" id="msgLogin"></div>
+  <div class="link" id="abrirCadastro">Ainda não tenho uma conta</div>
+  <div class="msg" id="msg"></div>
 </div>
 
 <!-- CADASTRO -->
 <div class="modal" id="modal">
   <div class="modal-box">
-    <div class="logo" style="font-size:28px">Criar conta</div>
+    <div class="logo" style="font-size:26px">Criar conta</div>
 
     <div class="group">
       <label>Email</label>
-      <input id="c_email" type="email">
+      <input id="c_email">
     </div>
 
     <div class="group">
@@ -212,81 +156,63 @@ input:focus{
 
     <button class="btn" id="btnCadastro">Cadastrar</button>
     <div class="link" id="fecharCadastro">Cancelar</div>
-    <div class="msg" id="msgCadastro"></div>
   </div>
 </div>
 
-<script src="env.js"></script>
 <script>
 const sb = supabase.createClient(
-  window.ENV.SUPABASE_URL,
-  window.ENV.SUPABASE_ANON_KEY
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-abrirCadastro.onclick=()=>{modal.style.display="flex";msgCadastro.textContent=""}
+/* MODAL */
+abrirCadastro.onclick=()=>modal.style.display="flex";
 fecharCadastro.onclick=()=>modal.style.display="none";
 
-c_cpf.oninput=e=>{
-  e.target.value=e.target.value
-    .replace(/\D/g,"")
-    .replace(/(\d{3})(\d)/,"$1.$2")
-    .replace(/(\d{3})(\d)/,"$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/,"$1-$2")
-    .slice(0,14);
-};
-
-c_whats.oninput=e=>{
-  e.target.value=e.target.value
-    .replace(/\D/g,"")
-    .replace(/^(\d{2})(\d)/,"($1) $2")
-    .replace(/(\d{5})(\d)/,"$1-$2")
-    .slice(0,15);
-};
-
+/* LOGIN */
 btnLogin.onclick=async()=>{
-  msgLogin.textContent="";
-  const {error}=await sb.auth.signInWithPassword({
-    email:email.value.trim(),
-    password:senha.value
-  });
-  if(error){
-    msgLogin.textContent="Email ou senha inválidos";
-    return;
+  msg.textContent="";
+  const {data,error}=await sb
+    .from("usuarios")
+    .select("email,senha,status,trial_expires_at")
+    .eq("email",email.value.trim())
+    .maybeSingle();
+
+  if(!data){msg.textContent="Usuário não encontrado";return;}
+  if(data.senha!==senha.value){msg.textContent="Senha incorreta";return;}
+
+  const agora=new Date();
+  const expira=new Date(data.trial_expires_at);
+
+  if(data.status==="aprovado"||agora<=expira){
+    localStorage.setItem("usuario_email",data.email);
+    location.replace("index.html");
+  }else{
+    msg.textContent="Teste expirado. Aguarde aprovação.";
   }
-  location.replace("index.html");
 };
 
+/* CADASTRO */
 btnCadastro.onclick=async()=>{
-  msgCadastro.textContent="";
-
-  if(!c_email.value || !c_senha.value){
-    msgCadastro.textContent="Preencha email e senha";
-    return;
-  }
-
   if(c_senha.value!==c_confirma.value){
-    msgCadastro.textContent="As senhas não conferem";
-    return;
+    alert("Senhas não conferem");return;
   }
 
-  const {error}=await sb.auth.signUp({
+  const trial=new Date(Date.now()+86400000);
+
+  const {error}=await sb.from("usuarios").insert({
     email:c_email.value.trim(),
-    password:c_senha.value,
-    options:{
-      data:{
-        cpf:c_cpf.value.replace(/\D/g,""),
-        whatsapp:c_whats.value.replace(/\D/g,"")
-      }
-    }
+    cpf:c_cpf.value.replace(/\D/g,""),
+    whatsapp:c_whats.value.replace(/\D/g,""),
+    senha:c_senha.value,
+    status:"pendente",
+    trial_expires_at:trial.toISOString()
   });
 
-  if(error){
-    msgCadastro.textContent="Erro ao criar conta";
-    return;
-  }
+  if(error){alert("Erro ao cadastrar");return;}
 
-  msgCadastro.style.color="#22c55e";
-  msgCadastro.textContent="Conta criada! Verifique seu email.";
+  alert("Cadastro criado! Aguarde aprovação.");
+  modal.style.display="none";
 };
 </script>
 
