@@ -1267,8 +1267,9 @@ const resultados = [
       "<p style='color:#777'>Nenhum resultado encontrado</p>";
   } else {
     searchGrid.innerHTML = resultados.map(r => `
-      <div class="search-card"
-           onclick="event.stopPropagation(); abrirPlayer(${JSON.stringify(r)})">
+<div class="search-card"
+     onclick="abrirResultado(event, ${encodeURIComponent(JSON.stringify(r))})">
+
         <img src="${r.capa_url}">
         <span>${r.titulo || r.serie_nome}</span>
       </div>
@@ -1599,6 +1600,20 @@ async function validarSessao() {
 }
 
 
+function abrirResultado(e, itemEncoded){
+  e.preventDefault();
+  e.stopPropagation();
+
+  // fecha busca ANTES de navegar
+  document.body.classList.remove("search-open");
+  searchResults.style.display = "none";
+  searchMobileBox.style.display = "none";
+
+  // pequena espera para evitar cancelamento
+  setTimeout(() => {
+    location.href = `player.html?item=${itemEncoded}`;
+  }, 50);
+}
 
 
 
