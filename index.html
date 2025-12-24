@@ -1147,8 +1147,6 @@ const ID_PRINCIPAL = "649a1523-e49b-49d8-a34a-452a54b04ba";
 
 async function iniciarApp() {
 
-if (usuario?.email && perfilEmail) {
-perfilEmail.textContent = localStorage.getItem("usuario_email") || "";}
 
 
 const { data, error } = await sb
@@ -1420,7 +1418,6 @@ function fechar(){
 
 
 
-function fecharPerfil(){perfilOverlay.style.display="none";}
 function logout(){
   localStorage.clear();
   sessionStorage.clear();
@@ -1616,17 +1613,6 @@ async function carregarAvatarHeader() {
 
   
 
-
-
-/* ================= PERFIL PREMIUM ================= */
-
-let userId = null;
-
-const avatarImg = document.getElementById("avatarImg");
-const nomeUsuario = document.getElementById("nomeUsuario");
-const usernameInput = document.getElementById("username");
-const usernameStatus = document.getElementById("usernameStatus");
-const perfilBtn = document.getElementById("perfilBtn");
 
 (async () => {
 
