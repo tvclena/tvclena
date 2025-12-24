@@ -17,12 +17,16 @@ body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   padding:10px 16px;
   background:rgba(0,0,0,.6);
   color:#fff;border:none;border-radius:999px;
-  cursor:pointer;z-index:10
+  cursor:pointer;z-index:20
 }
 
-#layout{display:grid;grid-template-columns:3fr 1.4fr;height:100%}
+#layout{
+  display:grid;
+  grid-template-columns:3fr 1.4fr;
+  height:100%;
+}
 
-/* PLAYER VIDEO / IFRAME */
+/* PLAYER */
 video, iframe.stream{
   width:100%;
   height:100%;
@@ -71,29 +75,26 @@ video, iframe.stream{
   top:50%;
   transform:translateY(-50%);
   color:#aaa;
-  pointer-events:none
 }
 select{
   width:100%;
-  appearance:none;
   padding:12px 14px;
   background:#1c1c1c;
   border:1px solid #333;
   border-radius:10px;
-  color:#fff
+  color:#fff;
+  appearance:none;
 }
 
-/* PAINEL DE APOSTAS */
+/* APOSTAS */
 #apostasBox{
   display:none;
   margin-top:16px;
 }
-
 #apostasBox h3{
   font-size:16px;
   margin-bottom:10px;
 }
-
 #apostasFrame{
   width:100%;
   height:420px;
@@ -102,6 +103,7 @@ select{
   background:#000;
 }
 
+/* PRÓXIMO EP */
 #btnProximo{
   position:absolute;
   right:40px;
@@ -134,7 +136,7 @@ select{
 
   <div id="layout">
 
-    <!-- ÁREA DO PLAYER -->
+    <!-- PLAYER -->
     <div id="playerArea">
       <video id="video" controls autoplay playsinline></video>
       <iframe id="streamIframe" class="stream" allowfullscreen></iframe>
@@ -157,13 +159,13 @@ select{
         </div>
       </div>
 
-      <!-- PAINEL APOSTAS -->
+      <!-- APOSTAS (JOGOS AO VIVO) -->
       <div id="apostasBox">
         <h3>📊 Apostas ao vivo</h3>
         <iframe id="apostasFrame"></iframe>
       </div>
-
     </div>
+
   </div>
 </div>
 
@@ -206,10 +208,16 @@ const iframeStream = document.getElementById("streamIframe");
 const apostasBox = document.getElementById("apostasBox");
 const apostasFrame = document.getElementById("apostasFrame");
 const serieControls = document.getElementById("serieControls");
+const selTemporada = document.getElementById("selTemporada");
+const selEpisodio = document.getElementById("selEpisodio");
+const btnProximo = document.getElementById("btnProximo");
 
 /* ================= UI ================= */
-document.getElementById("titulo").textContent = item.titulo || item.serie_nome;
-document.getElementById("desc").textContent = item.descricao || "";
+document.getElementById("titulo").textContent =
+  item.titulo || item.serie_nome || "Ao vivo";
+
+document.getElementById("desc").textContent =
+  item.descricao || "";
 
 document.getElementById("meta").innerHTML = `
   <span class="badge categoria">${item.categoria || "Geral"}</span>
@@ -230,7 +238,72 @@ if (item.tipo === "jogos_ao_vivo") {
 
   serieControls.style.display = "none";
   apostasBox.style.display = "block";
-  apostasFrame.src = item.apostas_iframe || "";
+  apostasFrame.src = item.capa_url || "";
+}
+
+/* ================= SÉRIE ================= */
+let serie = [];
+let episodioIndex = 0;
+
+if (item.tipo === "serie") carregarSerie();
+
+async function carregarSerie(){
+  const { data } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("serie_nome", item.serie_nome)
+    .order("temporada")
+    .order("episodio");
+
+  serie = data || [];
+  if (!serie.length) return;
+
+  serieControls.style.display = "block";
+  iframeStream.style.display = "none";
+
+  const temporadas = [...new Set(serie.map(e => e.temporada))];
+  selTemporada.innerHTML = temporadas
+    .map(t => `<option value="${t}">Temporada ${t}</option>`)
+    .join("");
+
+  selTemporada.onchange = montarEpisodios;
+  selEpisodio.onchange = () => {
+    episodioIndex = Number(selEpisodio.value);
+    tocarEpisodio();
+  };
+
+  montarEpisodios();
+}
+
+function montarEpisodios(){
+  const eps = serie.filter(e => e.temporada == selTemporada.value);
+  selEpisodio.innerHTML = eps
+    .map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`)
+    .join("");
+
+  episodioIndex = 0;
+  tocarEpisodio();
+}
+
+function tocarEpisodio(){
+  const eps = serie.filter(e => e.temporada == selTemporada.value);
+  const ep = eps[episodioIndex];
+  if (!ep) return;
+
+  video.src = ep.video_url;
+  video.play().catch(()=>{});
+}
+
+video.addEventListener("timeupdate",()=>{
+  if(item.tipo!=="serie"||!video.duration)return;
+  btnProximo.style.display =
+    video.duration - video.currentTime < 60 ? "block" : "none";
+});
+
+function proximoEpisodio(){
+  episodioIndex++;
+  selEpisodio.value = episodioIndex;
+  tocarEpisodio();
 }
 
 /* ================= VOLTAR ================= */
@@ -241,9 +314,7 @@ function voltar(){
 }
 
 /* ================= INIT ================= */
-(async ()=>{
-  await validarSessaoPlayer();
-})();
+(async()=>{await validarSessaoPlayer()})();
 </script>
 
 </body>
