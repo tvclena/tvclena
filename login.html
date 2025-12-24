@@ -210,81 +210,47 @@ const sb = supabase.createClient(
 abrirCadastro.onclick = () => modal.style.display = "flex";
 fecharCadastro.onclick = () => modal.style.display = "none";
 
-/* MÁSCARAS */
-c_cpf.oninput = e=>{
-  e.target.value = e.target.value
-    .replace(/\D/g,"")
-    .replace(/(\d{3})(\d)/,"$1.$2")
-    .replace(/(\d{3})(\d)/,"$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/,"$1-$2")
-    .slice(0,14);
-};
-
-c_whats.oninput = e=>{
-  e.target.value = e.target.value
-    .replace(/\D/g,"")
-    .replace(/^(\d{2})(\d)/,"($1) $2")
-    .replace(/(\d{5})(\d)/,"$1-$2")
-    .slice(0,15);
-};
-
-/* LOGIN – IGUAL AO SEU */
+/* LOGIN (via backend) */
 btnLogin.onclick = async () => {
   msg.textContent = "";
   btnLogin.classList.add("loading");
 
-  const emailVal = email.value.trim();
-  const senhaVal = senha.value;
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email.value.trim(),
+        senha: senha.value
+      })
+    });
 
-  if (!emailVal || !senhaVal) {
-    msg.textContent = "Preencha email e senha";
-    btnLogin.classList.remove("loading");
-    return;
-  }
+    const data = await res.json();
 
-  const { data, error } = await sb
-    .from("usuarios")
-    .select("email, senha, status, trial_expires_at")
-    .eq("email", emailVal)
-    .maybeSingle();
+    if (!res.ok) {
+      msg.textContent = data.error || "Erro ao fazer login";
+      return;
+    }
 
-  btnLogin.classList.remove("loading");
-
-  if (error) {
-    msg.textContent = "Erro ao consultar usuário";
-    return;
-  }
-
-  if (!data) {
-    msg.textContent = "Usuário não encontrado";
-    return;
-  }
-
-  if (data.senha !== senhaVal) {
-    msg.textContent = "Senha incorreta";
-    return;
-  }
-
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
-
-  if (data.status === "aprovado" || agora <= expira) {
     localStorage.setItem("usuario_email", data.email);
     location.replace("index.html");
-  } else {
-    msg.textContent = "Seu teste expirou. Aguarde aprovação.";
+
+  } catch (err) {
+    msg.textContent = "Falha de conexão";
+    console.error(err);
+  } finally {
+    btnLogin.classList.remove("loading");
   }
 };
 
+/* CADASTRO */
 btnCadastro.onclick = async () => {
   msgCadastro.textContent = "";
-  msgCadastro.className = "msg";
   btnCadastro.classList.add("loading");
   btnCadastro.disabled = true;
 
   if (c_senha.value !== c_confirma.value) {
     msgCadastro.textContent = "As senhas não conferem";
-    msgCadastro.classList.add("error");
     btnCadastro.classList.remove("loading");
     btnCadastro.disabled = false;
     return;
@@ -302,49 +268,24 @@ btnCadastro.onclick = async () => {
       })
     });
 
-    // 🔑 NÃO ASSUMA JSON
-    const text = await res.text();
+    const data = await res.json();
 
     if (!res.ok) {
-      msgCadastro.textContent =
-        "Erro no servidor ao criar cadastro. Tente novamente.";
-      msgCadastro.classList.add("error");
-      console.error("Erro backend:", text);
+      msgCadastro.textContent = data.error || "Erro ao cadastrar";
       return;
     }
 
-    // tenta converter se for JSON
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      msgCadastro.textContent =
-        "Cadastro criado, mas resposta inesperada do servidor.";
-      msgCadastro.classList.add("success");
-      return;
-    }
-
-    if (data.error) {
-      msgCadastro.textContent = data.error;
-      msgCadastro.classList.add("error");
-      return;
-    }
-
-    msgCadastro.textContent = "Cadastro criado com sucesso!";
-    msgCadastro.classList.add("success");
+    msgCadastro.textContent = "Cadastro criado! Aguarde aprovação.";
     setTimeout(() => modal.style.display = "none", 2000);
 
   } catch (err) {
-    msgCadastro.textContent =
-      "Falha de conexão com o servidor.";
-    msgCadastro.classList.add("error");
+    msgCadastro.textContent = "Falha de conexão";
     console.error(err);
   } finally {
     btnCadastro.classList.remove("loading");
     btnCadastro.disabled = false;
   }
 };
-
 </script>
 
 </body>
