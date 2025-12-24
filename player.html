@@ -149,7 +149,6 @@ select{
       <div id="meta"></div>
       <p id="desc"></p>
 
-      <!-- CONTROLES SÉRIE -->
       <div id="serieControls">
         <div class="select-box">
           <select id="selTemporada"></select>
@@ -159,7 +158,6 @@ select{
         </div>
       </div>
 
-      <!-- APOSTAS (JOGOS AO VIVO) -->
       <div id="apostasBox">
         <h3>📊 Apostas ao vivo</h3>
         <iframe id="apostasFrame"></iframe>
@@ -224,18 +222,30 @@ document.getElementById("meta").innerHTML = `
   <span class="badge tipo">${item.tipo}</span>
 `;
 
-/* ================= FILME ================= */
-if (item.tipo === "filme") {
+/* ================= DETECTA IFRAME NO video_url ================= */
+function isIframe(url){
+  if(!url) return false;
+  return (
+    url.includes("youtube.com") ||
+    url.includes("youtu.be") ||
+    url.includes("embed") ||
+    !url.match(/\.(mp4|m3u8|webm)$/i)
+  );
+}
+
+/* ================= FILME / JOGO / IFRAME ================= */
+if (isIframe(item.video_url)) {
+  video.style.display = "none";
+  iframeStream.style.display = "block";
+  iframeStream.src = item.video_url;
+} else {
   iframeStream.style.display = "none";
+  video.style.display = "block";
   video.src = item.video_url;
 }
 
 /* ================= JOGOS AO VIVO ================= */
 if (item.tipo === "jogos_ao_vivo") {
-  video.style.display = "none";
-  iframeStream.style.display = "block";
-  iframeStream.src = item.video_url;
-
   serieControls.style.display = "none";
   apostasBox.style.display = "block";
   apostasFrame.src = item.capa_url || "";
@@ -310,6 +320,7 @@ function proximoEpisodio(){
 function voltar(){
   video.pause();
   video.src = "";
+  iframeStream.src = "";
   location.replace("index.html");
 }
 
