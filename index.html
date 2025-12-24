@@ -1305,7 +1305,6 @@ if (busca) {
 document.addEventListener("click", e => {
   if (
     !searchMobileBox.contains(e.target) &&
-    !searchResults.contains(e.target) &&
     e.target.id !== "searchBtn"
   ) {
     searchMobileBox.style.display = "none";
@@ -1314,7 +1313,6 @@ document.addEventListener("click", e => {
     document.body.classList.remove("search-open");
   }
 });
-
 
 
 
