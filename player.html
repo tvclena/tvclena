@@ -17,7 +17,7 @@ body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   padding:10px 16px;
   background:rgba(0,0,0,.6);
   color:#fff;border:none;border-radius:999px;
-  cursor:pointer;z-index:20
+  cursor:pointer;z-index:30
 }
 
 #layout{
@@ -26,7 +26,16 @@ body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   height:100%;
 }
 
+@media(max-width:900px){
+  #layout{grid-template-columns:1fr}
+}
+
 /* PLAYER */
+#playerArea{
+  position:relative;
+  background:#000;
+}
+
 video, iframe.stream{
   width:100%;
   height:100%;
@@ -34,10 +43,32 @@ video, iframe.stream{
   background:#000;
 }
 
+/* FALLBACK */
+#iframeFallback{
+  display:none;
+  position:absolute;
+  inset:0;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+  padding:32px;
+  background:#000;
+  color:#aaa;
+  font-size:16px;
+}
+
+#iframeFallback a{
+  margin-top:14px;
+  color:#e50914;
+  font-weight:700;
+  text-decoration:none;
+}
+
 /* LATERAL */
 #side{
   background:#111;
-  padding:32px;
+  padding:28px;
   overflow-y:auto;
 }
 
@@ -55,7 +86,6 @@ video, iframe.stream{
 }
 .badge.tipo{background:#e50914}
 .badge.categoria{background:#333}
-.badge.classificacao{background:#444}
 
 #desc{
   font-size:14px;
@@ -66,7 +96,6 @@ video, iframe.stream{
 
 /* CONTROLES DE SÉRIE */
 #serieControls{display:none;margin-top:12px}
-
 .select-box{position:relative;margin-bottom:10px}
 .select-box::after{
   content:"▾";
@@ -87,44 +116,13 @@ select{
 }
 
 /* APOSTAS */
-#apostasBox{
-  display:none;
-  margin-top:16px;
-}
-#apostasBox h3{
-  font-size:16px;
-  margin-bottom:10px;
-}
+#apostasBox{display:none;margin-top:16px}
 #apostasFrame{
   width:100%;
-  height:420px;
+  height:380px;
   border-radius:12px;
   border:1px solid #222;
   background:#000;
-}
-
-/* PRÓXIMO EP */
-#btnProximo{
-  position:absolute;
-  right:40px;
-  bottom:120px;
-  padding:12px 22px;
-  border:none;
-  border-radius:999px;
-  font-size:15px;
-  font-weight:600;
-  cursor:pointer;
-  background:rgba(255,255,255,.15);
-  color:#fff;
-  backdrop-filter:blur(6px);
-  display:none;
-  z-index:20
-}
-
-@media(max-width:768px){
-  #layout{grid-template-columns:1fr}
-  #side{padding:16px}
-  #apostasFrame{height:320px}
 }
 </style>
 </head>
@@ -140,7 +138,11 @@ select{
     <div id="playerArea">
       <video id="video" controls autoplay playsinline></video>
       <iframe id="streamIframe" class="stream" allowfullscreen></iframe>
-      <button id="btnProximo" onclick="proximoEpisodio()">▶ Próximo episódio</button>
+
+      <div id="iframeFallback">
+        ⚠️ Este evento não permite reprodução externa.<br>
+        <a id="openExternal" target="_blank">Assistir na plataforma oficial</a>
+      </div>
     </div>
 
     <!-- LATERAL -->
@@ -197,135 +199,71 @@ async function validarSessaoPlayer(){
 }
 
 /* ================= ITEM ================= */
-const params = new URLSearchParams(location.search);
-const item = JSON.parse(decodeURIComponent(params.get("item")));
+const item = JSON.parse(
+  decodeURIComponent(new URLSearchParams(location.search).get("item"))
+);
 
 /* ================= ELEMENTOS ================= */
 const video = document.getElementById("video");
 const iframeStream = document.getElementById("streamIframe");
+const fallback = document.getElementById("iframeFallback");
+const openExternal = document.getElementById("openExternal");
 const apostasBox = document.getElementById("apostasBox");
 const apostasFrame = document.getElementById("apostasFrame");
-const serieControls = document.getElementById("serieControls");
-const selTemporada = document.getElementById("selTemporada");
-const selEpisodio = document.getElementById("selEpisodio");
-const btnProximo = document.getElementById("btnProximo");
 
 /* ================= UI ================= */
-document.getElementById("titulo").textContent =
-  item.titulo || item.serie_nome || "Ao vivo";
-
-document.getElementById("desc").textContent =
-  item.descricao || "";
-
-document.getElementById("meta").innerHTML = `
+titulo.textContent = item.titulo || "Ao vivo";
+desc.textContent = item.descricao || "";
+meta.innerHTML = `
   <span class="badge categoria">${item.categoria || "Geral"}</span>
   <span class="badge tipo">${item.tipo}</span>
 `;
 
-/* ================= DETECTA IFRAME NO video_url ================= */
+/* ================= DETECÇÃO ================= */
 function isIframe(url){
-  if(!url) return false;
-  return (
-    url.includes("youtube.com") ||
-    url.includes("youtu.be") ||
-    url.includes("embed") ||
-    !url.match(/\.(mp4|m3u8|webm)$/i)
-  );
+  return !url.match(/\.(mp4|m3u8|webm)$/i);
 }
 
-/* ================= FILME / JOGO / IFRAME ================= */
+/* ================= PLAYER ================= */
 if (isIframe(item.video_url)) {
-  video.style.display = "none";
-  iframeStream.style.display = "block";
-  iframeStream.src = item.video_url;
-} else {
-  iframeStream.style.display = "none";
-  video.style.display = "block";
-  video.src = item.video_url;
+  video.style.display="none";
+  iframeStream.style.display="block";
+  iframeStream.src=item.video_url;
+
+  openExternal.href=item.video_url.replace("/embed/","/watch?v=");
+
+  setTimeout(()=>{
+    try{
+      if(!iframeStream.contentWindow){
+        iframeStream.style.display="none";
+        fallback.style.display="flex";
+      }
+    }catch(e){
+      iframeStream.style.display="none";
+      fallback.style.display="flex";
+    }
+  },2500);
+}else{
+  iframeStream.style.display="none";
+  video.src=item.video_url;
 }
 
 /* ================= JOGOS AO VIVO ================= */
-if (item.tipo === "jogos_ao_vivo") {
-  serieControls.style.display = "none";
-  apostasBox.style.display = "block";
-  apostasFrame.src = item.capa_url || "";
-}
-
-/* ================= SÉRIE ================= */
-let serie = [];
-let episodioIndex = 0;
-
-if (item.tipo === "serie") carregarSerie();
-
-async function carregarSerie(){
-  const { data } = await sb
-    .from("filmes")
-    .select("*")
-    .eq("serie_nome", item.serie_nome)
-    .order("temporada")
-    .order("episodio");
-
-  serie = data || [];
-  if (!serie.length) return;
-
-  serieControls.style.display = "block";
-  iframeStream.style.display = "none";
-
-  const temporadas = [...new Set(serie.map(e => e.temporada))];
-  selTemporada.innerHTML = temporadas
-    .map(t => `<option value="${t}">Temporada ${t}</option>`)
-    .join("");
-
-  selTemporada.onchange = montarEpisodios;
-  selEpisodio.onchange = () => {
-    episodioIndex = Number(selEpisodio.value);
-    tocarEpisodio();
-  };
-
-  montarEpisodios();
-}
-
-function montarEpisodios(){
-  const eps = serie.filter(e => e.temporada == selTemporada.value);
-  selEpisodio.innerHTML = eps
-    .map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`)
-    .join("");
-
-  episodioIndex = 0;
-  tocarEpisodio();
-}
-
-function tocarEpisodio(){
-  const eps = serie.filter(e => e.temporada == selTemporada.value);
-  const ep = eps[episodioIndex];
-  if (!ep) return;
-
-  video.src = ep.video_url;
-  video.play().catch(()=>{});
-}
-
-video.addEventListener("timeupdate",()=>{
-  if(item.tipo!=="serie"||!video.duration)return;
-  btnProximo.style.display =
-    video.duration - video.currentTime < 60 ? "block" : "none";
-});
-
-function proximoEpisodio(){
-  episodioIndex++;
-  selEpisodio.value = episodioIndex;
-  tocarEpisodio();
+if(item.tipo==="jogos_ao_vivo"){
+  apostasBox.style.display="block";
+  apostasFrame.src=item.capa_url||"";
 }
 
 /* ================= VOLTAR ================= */
 function voltar(){
   video.pause();
-  video.src = "";
-  iframeStream.src = "";
+  video.src="";
+  iframeStream.src="";
   location.replace("index.html");
 }
 
 /* ================= INIT ================= */
-(async()=>{await validarSessaoPlayer()})();
+validarSessaoPlayer();
 </script>
 
 </body>
