@@ -1,35 +1,38 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).end();
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { fileBase64, userId } = req.body;
+  const { fileBase64, filename } = req.body;
 
-  const buffer = Buffer.from(
-    fileBase64.split(",")[1],
-    "base64"
-  );
+  if (!fileBase64 || !filename) {
+    return res.status(400).json({ error: "Dados inválidos" });
+  }
 
-  const fileName = `${userId}_${Date.now()}.jpg`;
-  const path = `avatars/${fileName}`;
+  const buffer = Buffer.from(fileBase64, "base64");
 
   const uploadUrl =
-    `https://br.storage.bunnycdn.com/sessao99/${path}`;
+    `https://br.storage.bunnycdn.com/sessao99/avatars/${filename}`;
 
-  const r = await fetch(uploadUrl, {
+  const response = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
       AccessKey: process.env.BUNNY_ACCESS_KEY,
-      "Content-Type": "image/jpeg"
+      "Content-Type": "application/octet-stream"
     },
     body: buffer
   });
 
-  if (!r.ok) {
-    return res.status(500).json({ error: "Upload falhou" });
+  if (!response.ok) {
+    const text = await response.text();
+    return res.status(500).json({
+      error: "Erro Bunny",
+      status: response.status,
+      detail: text
+    });
   }
 
   return res.json({
-    avatarUrl: `https://sessao99.b-cdn.net/${path}`
+    url: `https://sessao99.b-cdn.net/avatars/${filename}`
   });
 }
