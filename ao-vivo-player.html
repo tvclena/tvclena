@@ -12,29 +12,41 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;color:#fff;font-family:Inter,Arial,Helvetica,sans-serif;overflow:hidden}
-
-video{
-  width:100vw;
-  height:100vh;
-  object-fit:cover;
+body{
   background:#000;
+  color:#fff;
+  font-family:Inter,Arial,sans-serif;
+  overflow:hidden;
 }
 
-/* AO VIVO */
-#liveBadge{
+/* HEADER */
+header{
   position:fixed;
-  top:14px;
-  left:14px;
-  background:#e50914;
-  padding:6px 14px;
-  border-radius:999px;
-  font-size:13px;
-  font-weight:700;
-  z-index:10;
+  top:0;
+  left:0;
+  right:0;
+  height:54px;
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:14px;
+  padding:0 20px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent);
+  z-index:10;
+}
+header h1{
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:.5px;
+}
+#liveBadge{
+  background:#e50914;
+  padding:4px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  gap:6px;
 }
 #liveBadge::before{
   content:"";
@@ -50,6 +62,14 @@ video{
   100%{opacity:1}
 }
 
+/* VIDEO */
+video{
+  width:100vw;
+  height:100vh;
+  object-fit:cover;
+  background:#000;
+}
+
 /* FALLBACK */
 #fallback{
   position:fixed;
@@ -63,7 +83,7 @@ video{
 #fallback button{
   padding:16px 28px;
   font-size:16px;
-  font-weight:700;
+  font-weight:800;
   border:none;
   border-radius:10px;
   background:#e50914;
@@ -75,7 +95,10 @@ video{
 
 <body>
 
-<div id="liveBadge">AO VIVO</div>
+<header>
+  <h1>CLENA TV</h1>
+  <div id="liveBadge">AO VIVO</div>
+</header>
 
 <div id="fallback">
   <button onclick="iniciarManual()">▶ Iniciar transmissão</button>
@@ -90,7 +113,7 @@ video{
 ></video>
 
 <script>
-/* ================= CONFIG ================= */
+/* ================= SUPABASE ================= */
 const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
@@ -100,49 +123,44 @@ const video = document.getElementById("video");
 const fallback = document.getElementById("fallback");
 
 /* ================= HELPERS ================= */
-function isVideoFile(url){
-  return /\.(mp4|webm|m3u8)$/i.test(url);
-}
-
 function isBunnyId(val){
   return /^[a-f0-9-]{20,}$/i.test(val);
 }
-
 function bunnyToHls(id){
   return `https://vz-827c2cae-692.b-cdn.net/${id}/playlist.m3u8`;
 }
 
-/* ================= BUSCA AO VIVO ================= */
+/* ================= AO VIVO ================= */
 async function carregarAoVivo(){
+  console.log("🔴 Buscando programação ao vivo...");
+
   const { data, error } = await sb
     .from("programacao")
-    .select("filme_id, filmes(*)")
-    .order("inicio")
+    .select("inicio, filmes(*)")
+    .order("inicio", { ascending: true })
     .limit(1);
 
   if(error || !data || !data.length){
-    console.error("❌ Nenhuma programação encontrada", error);
+    console.error("❌ Programação não encontrada", error);
     return;
   }
 
   const filme = data[0].filmes;
+  console.log("📺 Ao vivo:", filme.titulo);
+
   iniciarVideo(filme);
 }
 
 /* ================= PLAYER ================= */
-async function iniciarVideo(item){
-  let src = item.video_url;
-  console.log("▶ Conteúdo:", item.titulo, src);
+async function iniciarVideo(filme){
+  let src = filme.video_url;
 
   if(isBunnyId(src)){
-    console.log("🎥 Bunny ID → HLS");
+    console.log("🎥 Bunny ID detectado → HLS");
     src = bunnyToHls(src);
   }
 
-  if(!isVideoFile(src)){
-    console.error("❌ Formato inválido:", src);
-    return;
-  }
+  console.log("▶ SRC:", src);
 
   video.src = src;
   video.load();
@@ -175,7 +193,6 @@ video.addEventListener("ended", ()=>{
 /* ================= START ================= */
 carregarAoVivo();
 </script>
-
 
 </body>
 </html>
