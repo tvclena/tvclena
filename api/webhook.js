@@ -6,12 +6,6 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const PLANOS = {
-  "Cinema": { valor: 1.99, dias: 30 },
-  "Cinema Bet": { valor: 5.00, dias: 30 },
-  "Studio": { valor: 15.00, dias: 30 }
-};
-
 export default async function handler(req, res) {
   try {
     const paymentId = req.query["data.id"];
@@ -45,18 +39,31 @@ export default async function handler(req, res) {
     }
 
     const email = payment.external_reference || payment.payer?.email;
-    const plano = payment.additional_info?.items?.[0]?.title;
-    const valor = payment.transaction_amount;
+    const planoNome = payment.additional_info?.items?.[0]?.title;
+    const valorPago = payment.transaction_amount;
 
-    if (!email || !PLANOS[plano]) {
+    if (!email || !planoNome) {
+      return res.status(200).end();
+    }
+
+    // 🔎 BUSCA PLANO NO SUPABASE
+    const { data: plano, error: planoError } = await sb
+      .from("planos")
+      .select("*")
+      .eq("nome", planoNome)
+      .eq("ativo", true)
+      .single();
+
+    if (planoError || !plano) {
       return res.status(200).end();
     }
 
     // 🔐 Validação de valor
-    if (PLANOS[plano].valor !== Number(valor)) {
+    if (Number(plano.valor) !== Number(valorPago)) {
       return res.status(200).end();
     }
 
+    // 👤 Busca usuário
     const { data: user } = await sb
       .from("usuarios")
       .select("id")
@@ -69,24 +76,24 @@ export default async function handler(req, res) {
 
     // ⏱ Calcula vencimento
     const vencimento = new Date();
-    vencimento.setDate(vencimento.getDate() + PLANOS[plano].dias);
+    vencimento.setDate(vencimento.getDate() + plano.dias);
 
-    // 🧾 Histórico
+    // 🧾 Histórico de pagamentos
     await sb.from("pagamentos").insert({
       user_id: user.id,
-      plano,
+      plano: plano.nome,
       mp_payment_id: paymentId,
       status: "approved",
-      valor,
+      valor: valorPago,
       metodo: payment.payment_method_id
     });
 
-    // 👤 Atualiza usuário
+    // 👤 Atualiza assinatura do usuário
     await sb.from("usuarios")
       .update({
         status: "aprovado",
-        tipo_assinatura: plano,
-        valor_assinatura: valor,
+        tipo_assinatura: plano.nome,
+        valor_assinatura: valorPago,
         vencimento_assinatura: vencimento.toISOString()
       })
       .eq("id", user.id);
@@ -94,7 +101,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
 
   } catch (e) {
-    // ❗ webhook NUNCA pode retornar erro
+    // ❗ Webhook NUNCA deve retornar erro
     console.error("Webhook erro:", e);
     return res.status(200).end();
   }
