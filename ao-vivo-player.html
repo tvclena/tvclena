@@ -12,7 +12,7 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;color:#fff;font-family:Inter,Arial}
+body{background:#000;color:#fff;font-family:Inter,Arial,Helvetica,sans-serif;overflow:hidden}
 
 video{
   width:100vw;
@@ -65,7 +65,7 @@ video{
   font-size:16px;
   font-weight:700;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   background:#e50914;
   color:#fff;
   cursor:pointer;
@@ -99,6 +99,7 @@ const sb = supabase.createClient(
 const video = document.getElementById("video");
 const fallback = document.getElementById("fallback");
 
+/* slug do canal ?canal=clena-series */
 const canalSlug =
   new URLSearchParams(location.search).get("canal") || "clena-series";
 
@@ -108,6 +109,21 @@ video.controlsList = "nodownload noplaybackrate nofullscreen";
 
 let playlist = [];
 let indice = 0;
+
+/* ================= HELPERS ================= */
+function isVideoFile(url){
+  return /\.(mp4|webm|m3u8)$/i.test(url);
+}
+
+function isBunnyId(val){
+  return /^[a-f0-9-]{20,}$/i.test(val);
+}
+
+/* Bunny AO VIVO → HLS */
+function bunnyToHls(id){
+  // ajuste apenas se mudar seu CDN
+  return `https://vz-827c2cae-692.b-cdn.net/${id}/playlist.m3u8`;
+}
 
 /* ================= PLAYLIST ================= */
 async function carregarPlaylist(){
@@ -124,8 +140,6 @@ async function carregarPlaylist(){
     return;
   }
 
-  console.log("✅ Canal OK:", canal.id);
-
   const { data, error } = await sb
     .from("canal_playlist")
     .select("ordem, filmes(*)")
@@ -134,7 +148,7 @@ async function carregarPlaylist(){
     .order("ordem");
 
   if(error){
-    console.error("❌ Erro playlist", error);
+    console.error("❌ Erro ao buscar playlist", error);
     return;
   }
 
@@ -150,10 +164,25 @@ async function tocarAtual(){
   }
 
   const item = playlist[indice].filmes;
-  console.log("▶ Tocando:", item.titulo, item.video_url);
+  let src = item.video_url;
+
+  console.log("▶ Conteúdo bruto:", src);
+
+  /* 🧠 DETECÇÃO AUTOMÁTICA */
+  if(isBunnyId(src)){
+    console.log("🎥 Bunny ID detectado → HLS");
+    src = bunnyToHls(src);
+  }
+
+  if(!isVideoFile(src)){
+    console.error("❌ Formato não suportado:", src);
+    return;
+  }
+
+  console.log("▶ Tocando:", item.titulo, src);
 
   video.pause();
-  video.src = item.video_url;
+  video.src = src;
   video.load();
 
   try{
