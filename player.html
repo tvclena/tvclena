@@ -10,31 +10,81 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
+
 #player{position:fixed;inset:0;background:#000}
-#close{
-  position:absolute;top:16px;left:16px;
-  padding:10px 16px;background:rgba(0,0,0,.65);
-  color:#fff;border:none;border-radius:999px;
-  cursor:pointer;z-index:90;font-size:14px
+
+#topActions{
+  position:absolute;
+  top:12px;left:12px;right:12px;
+  display:flex;justify-content:space-between;
+  z-index:99
 }
-#layout{display:grid;grid-template-columns:3fr 1.4fr;height:100%}
-@media(max-width:900px){#layout{grid-template-columns:1fr}#side{display:none}}
-#playerArea{position:relative}
-video,iframe{width:100%;height:100%;border:none;background:#000}
-#iframeFallback{
-  display:none;position:absolute;inset:0;
-  align-items:center;justify-content:center;
-  flex-direction:column;text-align:center;
-  background:#000;color:#aaa;padding:30px
+
+.btn{
+  padding:8px 14px;
+  background:rgba(0,0,0,.65);
+  color:#fff;border:none;
+  border-radius:999px;
+  cursor:pointer;font-size:14px
 }
-#iframeFallback a{margin-top:12px;color:#e50914;font-weight:700}
-#side{background:#111;padding:28px;overflow-y:auto}
-.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;background:#222}
+
+#layout{
+  display:grid;
+  grid-template-columns:3fr 1.4fr;
+  height:100%;
+}
+
+@media(max-width:900px){
+  #layout{grid-template-columns:1fr}
+}
+
+#playerArea{
+  position:relative;
+  background:#000;
+}
+
+video,iframe{
+  width:100%;
+  height:100%;
+  border:none;
+  background:#000;
+}
+
+#side{
+  background:#111;
+  padding:20px;
+  overflow-y:auto;
+}
+
+@media(max-width:900px){
+  #side{max-height:45vh}
+}
+
+.badge{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  background:#222;
+  margin-right:6px;
+}
+
 .badge.tipo{background:#e50914}
+
 select{
-  width:100%;padding:12px;margin-bottom:10px;
-  background:#1c1c1c;border:1px solid #333;
-  border-radius:10px;color:#fff
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  background:#1c1c1c;
+  border:1px solid #333;
+  border-radius:10px;
+  color:#fff;
+}
+
+#bottomActions{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
 }
 </style>
 </head>
@@ -42,27 +92,29 @@ select{
 <body>
 
 <div id="player">
-  <button id="close" onclick="sair()">←</button>
+
+  <div id="topActions">
+    <button class="btn" onclick="sair()">← Voltar</button>
+  </div>
 
   <div id="layout">
     <div id="playerArea">
-      <video id="video" controls autoplay playsinline></video>
+      <video id="video" controls playsinline></video>
       <iframe id="iframe" allowfullscreen></iframe>
-
-      <div id="iframeFallback">
-        ⚠️ Este conteúdo não permite reprodução externa
-        <a id="openExternal" target="_blank">Abrir na plataforma oficial</a>
-      </div>
     </div>
 
     <div id="side">
       <h2 id="titulo"></h2>
       <div id="meta"></div>
-      <p id="desc"></p>
+      <p id="desc" style="opacity:.8;margin:10px 0"></p>
 
       <div id="serieControls" style="display:none">
         <select id="selTemporada"></select>
         <select id="selEpisodio"></select>
+
+        <div id="bottomActions">
+          <button class="btn" onclick="abrirFullscreen()">Tela cheia</button>
+        </div>
       </div>
     </div>
   </div>
@@ -80,73 +132,23 @@ const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
 
-/* ================= VARIÁVEIS ================= */
-let watchingId=null, heartbeat=null;
-let serie=[], episodioIndex=0;
-
 /* ================= ELEMENTOS ================= */
-const video=document.getElementById("video");
-const iframe=document.getElementById("iframe");
-const fallback=document.getElementById("iframeFallback");
-const openExternal=document.getElementById("openExternal");
-const titulo=document.getElementById("titulo");
-const meta=document.getElementById("meta");
-const desc=document.getElementById("desc");
-const serieControls=document.getElementById("serieControls");
-const selTemporada=document.getElementById("selTemporada");
-const selEpisodio=document.getElementById("selEpisodio");
+const video = document.getElementById("video");
+const iframe = document.getElementById("iframe");
+const titulo = document.getElementById("titulo");
+const meta = document.getElementById("meta");
+const desc = document.getElementById("desc");
+const serieControls = document.getElementById("serieControls");
+const selTemporada = document.getElementById("selTemporada");
+const selEpisodio = document.getElementById("selEpisodio");
 
 /* ================= UI ================= */
-titulo.textContent=item.titulo||item.serie_nome||"Conteúdo";
-desc.textContent=item.descricao||"";
-meta.innerHTML=`
+titulo.textContent = item.titulo || item.serie_nome || "Conteúdo";
+desc.textContent = item.descricao || "";
+meta.innerHTML = `
   <span class="badge">${item.categoria||"Geral"}</span>
   <span class="badge tipo">${item.tipo}</span>
 `;
-
-/* ================= FUNÇÕES REALTIME ================= */
-async function registrar(extra={}){
-  const email=localStorage.getItem("usuario_email");
-  if(!email) return;
-
-  if(watchingId){
-    await sb.from("assistindo_agora").delete().eq("id",watchingId);
-  }
-
-  const {data}=await sb.from("assistindo_agora").insert({
-    usuario_email:email,
-    item_id:item.id,
-    titulo:item.titulo||item.serie_nome,
-    tipo:item.tipo,
-    serie_nome:item.serie_nome||null,
-    temporada:extra.temporada||null,
-    episodio:extra.episodio||null,
-    status:"assistindo"
-  }).select().single();
-
-  watchingId=data.id;
-
-  clearInterval(heartbeat);
-  heartbeat=setInterval(()=>{
-    sb.from("assistindo_agora")
-      .update({updated_at:new Date()})
-      .eq("id",watchingId);
-  },15000);
-}
-
-async function atualizar(status){
-  if(!watchingId) return;
-  await sb.from("assistindo_agora")
-    .update({status,updated_at:new Date()})
-    .eq("id",watchingId);
-}
-
-async function remover(){
-  clearInterval(heartbeat);
-  if(!watchingId) return;
-  await sb.from("assistindo_agora").delete().eq("id",watchingId);
-  watchingId=null;
-}
 
 /* ================= PLAYER ================= */
 function isIframe(url){
@@ -156,27 +158,22 @@ function isIframe(url){
 if(isIframe(item.video_url)){
   video.style.display="none";
   iframe.src=item.video_url;
-  openExternal.href=item.video_url;
-  setTimeout(()=>{
-    try{iframe.contentWindow.location.href}
-    catch{iframe.style.display="none";fallback.style.display="flex"}
-  },2000);
 }else{
   iframe.style.display="none";
   video.src=item.video_url;
 }
 
-/* PLAY / PAUSE */
-video.addEventListener("play",()=>registrar());
-video.addEventListener("pause",()=>atualizar("pausado"));
-
-/* MOBILE FULLSCREEN */
-video.addEventListener("play",()=>{
-  if(video.requestFullscreen) video.requestFullscreen().catch(()=>{});
-  if(screen.orientation?.lock) screen.orientation.lock("landscape").catch(()=>{});
-});
+/* ================= FULLSCREEN MANUAL ================= */
+function abrirFullscreen(){
+  if(video.requestFullscreen) video.requestFullscreen();
+  if(screen.orientation?.lock){
+    screen.orientation.lock("landscape").catch(()=>{});
+  }
+}
 
 /* ================= SÉRIES ================= */
+let serie=[], episodioIndex=0;
+
 if(item.tipo==="serie") carregarSerie();
 
 async function carregarSerie(){
@@ -190,36 +187,44 @@ async function carregarSerie(){
   if(!serie.length) return;
 
   serieControls.style.display="block";
+
   const temps=[...new Set(serie.map(e=>e.temporada))];
-  selTemporada.innerHTML=temps.map(t=>`<option>${t}</option>`).join("");
-  selTemporada.onchange=montarEpisodios;
-  selEpisodio.onchange=()=>{episodioIndex=+selEpisodio.value;tocarEpisodio()};
-  montarEpisodios();
+  selTemporada.innerHTML = temps.map(t=>`<option>${t}</option>`).join("");
+
+  selTemporada.onchange = trocarTemporada;
+  selEpisodio.onchange = trocarEpisodio;
+
+  trocarTemporada();
 }
 
-function montarEpisodios(){
-  const eps=serie.filter(e=>e.temporada==selTemporada.value);
-  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Ep ${e.episodio}</option>`).join("");
-  episodioIndex=0;
-  tocarEpisodio();
+function trocarTemporada(){
+  const eps = serie.filter(e=>e.temporada==selTemporada.value);
+
+  selEpisodio.innerHTML = eps.map(
+    (e,i)=>`<option value="${i}">Ep ${e.episodio}</option>`
+  ).join("");
+
+  episodioIndex = 0;
+  tocar(eps[0]);
 }
 
-function tocarEpisodio(){
-  const ep=serie.filter(e=>e.temporada==selTemporada.value)[episodioIndex];
+function trocarEpisodio(){
+  const eps = serie.filter(e=>e.temporada==selTemporada.value);
+  episodioIndex = +selEpisodio.value;
+  tocar(eps[episodioIndex]);
+}
+
+function tocar(ep){
   if(!ep) return;
-  video.src=ep.video_url;
+  video.src = ep.video_url;
   video.play().catch(()=>{});
-  registrar({temporada:selTemporada.value,episodio:ep.episodio});
 }
 
 /* ================= SAIR ================= */
-async function sair(){
-  await remover();
+function sair(){
   video.pause();
   location.replace("index.html");
 }
-
-window.addEventListener("beforeunload",remover);
 </script>
 
 </body>
