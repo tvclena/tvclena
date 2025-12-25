@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Planos | CLENA TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+
+:root{
+  --bg:#0f0f10;
+  --surface:#1b1b1e;
+  --card:#232326;
+  --accent:#e50914;
+  --text:#fff;
+  --muted:#b5b5b5;
+  --success:#22c55e;
+}
+
+body{
+  background:radial-gradient(80% 60% at 50% 10%, #1a1a1a 0%, #0f0f10 65%);
+  color:var(--text);
+  min-height:100vh;
+}
+
+/* HEADER */
+header{
+  height:64px;
+  display:flex;
+  align-items:center;
+  padding:0 40px;
+  background:linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,.4), transparent);
+}
+
+.logo{
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:1px;
+}
+.logo span{color:var(--accent)}
+
+.back{
+  margin-left:auto;
+  cursor:pointer;
+  font-size:14px;
+  color:#ccc;
+}
+.back:hover{color:#fff}
+
+/* CONTAINER */
+.container{
+  max-width:1100px;
+  margin:80px auto;
+  padding:0 20px;
+  text-align:center;
+}
+
+.container h1{
+  font-size:42px;
+  margin-bottom:10px;
+}
+.container p{
+  color:var(--muted);
+  margin-bottom:50px;
+  font-size:16px;
+}
+
+/* GRID PLANOS */
+.planos{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:28px;
+}
+
+/* CARD */
+.plano{
+  background:linear-gradient(180deg,#232326,#1a1a1c);
+  border-radius:22px;
+  padding:34px 26px;
+  box-shadow:0 30px 60px rgba(0,0,0,.65);
+  transition:.35s;
+  position:relative;
+  overflow:hidden;
+}
+
+.plano::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:radial-gradient(60% 40% at top, rgba(229,9,20,.35), transparent 60%);
+  opacity:.4;
+}
+
+.plano:hover{
+  transform:translateY(-10px) scale(1.02);
+  box-shadow:0 50px 90px rgba(0,0,0,.8);
+}
+
+.plano h2{
+  font-size:26px;
+  margin-bottom:8px;
+  position:relative;
+}
+
+.preco{
+  font-size:46px;
+  font-weight:900;
+  margin:18px 0;
+}
+.preco span{
+  font-size:18px;
+  font-weight:600;
+  color:var(--muted);
+}
+
+.duracao{
+  color:var(--muted);
+  font-size:14px;
+  margin-bottom:22px;
+}
+
+.beneficios{
+  text-align:left;
+  margin-bottom:28px;
+}
+.beneficios li{
+  list-style:none;
+  margin-bottom:10px;
+  font-size:14px;
+}
+.beneficios li::before{
+  content:"✓";
+  color:var(--success);
+  margin-right:8px;
+  font-weight:900;
+}
+
+/* BOTÃO */
+.btn{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:14px;
+  background:var(--accent);
+  color:#fff;
+  font-size:16px;
+  font-weight:900;
+  cursor:pointer;
+  position:relative;
+  z-index:2;
+}
+.btn:hover{
+  filter:brightness(1.1);
+}
+
+/* DESTAQUE */
+.popular{
+  position:absolute;
+  top:16px;
+  right:-42px;
+  transform:rotate(45deg);
+  background:var(--accent);
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  padding:6px 50px;
+}
+
+/* FOOT */
+.footer{
+  margin-top:60px;
+  font-size:13px;
+  color:#777;
+}
+
+/* MOBILE */
+@media(max-width:600px){
+  .container h1{font-size:30px}
+  .preco{font-size:38px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">CLENA <span>TV</span></div>
+  <div class="back" onclick="voltar()">← Voltar</div>
+</header>
+
+<div class="container">
+  <h1>Escolha seu plano</h1>
+  <p>Aproveite todo o conteúdo sem limites 🚀</p>
+
+  <div class="planos">
+
+    <!-- CINEMA -->
+    <div class="plano">
+      <h2>Cinema</h2>
+      <div class="preco">R$ 1,99 <span>/ mês</span></div>
+      <div class="duracao">30 dias de acesso</div>
+
+      <ul class="beneficios">
+        <li>Acesso ao catálogo básico</li>
+        <li>Filmes selecionados</li>
+        <li>Qualidade HD</li>
+      </ul>
+
+      <button class="btn" onclick="assinar('cinema',1.99,30)">
+        Assinar agora
+      </button>
+    </div>
+
+    <!-- CINEMA BET -->
+    <div class="plano">
+      <div class="popular">MAIS VENDIDO</div>
+      <h2>Cinema Bet</h2>
+      <div class="preco">R$ 5,00 <span>/ mês</span></div>
+      <div class="duracao">30 dias de acesso</div>
+
+      <ul class="beneficios">
+        <li>Todo conteúdo Cinema</li>
+        <li>Séries completas</li>
+        <li>Jogos ao vivo</li>
+        <li>Qualidade Full HD</li>
+      </ul>
+
+      <button class="btn" onclick="assinar('cinema_bet',5.00,30)">
+        Assinar agora
+      </button>
+    </div>
+
+    <!-- STUDIO -->
+    <div class="plano">
+      <h2>Studio</h2>
+      <div class="preco">R$ 15,00 <span>/ mês</span></div>
+      <div class="duracao">30 dias de acesso</div>
+
+      <ul class="beneficios">
+        <li>Catálogo completo</li>
+        <li>Estreias exclusivas</li>
+        <li>Todos os esportes</li>
+        <li>Qualidade máxima</li>
+        <li>Prioridade de suporte</li>
+      </ul>
+
+      <button class="btn" onclick="assinar('studio',15.00,30)">
+        Assinar agora
+      </button>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Pagamento seguro • Ativação automática após confirmação
+  </div>
+</div>
+
+<script>
+function voltar(){
+  location.href="index.html";
+}
+
+/*
+  Aqui depois vamos ligar na API:
+  fetch('/api/create-payment', {...})
+*/
+function assinar(plano, valor, dias){
+  alert(
+    `Plano selecionado:\\n` +
+    `Plano: ${plano}\\n` +
+    `Valor: R$ ${valor.toFixed(2)}\\n` +
+    `Duração: ${dias} dias`
+  );
+}
+</script>
+
+</body>
+</html>
