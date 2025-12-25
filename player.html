@@ -9,6 +9,7 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+
 body{
   background:#000;
   color:#fff;
@@ -56,11 +57,10 @@ body{
 
 /* ================= PLAYER ================= */
 #playerArea{
-  position:relative;
-  background:#000;
   display:flex;
   align-items:center;
   justify-content:center;
+  background:#000;
   padding:20px;
 }
 
@@ -68,18 +68,16 @@ body{
   width:100%;
   max-width:1200px;
   aspect-ratio:16/9;
-  background:#000;
   position:relative;
+  background:#000;
 }
 
-.playerWrapper video,
 .playerWrapper iframe{
   position:absolute;
   inset:0;
   width:100%;
   height:100%;
-  border:none;
-  background:#000;
+  border:0;
 }
 
 /* ================= SIDE ================= */
@@ -137,14 +135,9 @@ select{
   cursor:pointer;
 }
 
-/* ================= SCROLL ================= */
-#side::-webkit-scrollbar{
-  width:6px;
-}
-#side::-webkit-scrollbar-thumb{
-  background:#333;
-  border-radius:10px;
-}
+/* scrollbar */
+#side::-webkit-scrollbar{width:6px}
+#side::-webkit-scrollbar-thumb{background:#333;border-radius:10px}
 </style>
 </head>
 
@@ -161,9 +154,12 @@ select{
 
     <!-- PLAYER -->
     <div id="playerArea">
-      <div class="playerWrapper" id="playerWrapper">
-        <video id="video" controls playsinline></video>
-        <iframe id="iframe" allowfullscreen></iframe>
+      <div class="playerWrapper">
+        <iframe
+          id="bunnyPlayer"
+          allowfullscreen
+          allow="autoplay; fullscreen; picture-in-picture"
+        ></iframe>
       </div>
     </div>
 
@@ -173,11 +169,12 @@ select{
       <div id="meta"></div>
       <p id="desc" style="opacity:.8;margin:10px 0"></p>
 
+      <!-- séries (mantido para futuro) -->
       <div id="serieControls" style="display:none">
         <select id="selTemporada"></select>
         <select id="selEpisodio"></select>
 
-        <button id="fullscreenBtn" onclick="abrirFullscreen()">
+        <button id="fullscreenBtn" onclick="fullscreenIframe()">
           ⛶ Assistir em tela cheia
         </button>
       </div>
@@ -199,14 +196,10 @@ const item = JSON.parse(
 );
 
 /* ================= ELEMENTOS ================= */
-const video = document.getElementById("video");
-const iframe = document.getElementById("iframe");
 const titulo = document.getElementById("titulo");
 const meta = document.getElementById("meta");
 const desc = document.getElementById("desc");
-const serieControls = document.getElementById("serieControls");
-const selTemporada = document.getElementById("selTemporada");
-const selEpisodio = document.getElementById("selEpisodio");
+const iframe = document.getElementById("bunnyPlayer");
 
 /* ================= UI ================= */
 titulo.textContent = item.titulo || item.serie_nome || "Conteúdo";
@@ -216,83 +209,25 @@ meta.innerHTML = `
   <span class="badge tipo">${item.tipo}</span>
 `;
 
-/* ================= PLAYER ================= */
-function isIframe(url){
-  return !url.match(/\.(mp4|m3u8|webm)$/i);
-}
+/* ================= BUNNY STREAM ================= */
+const LIBRARY_ID = "569072"; // SUA LIBRARY DO BUNNY
 
-if(isIframe(item.video_url)){
-  video.remove();
-  iframe.src = item.video_url;
+if(!item.video_id){
+  alert("Vídeo não encontrado (video_id vazio)");
 }else{
-  iframe.remove();
-  video.src = item.video_url;
+  iframe.src =
+    `https://iframe.mediadelivery.net/embed/${LIBRARY_ID}/${item.video_id}`;
 }
 
 /* ================= FULLSCREEN ================= */
-function abrirFullscreen(){
-  if(video){
-    if(video.webkitEnterFullscreen){
-      video.webkitEnterFullscreen();
-    }else if(video.requestFullscreen){
-      video.requestFullscreen();
-    }
+function fullscreenIframe(){
+  if(iframe.requestFullscreen){
+    iframe.requestFullscreen();
   }
-}
-
-/* ================= SÉRIES ================= */
-let serie = [];
-
-if(item.tipo === "serie"){
-  carregarSerie();
-}
-
-async function carregarSerie(){
-  const { data } = await sb
-    .from("filmes")
-    .select("*")
-    .eq("serie_nome", item.serie_nome)
-    .order("temporada")
-    .order("episodio");
-
-  serie = data || [];
-  if(!serie.length) return;
-
-  serieControls.style.display = "block";
-
-  const temporadas = [...new Set(serie.map(e => e.temporada))];
-  selTemporada.innerHTML = temporadas.map(t =>
-    `<option value="${t}">Temporada ${t}</option>`
-  ).join("");
-
-  selTemporada.onchange = trocarTemporada;
-  selEpisodio.onchange = trocarEpisodio;
-
-  trocarTemporada();
-}
-
-function trocarTemporada(){
-  const eps = serie.filter(e => e.temporada == selTemporada.value);
-  selEpisodio.innerHTML = eps.map((e,i) =>
-    `<option value="${i}">Episódio ${e.episodio}</option>`
-  ).join("");
-  tocar(eps[0]);
-}
-
-function trocarEpisodio(){
-  const eps = serie.filter(e => e.temporada == selTemporada.value);
-  tocar(eps[selEpisodio.value]);
-}
-
-function tocar(ep){
-  if(!ep) return;
-  video.src = ep.video_url;
-  video.play().catch(()=>{});
 }
 
 /* ================= SAIR ================= */
 function sair(){
-  if(video) video.pause();
   location.replace("index.html");
 }
 </script>
