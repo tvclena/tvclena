@@ -5,7 +5,6 @@
 <title>CLENA TV • AO VIVO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 
@@ -30,20 +29,37 @@ header{
 }
 header strong{
   font-size:18px;
+  letter-spacing:.5px;
 }
 .badge{
   margin-left:12px;
-  padding:4px 10px;
+  padding:4px 12px;
   background:#e50914;
   border-radius:999px;
   font-size:12px;
   font-weight:700;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.badge::before{
+  content:"";
+  width:8px;
+  height:8px;
+  background:#fff;
+  border-radius:50%;
+  animation:pulse 1.2s infinite;
+}
+@keyframes pulse{
+  0%{opacity:1}
+  50%{opacity:.4}
+  100%{opacity:1}
 }
 
 /* PLAYER */
 #tv{
   width:100%;
-  height:70vh;
+  height:68vh;
   background:#000;
 }
 video{
@@ -53,14 +69,14 @@ video{
   background:#000;
 }
 
-/* INFO */
+/* AGORA */
 #agora{
-  padding:12px 20px;
+  padding:14px 20px;
   background:#0f0f10;
   border-bottom:1px solid #111;
 }
 #agora h2{
-  font-size:17px;
+  font-size:18px;
   margin-bottom:4px;
 }
 #agora span{
@@ -73,13 +89,15 @@ video{
   padding:20px;
 }
 #grade h3{
-  font-size:15px;
+  font-size:14px;
   color:#ccc;
-  margin-bottom:10px;
+  margin-bottom:12px;
+  text-transform:uppercase;
+  letter-spacing:.8px;
 }
 .item{
   display:flex;
-  justify-content:space-between;
+  gap:10px;
   padding:8px 0;
   border-bottom:1px solid #1a1a1a;
   font-size:14px;
@@ -103,7 +121,7 @@ video{
   <div class="badge">AO VIVO</div>
 </header>
 
-<!-- PLAYER AO VIVO (PURO) -->
+<!-- PLAYER -->
 <div id="tv">
   <video
     id="video"
@@ -113,10 +131,10 @@ video{
   ></video>
 </div>
 
-<!-- PROGRAMA ATUAL -->
+<!-- AGORA -->
 <div id="agora">
   <h2 id="titulo">Carregando…</h2>
-  <span id="horario"></span>
+  <span id="meta"></span>
 </div>
 
 <!-- GRADE -->
@@ -132,17 +150,18 @@ const sb = supabase.createClient(
   window.ENV.SUPABASE_ANON_KEY
 );
 
-const CANAL_SLUG = 'clena-series';
+const CANAL_SLUG = "clena-series";
 const video = document.getElementById("video");
 
-let inicioPrograma = null;
-let programaAtualId = null;
+video.controls = false;
+video.disablePictureInPicture = true;
+video.controlsList = "nodownload noplaybackrate nofullscreen";
 
-/* ================= AO VIVO ================= */
-async function iniciarAoVivo(){
-  const agoraISO = new Date().toISOString();
+let playlist = [];
+let indiceAtual = 0;
 
-  /* canal */
+/* ================= PLAYLIST ================= */
+async function carregarPlaylist(){
   const { data: canal } = await sb
     .from("canais")
     .select("id")
@@ -151,100 +170,70 @@ async function iniciarAoVivo(){
 
   if(!canal) return;
 
-  /* programa atual */
-  const { data: atual } = await sb
-    .from("programacao_ao_vivo")
-    .select("*, filmes(*)")
+  const { data } = await sb
+    .from("canal_playlist")
+    .select("ordem, filmes(*)")
     .eq("canal_id", canal.id)
-    .lte("inicio", agoraISO)
-    .gte("fim", agoraISO)
-    .single();
+    .eq("ativo", true)
+    .order("ordem");
 
-  if(!atual) return;
+  playlist = data || [];
+}
 
-  /* evita reload desnecessário */
-  if(programaAtualId === atual.id) return;
-  programaAtualId = atual.id;
+/* ================= PLAYER ================= */
+function tocarAtual(){
+  if(!playlist.length) return;
 
-  inicioPrograma = new Date(atual.inicio).getTime();
+  const item = playlist[indiceAtual].filmes;
 
-  /* troca de vídeo */
   video.pause();
-  video.removeAttribute("src");
+  video.src = item.video_url;
   video.load();
 
-  video.src = atual.filmes.video_url;
-
-  /* 🔥 sincronização correta */
   video.onloadedmetadata = () => {
-    const offset = Math.floor((Date.now() - inicioPrograma) / 1000);
-    video.currentTime = offset > 0 ? offset : 0;
+    video.currentTime = 0;
     video.play().catch(()=>{});
   };
 
-  /* UI */
   document.getElementById("titulo").textContent =
-    atual.titulo_override || atual.filmes.titulo;
+    item.titulo || item.serie_nome;
 
-  document.getElementById("horario").textContent =
-    hora(atual.inicio) + " – " + hora(atual.fim);
+  document.getElementById("meta").textContent =
+    item.tipo === "serie"
+      ? `${item.serie_nome} • T${item.temporada} Ep ${item.episodio}`
+      : item.categoria;
 
-  carregarGrade(canal.id, atual.id);
+  renderGrade();
 }
 
+/* ================= PRÓXIMO ================= */
+video.addEventListener("ended", () => {
+  indiceAtual++;
+  if(indiceAtual >= playlist.length){
+    indiceAtual = 0; // loop do canal
+  }
+  tocarAtual();
+});
+
 /* ================= GRADE ================= */
-async function carregarGrade(canalId, atualId){
-  const agora = new Date().toISOString();
-  const daqui = new Date(Date.now()+12*60*60*1000).toISOString();
-
-  const { data } = await sb
-    .from("programacao_ao_vivo")
-    .select("*")
-    .eq("canal_id", canalId)
-    .gte("inicio", agora)
-    .lte("inicio", daqui)
-    .order("inicio");
-
+function renderGrade(){
   const box = document.getElementById("lista");
   box.innerHTML = "";
 
-  data.forEach(p=>{
+  playlist.slice(indiceAtual, indiceAtual + 6).forEach((p,i)=>{
     box.innerHTML += `
-      <div class="item ${p.id===atualId?'ativo':''}">
-        <span>${hora(p.inicio)}</span>
-        <span>${p.titulo_override}</span>
+      <div class="item ${i===0?'ativo':''}">
+        ${p.filmes.titulo || p.filmes.serie_nome}
       </div>
     `;
   });
 }
 
-/* ================= DRIFT FIX ================= */
-/* mantém o vídeo sempre próximo do "tempo real" */
-setInterval(() => {
-  if (!inicioPrograma || !video.duration) return;
-
-  const esperado = (Date.now() - inicioPrograma) / 1000;
-  const diff = video.currentTime - esperado;
-
-  if (Math.abs(diff) > 3) {
-    video.currentTime = esperado;
-  }
-}, 5000);
-
-/* ================= AUTO TROCA ================= */
-video.addEventListener("ended", iniciarAoVivo);
-
-/* ================= UTIL ================= */
-function hora(d){
-  return new Date(d).toLocaleTimeString("pt-BR",{
-    hour:"2-digit",
-    minute:"2-digit"
-  });
-}
-
-/* START */
-iniciarAoVivo();
-setInterval(iniciarAoVivo, 30000);
+/* ================= START ================= */
+(async ()=>{
+  await carregarPlaylist();
+  tocarAtual();
+})();
 </script>
 
 </body>
