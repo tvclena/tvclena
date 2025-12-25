@@ -70,12 +70,14 @@ body{
   background:#000;
 }
 
+.playerWrapper video,
 .playerWrapper iframe{
   position:absolute;
   inset:0;
   width:100%;
   height:100%;
   border:0;
+  background:#000;
 }
 
 /* ===== SIDE ===== */
@@ -116,9 +118,10 @@ h2{font-size:22px;margin-bottom:8px}
 
     <!-- PLAYER -->
     <div id="playerArea">
-      <div class="playerWrapper">
+      <div class="playerWrapper" id="playerWrapper">
+        <video id="video" controls playsinline></video>
         <iframe
-          id="bunnyPlayer"
+          id="iframe"
           allowfullscreen
           allow="autoplay; fullscreen; picture-in-picture"
         ></iframe>
@@ -137,7 +140,7 @@ h2{font-size:22px;margin-bottom:8px}
 
 <script>
 /* ===== CONFIG ===== */
-const LIBRARY_ID = "569072"; // sua library Bunny
+const LIBRARY_ID = "569072"; // Bunny Library ID
 
 /* ===== ITEM ===== */
 const itemParam = new URLSearchParams(location.search).get("item");
@@ -157,14 +160,47 @@ document.getElementById("meta").innerHTML = `
   <span class="badge tipo">${item.tipo || "vídeo"}</span>
 `;
 
-/* ===== BUNNY ===== */
-if(!item.video_id){
-  alert("Vídeo não disponível (video_id vazio)");
+/* ===== PLAYER LOGIC ===== */
+const videoEl = document.getElementById("video");
+const iframeEl = document.getElementById("iframe");
+const source = item.video_url;
+
+if(!source){
+  alert("Vídeo não disponível");
   location.replace("index.html");
 }
 
-const iframe = document.getElementById("bunnyPlayer");
-iframe.src = `https://iframe.mediadelivery.net/embed/${LIBRARY_ID}/${item.video_id}`;
+/* helpers */
+function isVideoFile(url){
+  return /\.(mp4|webm|m3u8)$/i.test(url);
+}
+
+function isIframeUrl(url){
+  return url.includes("iframe.mediadelivery.net");
+}
+
+function isBunnyId(val){
+  return /^[a-f0-9\-]{20,}$/i.test(val);
+}
+
+/* decisão */
+if(isVideoFile(source)){
+  iframeEl.remove();
+  videoEl.src = source;
+}
+else if(isIframeUrl(source)){
+  videoEl.remove();
+  iframeEl.src = source;
+}
+else if(isBunnyId(source)){
+  videoEl.remove();
+  iframeEl.src =
+    `https://iframe.mediadelivery.net/embed/${LIBRARY_ID}/${source}`;
+}
+else{
+  alert("Formato de vídeo não reconhecido");
+  location.replace("index.html");
+}
 
 /* ===== SAIR ===== */
 function sair(){
