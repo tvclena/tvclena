@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Clena TV • Ao Vivo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env.js"></script>
+
+<meta name="theme-color" content="#000">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#000;
+  color:#fff;
+  font-family:Inter,Arial,sans-serif;
+}
+
+/* PLAYER */
+video{
+  width:100vw;
+  height:100vh;
+  object-fit:cover;
+  background:#000;
+}
+
+/* BARRA AO VIVO */
+#liveBadge{
+  position:fixed;
+  top:14px;
+  left:14px;
+  background:#e50914;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:700;
+  z-index:10;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+#dot{
+  width:8px;
+  height:8px;
+  background:#fff;
+  border-radius:50%;
+  animation:pulse 1.2s infinite;
+}
+@keyframes pulse{
+  0%{opacity:1}
+  50%{opacity:.4}
+  100%{opacity:1}
+}
+</style>
+</head>
+
+<body>
+
+<div id="liveBadge">
+  <div id="dot"></div> AO VIVO
+</div>
+
+<video
+  id="video"
+  autoplay
+  playsinline
+></video>
+
+<script>
+const sb = supabase.createClient(
+  window.ENV.SUPABASE_URL,
+  window.ENV.SUPABASE_ANON_KEY
+);
+
+const video = document.getElementById("video");
+const params = new URLSearchParams(location.search);
+const canalSlug = params.get("canal") || "clena-series";
+
+/* ==========================
+   BLOQUEIOS DE CONTROLE
+========================== */
+video.controls = false;
+video.disablePictureInPicture = true;
+video.controlsList = "nodownload noplaybackrate nofullscreen";
+
+/* ==========================
+   BUSCA CANAL
+========================== */
+async function getCanalId(){
+  const { data } = await sb
+    .from("canais")
+    .select("id")
+    .eq("slug", canalSlug)
+    .single();
+
+  return data?.id;
+}
+
+/* ==========================
+   PROGRAMA ATUAL
+========================== */
+async function carregarProgramaAtual(){
+
+  const canalId = await getCanalId();
+  const agora = new Date().toISOString();
+
+  const { data: prog } = await sb
+    .from("programacao_ao_vivo")
+    .select(`*, filmes(*)`)
+    .eq("canal_id", canalId)
+    .lte("inicio", agora)
+    .gte("fim", agora)
+    .single();
+
+  if(!prog){
+    console.warn("Sem programação ao vivo");
+    return;
+  }
+
+  iniciarPlayer(prog);
+}
+
+/* ==========================
+   PLAYER SINCRONIZADO
+========================== */
+function iniciarPlayer(prog){
+
+  const inicio = new Date(prog.inicio).getTime();
+  const agora = Date.now();
+  const offset = Math.floor((agora - inicio) / 1000);
+
+  if(video.src !== prog.filmes.video_url){
+    video.src = prog.filmes.video_url;
+  }
+
+  video.currentTime = Math.max(0, offset);
+  video.muted = false;
+
+  video.play().catch(()=>{});
+}
+
+/* ==========================
+   TROCA AUTOMÁTICA
+========================== */
+video.addEventListener("ended", () => {
+  setTimeout(carregarProgramaAtual, 1000);
+});
+
+/* ==========================
+   RE-SYNC A CADA 60s
+========================== */
+setInterval(carregarProgramaAtual, 60000);
+
+/* START */
+carregarProgramaAtual();
+</script>
+
+</body>
+</html>
