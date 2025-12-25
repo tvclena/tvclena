@@ -12,41 +12,29 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{
+body{background:#000;color:#fff;font-family:Inter,Arial}
+
+video{
+  width:100vw;
+  height:100vh;
+  object-fit:cover;
   background:#000;
-  color:#fff;
-  font-family:Inter,Arial,sans-serif;
-  overflow:hidden;
 }
 
-/* HEADER */
-header{
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  height:54px;
-  display:flex;
-  align-items:center;
-  gap:14px;
-  padding:0 20px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent);
-  z-index:10;
-}
-header h1{
-  font-size:18px;
-  font-weight:800;
-  letter-spacing:.5px;
-}
+/* AO VIVO */
 #liveBadge{
+  position:fixed;
+  top:14px;
+  left:14px;
   background:#e50914;
-  padding:4px 12px;
+  padding:6px 14px;
   border-radius:999px;
-  font-size:12px;
-  font-weight:800;
+  font-size:13px;
+  font-weight:700;
+  z-index:10;
   display:flex;
   align-items:center;
-  gap:6px;
+  gap:8px;
 }
 #liveBadge::before{
   content:"";
@@ -62,14 +50,6 @@ header h1{
   100%{opacity:1}
 }
 
-/* VIDEO */
-video{
-  width:100vw;
-  height:100vh;
-  object-fit:cover;
-  background:#000;
-}
-
 /* FALLBACK */
 #fallback{
   position:fixed;
@@ -83,9 +63,9 @@ video{
 #fallback button{
   padding:16px 28px;
   font-size:16px;
-  font-weight:800;
+  font-weight:700;
   border:none;
-  border-radius:10px;
+  border-radius:8px;
   background:#e50914;
   color:#fff;
   cursor:pointer;
@@ -95,10 +75,7 @@ video{
 
 <body>
 
-<header>
-  <h1>CLENA TV</h1>
-  <div id="liveBadge">AO VIVO</div>
-</header>
+<div id="liveBadge">AO VIVO</div>
 
 <div id="fallback">
   <button onclick="iniciarManual()">▶ Iniciar transmissão</button>
@@ -113,7 +90,7 @@ video{
 ></video>
 
 <script>
-/* ================= SUPABASE ================= */
+/* ================= CONFIG ================= */
 const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
@@ -122,47 +99,61 @@ const sb = supabase.createClient(
 const video = document.getElementById("video");
 const fallback = document.getElementById("fallback");
 
-/* ================= HELPERS ================= */
-function isBunnyId(val){
-  return /^[a-f0-9-]{20,}$/i.test(val);
-}
-function bunnyToHls(id){
-  return `https://vz-827c2cae-692.b-cdn.net/${id}/playlist.m3u8`;
-}
+const canalSlug =
+  new URLSearchParams(location.search).get("canal") || "clena-series";
 
-/* ================= AO VIVO ================= */
-async function carregarAoVivo(){
-  console.log("🔴 Buscando programação ao vivo...");
+video.controls = false;
+video.disablePictureInPicture = true;
+video.controlsList = "nodownload noplaybackrate nofullscreen";
 
-  const { data, error } = await sb
-    .from("programacao")
-    .select("inicio, filmes(*)")
-    .order("inicio", { ascending: true })
-    .limit(1);
+let playlist = [];
+let indice = 0;
 
-  if(error || !data || !data.length){
-    console.error("❌ Programação não encontrada", error);
+/* ================= PLAYLIST ================= */
+async function carregarPlaylist(){
+  console.log("🔎 Buscando canal:", canalSlug);
+
+  const { data: canal, error: canalErr } = await sb
+    .from("canais")
+    .select("id")
+    .eq("slug", canalSlug)
+    .single();
+
+  if(canalErr || !canal){
+    console.error("❌ Canal não encontrado");
     return;
   }
 
-  const filme = data[0].filmes;
-  console.log("📺 Ao vivo:", filme.titulo);
+  console.log("✅ Canal OK:", canal.id);
 
-  iniciarVideo(filme);
+  const { data, error } = await sb
+    .from("canal_playlist")
+    .select("ordem, filmes(*)")
+    .eq("canal_id", canal.id)
+    .eq("ativo", true)
+    .order("ordem");
+
+  if(error){
+    console.error("❌ Erro playlist", error);
+    return;
+  }
+
+  playlist = data || [];
+  console.log("📺 Playlist carregada:", playlist);
 }
 
 /* ================= PLAYER ================= */
-async function iniciarVideo(filme){
-  let src = filme.video_url;
-
-  if(isBunnyId(src)){
-    console.log("🎥 Bunny ID detectado → HLS");
-    src = bunnyToHls(src);
+async function tocarAtual(){
+  if(!playlist.length){
+    console.warn("⚠️ Playlist vazia");
+    return;
   }
 
-  console.log("▶ SRC:", src);
+  const item = playlist[indice].filmes;
+  console.log("▶ Tocando:", item.titulo, item.video_url);
 
-  video.src = src;
+  video.pause();
+  video.src = item.video_url;
   video.load();
 
   try{
@@ -172,7 +163,7 @@ async function iniciarVideo(filme){
       video.volume = 1;
     },300);
   }catch(e){
-    console.warn("🚫 Autoplay bloqueado");
+    console.warn("🚫 Autoplay bloqueado, exibindo fallback");
     fallback.style.display = "flex";
   }
 }
@@ -184,14 +175,18 @@ async function iniciarManual(){
   await video.play();
 }
 
-/* ================= LOOP ================= */
+/* ================= PRÓXIMO ================= */
 video.addEventListener("ended", ()=>{
-  video.currentTime = 0;
-  video.play();
+  indice++;
+  if(indice >= playlist.length) indice = 0;
+  tocarAtual();
 });
 
 /* ================= START ================= */
-carregarAoVivo();
+(async ()=>{
+  await carregarPlaylist();
+  await tocarAtual();
+})();
 </script>
 
 </body>
