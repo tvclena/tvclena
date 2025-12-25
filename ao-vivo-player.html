@@ -12,13 +12,8 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{
-  background:#000;
-  color:#fff;
-  font-family:Inter,Arial,sans-serif;
-}
+body{background:#000;color:#fff;font-family:Inter,Arial}
 
-/* PLAYER */
 video{
   width:100vw;
   height:100vh;
@@ -26,7 +21,6 @@ video{
   background:#000;
 }
 
-/* BARRA AO VIVO */
 #liveBadge{
   position:fixed;
   top:14px;
@@ -66,6 +60,7 @@ video{
   id="video"
   autoplay
   playsinline
+  preload="auto"
 ></video>
 
 <script>
@@ -75,86 +70,85 @@ const sb = supabase.createClient(
 );
 
 const video = document.getElementById("video");
-const params = new URLSearchParams(location.search);
-const canalSlug = params.get("canal") || "clena-series";
+const canalSlug = new URLSearchParams(location.search).get("canal") || "clena-series";
 
-/* ==========================
-   BLOQUEIOS DE CONTROLE
-========================== */
+let inicioPrograma = null;
+let programaIdAtual = null;
+
+/* 🔒 BLOQUEIOS */
 video.controls = false;
 video.disablePictureInPicture = true;
 video.controlsList = "nodownload noplaybackrate nofullscreen";
 
-/* ==========================
-   BUSCA CANAL
-========================== */
+/* ================= CANAL ================= */
 async function getCanalId(){
   const { data } = await sb
     .from("canais")
     .select("id")
     .eq("slug", canalSlug)
     .single();
-
   return data?.id;
 }
 
-/* ==========================
-   PROGRAMA ATUAL
-========================== */
+/* ================= PROGRAMA ================= */
 async function carregarProgramaAtual(){
-
   const canalId = await getCanalId();
+  if(!canalId) return;
+
   const agora = new Date().toISOString();
 
   const { data: prog } = await sb
     .from("programacao_ao_vivo")
-    .select(`*, filmes(*)`)
+    .select("*, filmes(*)")
     .eq("canal_id", canalId)
     .lte("inicio", agora)
     .gte("fim", agora)
     .single();
 
-  if(!prog){
-    console.warn("Sem programação ao vivo");
-    return;
-  }
+  if(!prog) return;
 
+  // 👇 NÃO recarrega se for o mesmo programa
+  if(programaIdAtual === prog.id) return;
+
+  programaIdAtual = prog.id;
   iniciarPlayer(prog);
 }
 
-/* ==========================
-   PLAYER SINCRONIZADO
-========================== */
+/* ================= PLAYER ================= */
 function iniciarPlayer(prog){
+  inicioPrograma = new Date(prog.inicio).getTime();
 
-  const inicio = new Date(prog.inicio).getTime();
-  const agora = Date.now();
-  const offset = Math.floor((agora - inicio) / 1000);
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
 
-  if(video.src !== prog.filmes.video_url){
-    video.src = prog.filmes.video_url;
-  }
+  video.src = prog.filmes.video_url;
 
-  video.currentTime = Math.max(0, offset);
-  video.muted = false;
-
-  video.play().catch(()=>{});
+  video.onloadedmetadata = () => {
+    const offset = Math.floor((Date.now() - inicioPrograma) / 1000);
+    video.currentTime = offset > 0 ? offset : 0;
+    video.play().catch(()=>{});
+  };
 }
 
-/* ==========================
-   TROCA AUTOMÁTICA
-========================== */
-video.addEventListener("ended", () => {
-  setTimeout(carregarProgramaAtual, 1000);
-});
+/* ================= DRIFT FIX ================= */
+setInterval(() => {
+  if (!inicioPrograma || !video.duration) return;
 
-/* ==========================
-   RE-SYNC A CADA 60s
-========================== */
-setInterval(carregarProgramaAtual, 60000);
+  const esperado = (Date.now() - inicioPrograma) / 1000;
+  const diff = video.currentTime - esperado;
+
+  if (Math.abs(diff) > 3) {
+    video.currentTime = esperado;
+  }
+}, 5000);
+
+/* ================= AUTO TROCA ================= */
+video.addEventListener("ended", carregarProgramaAtual);
 
 /* START */
 carregarProgramaAtual();
+setInterval(carregarProgramaAtual, 30000);
 </script>
 
 </body>
