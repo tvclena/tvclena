@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Clena TV • Ao Vivo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env.js"></script>
+
+<meta name="theme-color" content="#0f0f10">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:Inter,Arial,sans-serif;
+  background:#0f0f10;
+  color:#fff;
+}
+
+header{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:64px;
+  display:flex;
+  align-items:center;
+  gap:20px;
+  padding:0 40px;
+  z-index:100;
+  background:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.5),transparent);
+}
+
+.logo{
+  font-size:22px;
+  font-weight:800;
+}
+.logo span:last-child{color:#e50914}
+
+.filtros{
+  padding:90px 40px 20px;
+  display:flex;
+  gap:12px;
+  overflow-x:auto;
+}
+
+.filtros button{
+  padding:10px 18px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  background:#2b2b2b;
+  color:#fff;
+  white-space:nowrap;
+}
+.filtros button.active{
+  background:#e50914;
+}
+
+section{
+  padding:20px 40px 40px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:#232326;
+  border-radius:12px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:.25s;
+}
+.card:hover{
+  transform:scale(1.05);
+  box-shadow:0 20px 40px rgba(0,0,0,.6);
+}
+.card img{
+  width:100%;
+  height:260px;
+  object-fit:cover;
+}
+.card .title{
+  padding:12px;
+  font-weight:600;
+  font-size:14px;
+}
+.card .title span{
+  display:block;
+  font-size:12px;
+  color:#bbb;
+  margin-bottom:4px;
+}
+
+@media(max-width:768px){
+  header{padding:0 16px;height:56px}
+  .filtros{padding:80px 16px 16px}
+  section{padding:16px}
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .card img{height:160px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">
+    CLENA <span>TV</span> 🔴 AO VIVO
+  </div>
+</header>
+
+<!-- CANAIS -->
+<div class="filtros" id="listaCanais"></div>
+
+<!-- GRADE -->
+<section>
+  <h3>Programação (próximas 12 horas)</h3>
+  <div class="grid" id="gradeAoVivo"></div>
+</section>
+
+<script>
+const sb = supabase.createClient(
+  window.ENV.SUPABASE_URL,
+  window.ENV.SUPABASE_ANON_KEY
+);
+
+let canalAtual = null;
+
+/* =======================
+   CARREGAR CANAIS
+======================= */
+async function carregarCanais(){
+  const { data } = await sb
+    .from("canais")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const box = document.getElementById("listaCanais");
+  box.innerHTML = "";
+
+  data.forEach((c, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = c.nome;
+    if(i === 0) btn.classList.add("active");
+
+    btn.onclick = () => abrirCanal(c.id, btn);
+    box.appendChild(btn);
+
+    if(i === 0) abrirCanal(c.id, btn);
+  });
+}
+
+/* =======================
+   ABRIR CANAL
+======================= */
+async function abrirCanal(canalId, el){
+  canalAtual = canalId;
+
+  document
+    .querySelectorAll("#listaCanais button")
+    .forEach(b => b.classList.remove("active"));
+
+  el.classList.add("active");
+
+  const agora = new Date().toISOString();
+  const daqui12h = new Date(Date.now() + 12*60*60*1000).toISOString();
+
+  const { data } = await sb
+    .from("programacao_ao_vivo")
+    .select(`
+      *,
+      filmes (*)
+    `)
+    .eq("canal_id", canalId)
+    .gte("inicio", agora)
+    .lte("inicio", daqui12h)
+    .order("inicio");
+
+  renderGrade(data);
+}
+
+/* =======================
+   RENDER GRADE
+======================= */
+function renderGrade(lista){
+  const grid = document.getElementById("gradeAoVivo");
+  grid.innerHTML = "";
+
+  if(!lista || !lista.length){
+    grid.innerHTML = "<p style='color:#777'>Sem programação.</p>";
+    return;
+  }
+
+  lista.forEach(item => {
+    const inicio = new Date(item.inicio)
+      .toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+    const fim = new Date(item.fim)
+      .toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.onclick = () => assistirAoVivo(item);
+
+    card.innerHTML = `
+      <img src="${item.filmes.capa_url}">
+      <div class="title">
+        <span>${inicio} – ${fim}</span>
+        ${item.titulo_override || item.filmes.titulo}
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+/* =======================
+   ASSISTIR AO VIVO
+======================= */
+function assistirAoVivo(item){
+  const agora = Date.now();
+  const inicio = new Date(item.inicio).getTime();
+
+  const offset = Math.max(0, Math.floor((agora - inicio) / 1000));
+
+  const payload = {
+    ...item.filmes,
+    ao_vivo: true,
+    offset
+  };
+
+  location.href =
+    "player.html?item=" +
+    encodeURIComponent(JSON.stringify(payload));
+}
+
+/* =======================
+   INIT
+======================= */
+carregarCanais();
+
+// atualiza grade a cada 60s
+setInterval(() => {
+  if(canalAtual){
+    const btn = document.querySelector("#listaCanais button.active");
+    if(btn) abrirCanal(canalAtual, btn);
+  }
+}, 60000);
+</script>
+
+</body>
+</html>
