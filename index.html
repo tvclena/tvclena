@@ -1077,7 +1077,7 @@ pValor.textContent = pagamento?.valor
 pVenc.textContent = pagamento?.created_at
   ? new Date(pagamento.created_at).toLocaleDateString("pt-BR")
   : "-";
-
+}
 
 async function perfilValidarUsername(){
   const u = pUser.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
