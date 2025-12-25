@@ -5,8 +5,6 @@
 <title>Sessão • Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 
@@ -23,7 +21,7 @@ body{
   background:#000;
 }
 
-/* ================= TOPO ================= */
+/* ===== TOPO ===== */
 #topActions{
   position:absolute;
   top:14px;
@@ -41,7 +39,7 @@ body{
   cursor:pointer;
 }
 
-/* ================= LAYOUT ================= */
+/* ===== LAYOUT ===== */
 #layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
@@ -55,7 +53,7 @@ body{
   }
 }
 
-/* ================= PLAYER ================= */
+/* ===== PLAYER ===== */
 #playerArea{
   display:flex;
   align-items:center;
@@ -80,7 +78,7 @@ body{
   border:0;
 }
 
-/* ================= SIDE ================= */
+/* ===== SIDE ===== */
 #side{
   background:#111;
   padding:22px;
@@ -88,15 +86,10 @@ body{
 }
 
 @media(max-width:900px){
-  #side{
-    max-height:45vh;
-  }
+  #side{max-height:45vh}
 }
 
-h2{
-  font-size:22px;
-  margin-bottom:8px;
-}
+h2{font-size:22px;margin-bottom:8px}
 
 .badge{
   display:inline-block;
@@ -107,37 +100,7 @@ h2{
   margin-right:6px;
 }
 
-.badge.tipo{
-  background:#e50914;
-}
-
-select{
-  width:100%;
-  padding:14px;
-  margin-top:12px;
-  background:#1c1c1c;
-  border:1px solid #333;
-  border-radius:12px;
-  color:#fff;
-  font-size:15px;
-}
-
-#fullscreenBtn{
-  width:100%;
-  margin-top:16px;
-  padding:16px;
-  font-size:16px;
-  font-weight:600;
-  background:#fff;
-  color:#000;
-  border:none;
-  border-radius:14px;
-  cursor:pointer;
-}
-
-/* scrollbar */
-#side::-webkit-scrollbar{width:6px}
-#side::-webkit-scrollbar-thumb{background:#333;border-radius:10px}
+.badge.tipo{background:#e50914}
 </style>
 </head>
 
@@ -145,7 +108,6 @@ select{
 
 <div id="player">
 
-  <!-- TOPO -->
   <div id="topActions">
     <button class="topBtn" onclick="sair()">← Voltar</button>
   </div>
@@ -167,66 +129,44 @@ select{
     <div id="side">
       <h2 id="titulo"></h2>
       <div id="meta"></div>
-      <p id="desc" style="opacity:.8;margin:10px 0"></p>
-
-      <!-- séries (mantido para futuro) -->
-      <div id="serieControls" style="display:none">
-        <select id="selTemporada"></select>
-        <select id="selEpisodio"></select>
-
-        <button id="fullscreenBtn" onclick="fullscreenIframe()">
-          ⛶ Assistir em tela cheia
-        </button>
-      </div>
+      <p id="desc" style="opacity:.8;margin-top:10px"></p>
     </div>
 
   </div>
 </div>
 
 <script>
-/* ================= SUPABASE ================= */
-const sb = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-);
+/* ===== CONFIG ===== */
+const LIBRARY_ID = "569072"; // sua library Bunny
 
-/* ================= ITEM ================= */
-const item = JSON.parse(
-  decodeURIComponent(new URLSearchParams(location.search).get("item"))
-);
+/* ===== ITEM ===== */
+const itemParam = new URLSearchParams(location.search).get("item");
 
-/* ================= ELEMENTOS ================= */
-const titulo = document.getElementById("titulo");
-const meta = document.getElementById("meta");
-const desc = document.getElementById("desc");
-const iframe = document.getElementById("bunnyPlayer");
+if(!itemParam){
+  alert("Item não informado");
+  location.replace("index.html");
+}
 
-/* ================= UI ================= */
-titulo.textContent = item.titulo || item.serie_nome || "Conteúdo";
-desc.textContent = item.descricao || "";
-meta.innerHTML = `
+const item = JSON.parse(decodeURIComponent(itemParam));
+
+/* ===== UI ===== */
+document.getElementById("titulo").textContent = item.titulo || "Conteúdo";
+document.getElementById("desc").textContent = item.descricao || "";
+document.getElementById("meta").innerHTML = `
   <span class="badge">${item.categoria || "Geral"}</span>
-  <span class="badge tipo">${item.tipo}</span>
+  <span class="badge tipo">${item.tipo || "vídeo"}</span>
 `;
 
-/* ================= BUNNY STREAM ================= */
-const LIBRARY_ID = "569072"; // SUA LIBRARY DO BUNNY
-
+/* ===== BUNNY ===== */
 if(!item.video_id){
-  alert("Vídeo não encontrado (video_id vazio)");
-}else{
-  iframe.src =
-    `https://iframe.mediadelivery.net/embed/${LIBRARY_ID}/${item.video_id}`;
+  alert("Vídeo não disponível (video_id vazio)");
+  location.replace("index.html");
 }
 
-/* ================= FULLSCREEN ================= */
-function fullscreenIframe(){
-  if(iframe.requestFullscreen){
-    iframe.requestFullscreen();
-  }
-}
+const iframe = document.getElementById("bunnyPlayer");
+iframe.src = `https://iframe.mediadelivery.net/embed/${LIBRARY_ID}/${item.video_id}`;
 
-/* ================= SAIR ================= */
+/* ===== SAIR ===== */
 function sair(){
   location.replace("index.html");
 }
