@@ -183,7 +183,7 @@ header{
   <p>Ative agora e aproveite todo o conteúdo sem limites 🚀</p>
 
   <div class="planos">
-    <!-- Planos carregados dinamicamente -->
+    <!-- planos dinâmicos -->
   </div>
 
   <div class="footer">
@@ -192,60 +192,51 @@ header{
 </div>
 
 <script>
-/* 🔐 DADOS DO SUPABASE (PUBLICOS) */
-const SUPABASE_URL = "https://SUA_URL.supabase.co";
-const SUPABASE_ANON_KEY = "SUA_ANON_KEY";
-
-/* NAVEGAÇÃO */
 function voltar(){
   location.href = "index.html";
 }
 
-/* CARREGAR PLANOS */
+/* CARREGA PLANOS DA API */
 async function carregarPlanos(){
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/planos?ativo=eq.true&order=valor.asc`,
-    {
-      headers:{
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-      }
-    }
-  );
+  try{
+    const res = await fetch("/api/get-planos");
+    const planos = await res.json();
 
-  const planos = await res.json();
-  const container = document.querySelector(".planos");
-  container.innerHTML = "";
+    const container = document.querySelector(".planos");
+    container.innerHTML = "";
 
-  planos.forEach((plano, index) => {
-    const card = document.createElement("div");
-    card.className = "plano";
+    planos.forEach((plano, index) => {
+      const card = document.createElement("div");
+      card.className = "plano";
 
-    card.innerHTML = `
-      ${index === 1 ? `<div class="popular">MAIS VENDIDO</div>` : ""}
-      <h2>${plano.nome}</h2>
-      <div class="preco">
-        R$ ${Number(plano.valor).toFixed(2).replace(".", ",")}
-        <span>/ mês</span>
-      </div>
-      <div class="duracao">${plano.dias} dias de acesso</div>
+      card.innerHTML = `
+        ${index === 1 ? `<div class="popular">MAIS VENDIDO</div>` : ""}
+        <h2>${plano.nome}</h2>
+        <div class="preco">
+          R$ ${Number(plano.valor).toFixed(2).replace(".", ",")}
+          <span>/ mês</span>
+        </div>
+        <div class="duracao">${plano.dias} dias de acesso</div>
 
-      <ul class="beneficios">
-        <li>Acesso completo</li>
-        <li>Conteúdo exclusivo</li>
-        <li>Qualidade máxima</li>
-      </ul>
+        <ul class="beneficios">
+          <li>Acesso completo</li>
+          <li>Conteúdo exclusivo</li>
+          <li>Qualidade máxima</li>
+        </ul>
 
-      <button class="btn" onclick="assinar('${plano.nome}')">
-        Assinar agora
-      </button>
-    `;
+        <button class="btn" onclick="assinar('${plano.nome}')">
+          Assinar agora
+        </button>
+      `;
 
-    container.appendChild(card);
-  });
+      container.appendChild(card);
+    });
+  }catch(e){
+    alert("Erro ao carregar planos");
+  }
 }
 
-/* ASSINAR */
+/* INICIAR PAGAMENTO */
 async function assinar(plano){
   const email = localStorage.getItem("usuario_email");
 
