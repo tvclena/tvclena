@@ -240,11 +240,14 @@ async function carregarPlanos(){
 async function assinar(plano){
   const email = localStorage.getItem("usuario_email");
 
-  if(!email){
-    alert("Faça login para continuar");
-    location.href = "login.html";
-    return;
-  }
+if(!email){
+  // salva para onde o usuário deve voltar
+  localStorage.setItem("redirect_after_login", "planos.html");
+  alert("Faça login para continuar");
+  location.href = "login.html";
+  return;
+}
+
 
   try{
     const res = await fetch("/api/create-payment",{
