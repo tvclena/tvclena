@@ -99,17 +99,6 @@ const sb = supabase.createClient(
 const video = document.getElementById("video");
 const fallback = document.getElementById("fallback");
 
-/* slug do canal ?canal=clena-series */
-const canalSlug =
-  new URLSearchParams(location.search).get("canal") || "clena-series";
-
-video.controls = false;
-video.disablePictureInPicture = true;
-video.controlsList = "nodownload noplaybackrate nofullscreen";
-
-let playlist = [];
-let indice = 0;
-
 /* ================= HELPERS ================= */
 function isVideoFile(url){
   return /\.(mp4|webm|m3u8)$/i.test(url);
@@ -119,69 +108,42 @@ function isBunnyId(val){
   return /^[a-f0-9-]{20,}$/i.test(val);
 }
 
-/* Bunny AO VIVO → HLS */
 function bunnyToHls(id){
-  // ajuste apenas se mudar seu CDN
   return `https://vz-827c2cae-692.b-cdn.net/${id}/playlist.m3u8`;
 }
 
-/* ================= PLAYLIST ================= */
-async function carregarPlaylist(){
-  console.log("🔎 Buscando canal:", canalSlug);
-
-  const { data: canal, error: canalErr } = await sb
-    .from("canais")
-    .select("id")
-    .eq("slug", canalSlug)
-    .single();
-
-  if(canalErr || !canal){
-    console.error("❌ Canal não encontrado");
-    return;
-  }
-
+/* ================= BUSCA AO VIVO ================= */
+async function carregarAoVivo(){
   const { data, error } = await sb
-    .from("canal_playlist")
-    .select("ordem, filmes(*)")
-    .eq("canal_id", canal.id)
-    .eq("ativo", true)
-    .order("ordem");
+    .from("programacao")
+    .select("filme_id, filmes(*)")
+    .order("inicio")
+    .limit(1);
 
-  if(error){
-    console.error("❌ Erro ao buscar playlist", error);
+  if(error || !data || !data.length){
+    console.error("❌ Nenhuma programação encontrada", error);
     return;
   }
 
-  playlist = data || [];
-  console.log("📺 Playlist carregada:", playlist);
+  const filme = data[0].filmes;
+  iniciarVideo(filme);
 }
 
 /* ================= PLAYER ================= */
-async function tocarAtual(){
-  if(!playlist.length){
-    console.warn("⚠️ Playlist vazia");
-    return;
-  }
-
-  const item = playlist[indice].filmes;
+async function iniciarVideo(item){
   let src = item.video_url;
+  console.log("▶ Conteúdo:", item.titulo, src);
 
-  console.log("▶ Conteúdo bruto:", src);
-
-  /* 🧠 DETECÇÃO AUTOMÁTICA */
   if(isBunnyId(src)){
-    console.log("🎥 Bunny ID detectado → HLS");
+    console.log("🎥 Bunny ID → HLS");
     src = bunnyToHls(src);
   }
 
   if(!isVideoFile(src)){
-    console.error("❌ Formato não suportado:", src);
+    console.error("❌ Formato inválido:", src);
     return;
   }
 
-  console.log("▶ Tocando:", item.titulo, src);
-
-  video.pause();
   video.src = src;
   video.load();
 
@@ -192,7 +154,7 @@ async function tocarAtual(){
       video.volume = 1;
     },300);
   }catch(e){
-    console.warn("🚫 Autoplay bloqueado, exibindo fallback");
+    console.warn("🚫 Autoplay bloqueado");
     fallback.style.display = "flex";
   }
 }
@@ -204,19 +166,16 @@ async function iniciarManual(){
   await video.play();
 }
 
-/* ================= PRÓXIMO ================= */
+/* ================= LOOP ================= */
 video.addEventListener("ended", ()=>{
-  indice++;
-  if(indice >= playlist.length) indice = 0;
-  tocarAtual();
+  video.currentTime = 0;
+  video.play();
 });
 
 /* ================= START ================= */
-(async ()=>{
-  await carregarPlaylist();
-  await tocarAtual();
-})();
+carregarAoVivo();
 </script>
+
 
 </body>
 </html>
