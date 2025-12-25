@@ -9,15 +9,25 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
+body{
+  background:#000;
+  color:#fff;
+  font-family:Inter,Arial,sans-serif;
+  overflow:hidden;
+}
 
-#player{position:fixed;inset:0;background:#000}
+#player{
+  position:fixed;
+  inset:0;
+  background:#000;
+}
 
-/* TOPO */
+/* ================= TOPO ================= */
 #topActions{
   position:absolute;
-  top:14px;left:14px;
-  z-index:99
+  top:14px;
+  left:14px;
+  z-index:99;
 }
 
 .topBtn{
@@ -30,7 +40,7 @@ body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   cursor:pointer;
 }
 
-/* LAYOUT */
+/* ================= LAYOUT ================= */
 #layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
@@ -38,31 +48,56 @@ body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 }
 
 @media(max-width:900px){
-  #layout{grid-template-columns:1fr}
+  #layout{
+    grid-template-columns:1fr;
+    grid-template-rows:auto 1fr;
+  }
 }
 
-/* PLAYER */
+/* ================= PLAYER ================= */
 #playerArea{
   position:relative;
   background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
 }
 
-video,iframe{
+.playerWrapper{
+  width:100%;
+  max-width:1200px;
+  aspect-ratio:16/9;
+  background:#000;
+  position:relative;
+}
+
+.playerWrapper video,
+.playerWrapper iframe{
+  position:absolute;
+  inset:0;
   width:100%;
   height:100%;
   border:none;
   background:#000;
 }
 
-/* SIDE */
+/* ================= SIDE ================= */
 #side{
   background:#111;
-  padding:20px;
+  padding:22px;
   overflow-y:auto;
 }
 
 @media(max-width:900px){
-  #side{max-height:45vh}
+  #side{
+    max-height:45vh;
+  }
+}
+
+h2{
+  font-size:22px;
+  margin-bottom:8px;
 }
 
 .badge{
@@ -74,7 +109,9 @@ video,iframe{
   margin-right:6px;
 }
 
-.badge.tipo{background:#e50914}
+.badge.tipo{
+  background:#e50914;
+}
 
 select{
   width:100%;
@@ -93,13 +130,21 @@ select{
   padding:16px;
   font-size:16px;
   font-weight:600;
-  background:#fff;   /* fundo branco */
-  color:#000;        /* texto preto */
+  background:#fff;
+  color:#000;
   border:none;
   border-radius:14px;
   cursor:pointer;
 }
 
+/* ================= SCROLL ================= */
+#side::-webkit-scrollbar{
+  width:6px;
+}
+#side::-webkit-scrollbar-thumb{
+  background:#333;
+  border-radius:10px;
+}
 </style>
 </head>
 
@@ -116,11 +161,13 @@ select{
 
     <!-- PLAYER -->
     <div id="playerArea">
-      <video id="video" controls playsinline></video>
-      <iframe id="iframe" allowfullscreen></iframe>
+      <div class="playerWrapper" id="playerWrapper">
+        <video id="video" controls playsinline></video>
+        <iframe id="iframe" allowfullscreen></iframe>
+      </div>
     </div>
 
-    <!-- INFO / CONTROLES -->
+    <!-- SIDE -->
     <div id="side">
       <h2 id="titulo"></h2>
       <div id="meta"></div>
@@ -165,7 +212,7 @@ const selEpisodio = document.getElementById("selEpisodio");
 titulo.textContent = item.titulo || item.serie_nome || "Conteúdo";
 desc.textContent = item.descricao || "";
 meta.innerHTML = `
-  <span class="badge">${item.categoria||"Geral"}</span>
+  <span class="badge">${item.categoria || "Geral"}</span>
   <span class="badge tipo">${item.tipo}</span>
 `;
 
@@ -175,44 +222,48 @@ function isIframe(url){
 }
 
 if(isIframe(item.video_url)){
-  video.style.display="none";
-  iframe.src=item.video_url;
+  video.remove();
+  iframe.src = item.video_url;
 }else{
-  iframe.style.display="none";
-  video.src=item.video_url;
+  iframe.remove();
+  video.src = item.video_url;
 }
 
-/* ================= FULLSCREEN REAL ================= */
+/* ================= FULLSCREEN ================= */
 function abrirFullscreen(){
-  // iOS
-  if (video.webkitEnterFullscreen) {
-    video.webkitEnterFullscreen();
-  } 
-  // Android / Desktop
-  else if (video.requestFullscreen) {
-    video.requestFullscreen();
+  if(video){
+    if(video.webkitEnterFullscreen){
+      video.webkitEnterFullscreen();
+    }else if(video.requestFullscreen){
+      video.requestFullscreen();
+    }
   }
 }
 
 /* ================= SÉRIES ================= */
-let serie=[], episodioIndex=0;
+let serie = [];
 
-if(item.tipo==="serie") carregarSerie();
+if(item.tipo === "serie"){
+  carregarSerie();
+}
 
 async function carregarSerie(){
-  const {data}=await sb.from("filmes")
+  const { data } = await sb
+    .from("filmes")
     .select("*")
-    .eq("serie_nome",item.serie_nome)
+    .eq("serie_nome", item.serie_nome)
     .order("temporada")
     .order("episodio");
 
-  serie=data||[];
+  serie = data || [];
   if(!serie.length) return;
 
-  serieControls.style.display="block";
+  serieControls.style.display = "block";
 
-  const temps=[...new Set(serie.map(e=>e.temporada))];
-  selTemporada.innerHTML = temps.map(t=>`<option>${t}</option>`).join("");
+  const temporadas = [...new Set(serie.map(e => e.temporada))];
+  selTemporada.innerHTML = temporadas.map(t =>
+    `<option value="${t}">Temporada ${t}</option>`
+  ).join("");
 
   selTemporada.onchange = trocarTemporada;
   selEpisodio.onchange = trocarEpisodio;
@@ -221,18 +272,16 @@ async function carregarSerie(){
 }
 
 function trocarTemporada(){
-  const eps = serie.filter(e=>e.temporada==selTemporada.value);
-  selEpisodio.innerHTML = eps.map(
-    (e,i)=>`<option value="${i}">Ep ${e.episodio}</option>`
+  const eps = serie.filter(e => e.temporada == selTemporada.value);
+  selEpisodio.innerHTML = eps.map((e,i) =>
+    `<option value="${i}">Episódio ${e.episodio}</option>`
   ).join("");
-  episodioIndex = 0;
   tocar(eps[0]);
 }
 
 function trocarEpisodio(){
-  const eps = serie.filter(e=>e.temporada==selTemporada.value);
-  episodioIndex = +selEpisodio.value;
-  tocar(eps[episodioIndex]);
+  const eps = serie.filter(e => e.temporada == selTemporada.value);
+  tocar(eps[selEpisodio.value]);
 }
 
 function tocar(ep){
@@ -243,7 +292,7 @@ function tocar(ep){
 
 /* ================= SAIR ================= */
 function sair(){
-  video.pause();
+  if(video) video.pause();
   location.replace("index.html");
 }
 </script>
