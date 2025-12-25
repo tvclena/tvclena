@@ -13,21 +13,24 @@ body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
 #player{position:fixed;inset:0;background:#000}
 
+/* TOPO */
 #topActions{
   position:absolute;
-  top:12px;left:12px;right:12px;
-  display:flex;justify-content:space-between;
+  top:14px;left:14px;
   z-index:99
 }
 
-.btn{
-  padding:8px 14px;
+.topBtn{
+  padding:10px 16px;
   background:rgba(0,0,0,.65);
-  color:#fff;border:none;
+  color:#fff;
+  border:none;
   border-radius:999px;
-  cursor:pointer;font-size:14px
+  font-size:14px;
+  cursor:pointer;
 }
 
+/* LAYOUT */
 #layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
@@ -38,6 +41,7 @@ body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   #layout{grid-template-columns:1fr}
 }
 
+/* PLAYER */
 #playerArea{
   position:relative;
   background:#000;
@@ -50,6 +54,7 @@ video,iframe{
   background:#000;
 }
 
+/* SIDE */
 #side{
   background:#111;
   padding:20px;
@@ -73,18 +78,26 @@ video,iframe{
 
 select{
   width:100%;
-  padding:12px;
-  margin-top:10px;
+  padding:14px;
+  margin-top:12px;
   background:#1c1c1c;
   border:1px solid #333;
-  border-radius:10px;
+  border-radius:12px;
   color:#fff;
+  font-size:15px;
 }
 
-#bottomActions{
-  display:flex;
-  gap:10px;
-  margin-top:14px;
+/* FULLSCREEN CTA */
+#fullscreenBtn{
+  width:100%;
+  margin-top:16px;
+  padding:16px;
+  font-size:16px;
+  font-weight:600;
+  background:#e50914;
+  border:none;
+  border-radius:14px;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -93,16 +106,20 @@ select{
 
 <div id="player">
 
+  <!-- TOPO -->
   <div id="topActions">
-    <button class="btn" onclick="sair()">← Voltar</button>
+    <button class="topBtn" onclick="sair()">← Voltar</button>
   </div>
 
   <div id="layout">
+
+    <!-- PLAYER -->
     <div id="playerArea">
       <video id="video" controls playsinline></video>
       <iframe id="iframe" allowfullscreen></iframe>
     </div>
 
+    <!-- INFO / CONTROLES -->
     <div id="side">
       <h2 id="titulo"></h2>
       <div id="meta"></div>
@@ -112,11 +129,12 @@ select{
         <select id="selTemporada"></select>
         <select id="selEpisodio"></select>
 
-        <div id="bottomActions">
-          <button class="btn" onclick="abrirFullscreen()">Tela cheia</button>
-        </div>
+        <button id="fullscreenBtn" onclick="abrirFullscreen()">
+          ⛶ Assistir em tela cheia
+        </button>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -163,11 +181,15 @@ if(isIframe(item.video_url)){
   video.src=item.video_url;
 }
 
-/* ================= FULLSCREEN MANUAL ================= */
+/* ================= FULLSCREEN REAL ================= */
 function abrirFullscreen(){
-  if(video.requestFullscreen) video.requestFullscreen();
-  if(screen.orientation?.lock){
-    screen.orientation.lock("landscape").catch(()=>{});
+  // iOS
+  if (video.webkitEnterFullscreen) {
+    video.webkitEnterFullscreen();
+  } 
+  // Android / Desktop
+  else if (video.requestFullscreen) {
+    video.requestFullscreen();
   }
 }
 
@@ -199,11 +221,9 @@ async function carregarSerie(){
 
 function trocarTemporada(){
   const eps = serie.filter(e=>e.temporada==selTemporada.value);
-
   selEpisodio.innerHTML = eps.map(
     (e,i)=>`<option value="${i}">Ep ${e.episodio}</option>`
   ).join("");
-
   episodioIndex = 0;
   tocar(eps[0]);
 }
