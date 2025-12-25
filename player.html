@@ -5,9 +5,10 @@
 <title>Sessão • Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-
 body{
   background:#000;
   color:#fff;
@@ -15,18 +16,13 @@ body{
   overflow:hidden;
 }
 
-#player{
-  position:fixed;
-  inset:0;
-  background:#000;
-}
+#player{position:fixed;inset:0;background:#000}
 
-/* ===== TOPO ===== */
+/* TOPO */
 #topActions{
   position:absolute;
-  top:14px;
-  left:14px;
-  z-index:99;
+  top:14px;left:14px;
+  z-index:99
 }
 
 .topBtn{
@@ -39,21 +35,17 @@ body{
   cursor:pointer;
 }
 
-/* ===== LAYOUT ===== */
+/* LAYOUT */
 #layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
   height:100%;
 }
-
 @media(max-width:900px){
-  #layout{
-    grid-template-columns:1fr;
-    grid-template-rows:auto 1fr;
-  }
+  #layout{grid-template-columns:1fr}
 }
 
-/* ===== PLAYER ===== */
+/* PLAYER */
 #playerArea{
   display:flex;
   align-items:center;
@@ -67,7 +59,6 @@ body{
   max-width:1200px;
   aspect-ratio:16/9;
   position:relative;
-  background:#000;
 }
 
 .playerWrapper video,
@@ -80,18 +71,15 @@ body{
   background:#000;
 }
 
-/* ===== SIDE ===== */
+/* SIDE */
 #side{
   background:#111;
   padding:22px;
   overflow-y:auto;
 }
-
 @media(max-width:900px){
   #side{max-height:45vh}
 }
-
-h2{font-size:22px;margin-bottom:8px}
 
 .badge{
   display:inline-block;
@@ -101,8 +89,31 @@ h2{font-size:22px;margin-bottom:8px}
   background:#222;
   margin-right:6px;
 }
-
 .badge.tipo{background:#e50914}
+
+select{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  background:#1c1c1c;
+  border:1px solid #333;
+  border-radius:12px;
+  color:#fff;
+  font-size:15px;
+}
+
+#fullscreenBtn{
+  width:100%;
+  margin-top:16px;
+  padding:16px;
+  font-size:16px;
+  font-weight:600;
+  background:#fff;
+  color:#000;
+  border:none;
+  border-radius:14px;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -118,13 +129,9 @@ h2{font-size:22px;margin-bottom:8px}
 
     <!-- PLAYER -->
     <div id="playerArea">
-      <div class="playerWrapper" id="playerWrapper">
+      <div class="playerWrapper">
         <video id="video" controls playsinline></video>
-        <iframe
-          id="iframe"
-          allowfullscreen
-          allow="autoplay; fullscreen; picture-in-picture"
-        ></iframe>
+        <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
       </div>
     </div>
 
@@ -132,78 +139,137 @@ h2{font-size:22px;margin-bottom:8px}
     <div id="side">
       <h2 id="titulo"></h2>
       <div id="meta"></div>
-      <p id="desc" style="opacity:.8;margin-top:10px"></p>
+      <p id="desc" style="opacity:.8;margin:10px 0"></p>
+
+      <!-- CONTROLES DE SÉRIE -->
+      <div id="serieControls" style="display:none">
+        <select id="selTemporada"></select>
+        <select id="selEpisodio"></select>
+
+        <button id="fullscreenBtn" onclick="abrirFullscreen()">
+          ⛶ Assistir em tela cheia
+        </button>
+      </div>
     </div>
 
   </div>
 </div>
 
 <script>
-/* ===== CONFIG ===== */
-const LIBRARY_ID = "569072"; // Bunny Library ID
+/* ================= CONFIG ================= */
+const LIBRARY_ID = "569072";
 
-/* ===== ITEM ===== */
-const itemParam = new URLSearchParams(location.search).get("item");
+/* ================= SUPABASE ================= */
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
 
-if(!itemParam){
-  alert("Item não informado");
-  location.replace("index.html");
-}
+/* ================= ITEM ================= */
+const item = JSON.parse(
+  decodeURIComponent(new URLSearchParams(location.search).get("item"))
+);
 
-const item = JSON.parse(decodeURIComponent(itemParam));
+/* ================= ELEMENTOS ================= */
+const video = document.getElementById("video");
+const iframe = document.getElementById("iframe");
+const titulo = document.getElementById("titulo");
+const meta = document.getElementById("meta");
+const desc = document.getElementById("desc");
+const serieControls = document.getElementById("serieControls");
+const selTemporada = document.getElementById("selTemporada");
+const selEpisodio = document.getElementById("selEpisodio");
 
-/* ===== UI ===== */
-document.getElementById("titulo").textContent = item.titulo || "Conteúdo";
-document.getElementById("desc").textContent = item.descricao || "";
-document.getElementById("meta").innerHTML = `
-  <span class="badge">${item.categoria || "Geral"}</span>
-  <span class="badge tipo">${item.tipo || "vídeo"}</span>
+/* ================= UI ================= */
+titulo.textContent = item.titulo || item.serie_nome || "Conteúdo";
+desc.textContent = item.descricao || "";
+meta.innerHTML = `
+  <span class="badge">${item.categoria||"Geral"}</span>
+  <span class="badge tipo">${item.tipo}</span>
 `;
 
-/* ===== PLAYER LOGIC ===== */
-const videoEl = document.getElementById("video");
-const iframeEl = document.getElementById("iframe");
-const source = item.video_url;
+/* ================= HELPERS ================= */
+function isVideoFile(v){ return /\.(mp4|webm|m3u8)$/i.test(v); }
+function isIframeUrl(v){ return v.includes("iframe.mediadelivery.net"); }
+function isBunnyId(v){ return /^[a-f0-9\-]{20,}$/i.test(v); }
 
-if(!source){
-  alert("Vídeo não disponível");
-  location.replace("index.html");
-}
-
-/* helpers */
-function isVideoFile(url){
-  return /\.(mp4|webm|m3u8)$/i.test(url);
-}
-
-function isIframeUrl(url){
-  return url.includes("iframe.mediadelivery.net");
-}
-
-function isBunnyId(val){
-  return /^[a-f0-9\-]{20,}$/i.test(val);
-}
-
-/* decisão */
-if(isVideoFile(source)){
-  iframeEl.remove();
-  videoEl.src = source;
-}
-else if(isIframeUrl(source)){
-  videoEl.remove();
-  iframeEl.src = source;
-}
-else if(isBunnyId(source)){
-  videoEl.remove();
-  iframeEl.src =
-    `https://iframe.mediadelivery.net/embed/${LIBRARY_ID}/${source}`;
-}
-else{
-  alert("Formato de vídeo não reconhecido");
-  location.replace("index.html");
+/* ================= PLAYER ================= */
+function tocarFonte(source){
+  if(isVideoFile(source)){
+    iframe.remove();
+    video.src = source;
+    video.play().catch(()=>{});
+  }
+  else if(isIframeUrl(source)){
+    video.remove();
+    iframe.src = source;
+  }
+  else if(isBunnyId(source)){
+    video.remove();
+    iframe.src = `https://iframe.mediadelivery.net/embed/${LIBRARY_ID}/${source}`;
+  }
+  else{
+    alert("Formato de vídeo não suportado");
+    sair();
+  }
 }
 
-/* ===== SAIR ===== */
+tocarFonte(item.video_url);
+
+/* ================= FULLSCREEN ================= */
+function abrirFullscreen(){
+  if(video && video.requestFullscreen){
+    video.requestFullscreen();
+  }else if(iframe && iframe.requestFullscreen){
+    iframe.requestFullscreen();
+  }
+}
+
+/* ================= SÉRIES ================= */
+let serie = [];
+
+if(item.tipo === "serie") carregarSerie();
+
+async function carregarSerie(){
+  const { data } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("serie_nome", item.serie_nome)
+    .order("temporada")
+    .order("episodio");
+
+  if(!data || !data.length) return;
+
+  serie = data;
+  serieControls.style.display = "block";
+
+  const temps = [...new Set(serie.map(e => e.temporada))];
+  selTemporada.innerHTML = temps.map(t =>
+    `<option value="${t}">Temporada ${t}</option>`
+  ).join("");
+
+  selTemporada.onchange = trocarTemporada;
+  selEpisodio.onchange = trocarEpisodio;
+
+  trocarTemporada();
+}
+
+function trocarTemporada(){
+  const eps = serie.filter(e => e.temporada == selTemporada.value);
+  selEpisodio.innerHTML = eps.map((e,i) =>
+    `<option value="${i}">Episódio ${e.episodio}</option>`
+  ).join("");
+  tocarFonte(eps[0].video_url);
+}
+
+function trocarEpisodio(){
+  const eps = serie.filter(e => e.temporada == selTemporada.value);
+  tocarFonte(eps[selEpisodio.value].video_url);
+}
+
+/* ================= SAIR ================= */
 function sair(){
+  if(video) video.pause();
   location.replace("index.html");
 }
 </script>
