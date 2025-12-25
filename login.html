@@ -233,10 +233,20 @@ btnLogin.onclick = async ()=>{
   const agora=new Date();
   const expira=new Date(data.trial_expires_at);
 
-  if(agora<=expira){
-    localStorage.setItem("usuario_email",data.email);
-    location.replace("index.html");
+ if(agora<=expira){
+  localStorage.setItem("usuario_email", data.email);
+
+  const redirect = localStorage.getItem("redirect_after_login");
+
+  if(redirect){
+    localStorage.removeItem("redirect_after_login");
+    location.replace(redirect);
   }else{
+    location.replace("index.html");
+  }
+}
+
+  else{
     msg.textContent="Período de teste expirado";
   }
 };
