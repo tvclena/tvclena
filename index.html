@@ -912,6 +912,8 @@ body.search-open {
 <button onclick="setFiltro('filme', this)">Filmes</button>
 <button onclick="setFiltro('serie', this)">Séries</button>
 <button onclick="setFiltro('jogos_ao_vivo', this)">Jogos ao vivo</button>
+<button onclick="irAoVivo()">🔴 Ao vivo</button>
+
 </div>
 
 <section>
@@ -1737,10 +1739,6 @@ async function carregarAvatarHeader() {
 
 
 
-
-  
-
-
 (async () => {
 
   const ok = await validarSessao();
@@ -1752,6 +1750,9 @@ async function carregarAvatarHeader() {
   setInterval(validarSessao, 15000);
 
 })();
+function irAoVivo(){
+  location.href = "ao-vivo.html";
+}
 
 
 </script>
