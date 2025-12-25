@@ -1028,31 +1028,56 @@ function perfilFechar(){
 async function perfilCarregar(){
   const email = localStorage.getItem("usuario_email");
 
-  const { data } = await sb
+  // 1️⃣ Busca usuário
+  const { data: user } = await sb
     .from("usuarios")
-    .select("*")
+    .select("id, email, nome_usuario, username, avatar_url")
     .eq("email", email)
     .single();
 
-  if(!data) return;
+  if(!user) return;
 
-  perfilUserId = data.id;
+  perfilUserId = user.id;
 
-  pEmail.textContent = data.email;
-  pNome.value = data.nome_usuario || "";
-  pUser.value = data.username || "";
-  pPlano.textContent = data.tipo_assinatura || "-";
-  pValor.textContent = data.valor_assinatura
-    ? data.valor_assinatura.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-    : "-";
-  pVenc.textContent = data.vencimento_assinatura
-    ? new Date(data.vencimento_assinatura).toLocaleDateString("pt-BR")
-    : "-";
+  pEmail.textContent = user.email;
+  pNome.value = user.nome_usuario || "";
+  pUser.value = user.username || "";
 
   pAvatar.src =
-    data.avatar_url ||
-    `https://ui-avatars.com/api/?name=${(pNome.value||"U")[0]}&background=e50914&color=fff`;
+    user.avatar_url ||
+    `https://ui-avatars.com/api/?name=${(user.nome_usuario || "U")[0]}&background=e50914&color=fff`;
+
+const { data: pagamento } = await sb
+  .from("pagamentos")
+  .select("status, valor, created_at, plano_id")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false })
+  .limit(1)
+  .maybeSingle();
+
+
+  
+let planoNome = "-";
+
+if (pagamento?.plano_id) {
+  const { data: plano } = await sb
+    .from("planos")
+    .select("nome")
+    .eq("id", pagamento.plano_id)
+    .single();
+
+  planoNome = plano?.nome || "-";
 }
+
+pPlano.textContent = planoNome;
+pValor.textContent = pagamento?.valor
+  ? pagamento.valor.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+  : "-";
+
+pVenc.textContent = pagamento?.created_at
+  ? new Date(pagamento.created_at).toLocaleDateString("pt-BR")
+  : "-";
+
 
 async function perfilValidarUsername(){
   const u = pUser.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
