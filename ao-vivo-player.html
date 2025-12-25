@@ -5,7 +5,6 @@
 <title>Clena TV • Ao Vivo</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 
@@ -13,13 +12,8 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{
-  background:#000;
-  color:#fff;
-  font-family:Inter,Arial,sans-serif;
-}
+body{background:#000;color:#fff;font-family:Inter,Arial}
 
-/* VIDEO FULLSCREEN */
 video{
   width:100vw;
   height:100vh;
@@ -27,7 +21,7 @@ video{
   background:#000;
 }
 
-/* AO VIVO BADGE */
+/* AO VIVO */
 #liveBadge{
   position:fixed;
   top:14px;
@@ -55,15 +49,38 @@ video{
   50%{opacity:.4}
   100%{opacity:1}
 }
+
+/* FALLBACK */
+#fallback{
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:20;
+}
+#fallback button{
+  padding:16px 28px;
+  font-size:16px;
+  font-weight:700;
+  border:none;
+  border-radius:8px;
+  background:#e50914;
+  color:#fff;
+  cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
-<!-- 🔴 AO VIVO -->
 <div id="liveBadge">AO VIVO</div>
 
-<!-- PLAYER -->
+<div id="fallback">
+  <button onclick="iniciarManual()">▶ Iniciar transmissão</button>
+</div>
+
 <video
   id="video"
   autoplay
@@ -80,20 +97,22 @@ const sb = supabase.createClient(
 );
 
 const video = document.getElementById("video");
+const fallback = document.getElementById("fallback");
+
 const canalSlug =
   new URLSearchParams(location.search).get("canal") || "clena-series";
 
-/* 🔒 BLOQUEIOS (TV REAL) */
 video.controls = false;
 video.disablePictureInPicture = true;
 video.controlsList = "nodownload noplaybackrate nofullscreen";
 
-/* ESTADO */
 let playlist = [];
-let indiceAtual = 0;
+let indice = 0;
 
 /* ================= PLAYLIST ================= */
 async function carregarPlaylist(){
+  console.log("🔎 Buscando canal:", canalSlug);
+
   const { data: canal, error: canalErr } = await sb
     .from("canais")
     .select("id")
@@ -101,9 +120,11 @@ async function carregarPlaylist(){
     .single();
 
   if(canalErr || !canal){
-    console.error("Canal não encontrado");
+    console.error("❌ Canal não encontrado");
     return;
   }
+
+  console.log("✅ Canal OK:", canal.id);
 
   const { data, error } = await sb
     .from("canal_playlist")
@@ -113,53 +134,58 @@ async function carregarPlaylist(){
     .order("ordem");
 
   if(error){
-    console.error("Erro ao carregar playlist", error);
+    console.error("❌ Erro playlist", error);
     return;
   }
 
   playlist = data || [];
+  console.log("📺 Playlist carregada:", playlist);
 }
 
 /* ================= PLAYER ================= */
-function tocarAtual(){
-  if(!playlist.length) return;
+async function tocarAtual(){
+  if(!playlist.length){
+    console.warn("⚠️ Playlist vazia");
+    return;
+  }
 
-  const item = playlist[indiceAtual].filmes;
+  const item = playlist[indice].filmes;
+  console.log("▶ Tocando:", item.titulo, item.video_url);
 
   video.pause();
   video.src = item.video_url;
   video.load();
 
-  video.onloadedmetadata = async () => {
-    try {
-      video.muted = true;        // 🔒 garante autoplay
-      await video.play();        // ▶️ inicia SEM bloqueio
+  try{
+    await video.play();
+    setTimeout(()=>{
+      video.muted = false;
+      video.volume = 1;
+    },300);
+  }catch(e){
+    console.warn("🚫 Autoplay bloqueado, exibindo fallback");
+    fallback.style.display = "flex";
+  }
+}
 
-      // 🔊 libera áudio logo após iniciar
-      setTimeout(() => {
-        video.muted = false;
-        video.volume = 1;
-      }, 300);
-
-    } catch(e){
-      console.warn("Autoplay bloqueado", e);
-    }
-  };
+/* ================= FALLBACK ================= */
+async function iniciarManual(){
+  fallback.style.display = "none";
+  video.muted = false;
+  await video.play();
 }
 
 /* ================= PRÓXIMO ================= */
-video.addEventListener("ended", () => {
-  indiceAtual++;
-  if(indiceAtual >= playlist.length){
-    indiceAtual = 0; // 🔁 loop do canal
-  }
+video.addEventListener("ended", ()=>{
+  indice++;
+  if(indice >= playlist.length) indice = 0;
   tocarAtual();
 });
 
 /* ================= START ================= */
 (async ()=>{
   await carregarPlaylist();
-  tocarAtual();
+  await tocarAtual();
 })();
 </script>
 
