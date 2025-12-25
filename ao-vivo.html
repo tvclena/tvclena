@@ -5,15 +5,18 @@
 <title>CLENA TV • AO VIVO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
+
+<meta name="theme-color" content="#000">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{
-  font-family:Inter,Arial,sans-serif;
   background:#000;
   color:#fff;
+  font-family:Inter,Arial,sans-serif;
 }
 
 /* HEADER */
@@ -25,7 +28,9 @@ header{
   background:#000;
   border-bottom:1px solid #111;
 }
-header strong{font-size:18px}
+header strong{
+  font-size:18px;
+}
 .badge{
   margin-left:12px;
   padding:4px 10px;
@@ -40,7 +45,6 @@ header strong{font-size:18px}
   width:100%;
   height:70vh;
   background:#000;
-  position:relative;
 }
 video{
   width:100%;
@@ -70,8 +74,8 @@ video{
 }
 #grade h3{
   font-size:15px;
-  margin-bottom:10px;
   color:#ccc;
+  margin-bottom:10px;
 }
 .item{
   display:flex;
@@ -99,28 +103,30 @@ video{
   <div class="badge">AO VIVO</div>
 </header>
 
-<!-- PLAYER PURO -->
+<!-- PLAYER AO VIVO (PURO) -->
 <div id="tv">
-  <video id="video"
+  <video
+    id="video"
     autoplay
     playsinline
     preload="auto"
   ></video>
 </div>
 
-<!-- AGORA -->
+<!-- PROGRAMA ATUAL -->
 <div id="agora">
-  <h2 id="titulo"></h2>
+  <h2 id="titulo">Carregando…</h2>
   <span id="horario"></span>
 </div>
 
-<!-- PROGRAMAÇÃO -->
+<!-- GRADE -->
 <div id="grade">
   <h3>Programação</h3>
   <div id="lista"></div>
 </div>
 
 <script>
+/* ================= CONFIG ================= */
 const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
@@ -129,52 +135,64 @@ const sb = supabase.createClient(
 const CANAL_SLUG = 'clena-series';
 const video = document.getElementById("video");
 
-/* ======================
-   AO VIVO REAL
-====================== */
-async function iniciarAoVivo(){
-  const agora = new Date();
+let inicioPrograma = null;
+let programaAtualId = null;
 
-  // canal
+/* ================= AO VIVO ================= */
+async function iniciarAoVivo(){
+  const agoraISO = new Date().toISOString();
+
+  /* canal */
   const { data: canal } = await sb
     .from("canais")
     .select("id")
     .eq("slug", CANAL_SLUG)
     .single();
 
-  // programa atual
+  if(!canal) return;
+
+  /* programa atual */
   const { data: atual } = await sb
     .from("programacao_ao_vivo")
     .select("*, filmes(*)")
     .eq("canal_id", canal.id)
-    .lte("inicio", agora.toISOString())
-    .gte("fim", agora.toISOString())
+    .lte("inicio", agoraISO)
+    .gte("fim", agoraISO)
     .single();
 
   if(!atual) return;
 
-  // 🔥 OFFSET ANTES DO PLAY
-  const inicio = new Date(atual.inicio).getTime();
-  const offset = Math.floor((Date.now() - inicio) / 1000);
+  /* evita reload desnecessário */
+  if(programaAtualId === atual.id) return;
+  programaAtualId = atual.id;
+
+  inicioPrograma = new Date(atual.inicio).getTime();
+
+  /* troca de vídeo */
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
 
   video.src = atual.filmes.video_url;
-  video.currentTime = offset > 0 ? offset : 0;
-  video.muted = false;
 
-  await video.play().catch(()=>{});
+  /* 🔥 sincronização correta */
+  video.onloadedmetadata = () => {
+    const offset = Math.floor((Date.now() - inicioPrograma) / 1000);
+    video.currentTime = offset > 0 ? offset : 0;
+    video.play().catch(()=>{});
+  };
 
+  /* UI */
   document.getElementById("titulo").textContent =
     atual.titulo_override || atual.filmes.titulo;
 
   document.getElementById("horario").textContent =
-    formatar(atual.inicio) + " – " + formatar(atual.fim);
+    hora(atual.inicio) + " – " + hora(atual.fim);
 
   carregarGrade(canal.id, atual.id);
 }
 
-/* ======================
-   GRADE VISUAL
-====================== */
+/* ================= GRADE ================= */
 async function carregarGrade(canalId, atualId){
   const agora = new Date().toISOString();
   const daqui = new Date(Date.now()+12*60*60*1000).toISOString();
@@ -191,23 +209,42 @@ async function carregarGrade(canalId, atualId){
   box.innerHTML = "";
 
   data.forEach(p=>{
-    const ativo = p.id === atualId ? "ativo" : "";
     box.innerHTML += `
-      <div class="item ${ativo}">
-        <span>${formatar(p.inicio)}</span>
+      <div class="item ${p.id===atualId?'ativo':''}">
+        <span>${hora(p.inicio)}</span>
         <span>${p.titulo_override}</span>
       </div>
     `;
   });
 }
 
-function formatar(d){
-  return new Date(d).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+/* ================= DRIFT FIX ================= */
+/* mantém o vídeo sempre próximo do "tempo real" */
+setInterval(() => {
+  if (!inicioPrograma || !video.duration) return;
+
+  const esperado = (Date.now() - inicioPrograma) / 1000;
+  const diff = video.currentTime - esperado;
+
+  if (Math.abs(diff) > 3) {
+    video.currentTime = esperado;
+  }
+}, 5000);
+
+/* ================= AUTO TROCA ================= */
+video.addEventListener("ended", iniciarAoVivo);
+
+/* ================= UTIL ================= */
+function hora(d){
+  return new Date(d).toLocaleTimeString("pt-BR",{
+    hour:"2-digit",
+    minute:"2-digit"
+  });
 }
 
-/* 🔄 troca automática */
-setInterval(iniciarAoVivo, 30000);
+/* START */
 iniciarAoVivo();
+setInterval(iniciarAoVivo, 30000);
 </script>
 
 </body>
