@@ -2,32 +2,42 @@ export const config = {
   runtime: "nodejs"
 };
 
+import { createClient } from "@supabase/supabase-js";
+
+const sb = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).end();
   }
 
-  const { plano, valor, email } = req.body;
+  const { plano, email } = req.body;
+  // agora "plano" é o NOME ou ID (vamos alinhar depois no front)
 
   if (!process.env.MP_ACCESS_TOKEN) {
     return res.status(500).json({ error: "MP_ACCESS_TOKEN não configurado" });
   }
 
-  const PLANOS = {
-    "Cinema": 1.99,
-    "Cinema Bet": 5.00,
-    "Studio": 15.00
-  };
+  /* 🔎 BUSCA O PLANO NO SUPABASE */
+  const { data: planoDB, error } = await sb
+    .from("planos")
+    .select("*")
+    .eq("nome", plano)
+    .eq("ativo", true)
+    .single();
 
-  if (PLANOS[plano] !== Number(valor)) {
-    return res.status(400).json({ error: "Plano inválido" });
+  if (error || !planoDB) {
+    return res.status(400).json({ error: "Plano inválido ou inativo" });
   }
 
   const preference = {
     items: [{
-      title: plano,
+      title: planoDB.nome,
       quantity: 1,
-      unit_price: Number(valor),
+      unit_price: Number(planoDB.valor),
       currency_id: "BRL"
     }],
     payer: { email },
