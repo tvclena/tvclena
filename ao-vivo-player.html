@@ -67,6 +67,7 @@ video{
 <video
   id="video"
   autoplay
+  muted
   playsinline
   preload="auto"
 ></video>
@@ -129,9 +130,20 @@ function tocarAtual(){
   video.src = item.video_url;
   video.load();
 
-  video.onloadedmetadata = () => {
-    video.currentTime = 0;
-    video.play().catch(()=>{});
+  video.onloadedmetadata = async () => {
+    try {
+      video.muted = true;        // 🔒 garante autoplay
+      await video.play();        // ▶️ inicia SEM bloqueio
+
+      // 🔊 libera áudio logo após iniciar
+      setTimeout(() => {
+        video.muted = false;
+        video.volume = 1;
+      }, 300);
+
+    } catch(e){
+      console.warn("Autoplay bloqueado", e);
+    }
   };
 }
 
