@@ -151,17 +151,19 @@ const sb = supabase.createClient(
   window.ENV.SUPABASE_ANON_KEY
 );
 
-const video   = document.getElementById("video");
-const titulo  = document.getElementById("titulo");
-const meta    = document.getElementById("meta");
-const lista   = document.getElementById("lista");
+/* ================= ELEMENTOS ================= */
+const video  = document.getElementById("video");
+const titulo = document.getElementById("titulo");
+const meta   = document.getElementById("meta");
+const lista  = document.getElementById("lista");
 
 video.controls = false;
 video.disablePictureInPicture = true;
 video.controlsList = "nodownload noplaybackrate nofullscreen";
 
+/* ================= STATE ================= */
 let programacao = [];
-let indexAtual = 0;
+let indexAtual  = 0;
 
 /* ================= HELPERS ================= */
 function isBunnyId(v){
@@ -185,7 +187,8 @@ async function carregarProgramacao(){
 
   programacao = data;
 
-  const agora = new Date();
+  // AGORA EM UTC (IMPORTANTE)
+  const agora = new Date(new Date().toISOString());
 
   indexAtual = programacao.findIndex((p,i)=>{
     const ini = new Date(p.inicio);
@@ -196,7 +199,12 @@ async function carregarProgramacao(){
     return ini <= agora && (!prox || agora < prox);
   });
 
-  if(indexAtual < 0) indexAtual = 0;
+  // FALLBACK SE NÃO ACHOU
+  if(indexAtual === -1){
+    indexAtual = agora < new Date(programacao[0].inicio)
+      ? 0
+      : programacao.length - 1;
+  }
 }
 
 /* ================= PLAYER ================= */
