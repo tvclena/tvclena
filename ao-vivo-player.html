@@ -5,6 +5,7 @@
 <title>Clena TV • Ao Vivo</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 
@@ -12,8 +13,13 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;color:#fff;font-family:Inter,Arial}
+body{
+  background:#000;
+  color:#fff;
+  font-family:Inter,Arial,sans-serif;
+}
 
+/* VIDEO FULLSCREEN */
 video{
   width:100vw;
   height:100vh;
@@ -21,21 +27,23 @@ video{
   background:#000;
 }
 
+/* AO VIVO BADGE */
 #liveBadge{
   position:fixed;
   top:14px;
   left:14px;
   background:#e50914;
-  padding:6px 12px;
+  padding:6px 14px;
   border-radius:999px;
   font-size:13px;
   font-weight:700;
   z-index:10;
   display:flex;
   align-items:center;
-  gap:6px;
+  gap:8px;
 }
-#dot{
+#liveBadge::before{
+  content:"";
   width:8px;
   height:8px;
   background:#fff;
@@ -52,10 +60,10 @@ video{
 
 <body>
 
-<div id="liveBadge">
-  <div id="dot"></div> AO VIVO
-</div>
+<!-- 🔴 AO VIVO -->
+<div id="liveBadge">AO VIVO</div>
 
+<!-- PLAYER -->
 <video
   id="video"
   autoplay
@@ -64,91 +72,83 @@ video{
 ></video>
 
 <script>
+/* ================= CONFIG ================= */
 const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
 );
 
 const video = document.getElementById("video");
-const canalSlug = new URLSearchParams(location.search).get("canal") || "clena-series";
+const canalSlug =
+  new URLSearchParams(location.search).get("canal") || "clena-series";
 
-let inicioPrograma = null;
-let programaIdAtual = null;
-
-/* 🔒 BLOQUEIOS */
+/* 🔒 BLOQUEIOS (TV REAL) */
 video.controls = false;
 video.disablePictureInPicture = true;
 video.controlsList = "nodownload noplaybackrate nofullscreen";
 
-/* ================= CANAL ================= */
-async function getCanalId(){
-  const { data } = await sb
+/* ESTADO */
+let playlist = [];
+let indiceAtual = 0;
+
+/* ================= PLAYLIST ================= */
+async function carregarPlaylist(){
+  const { data: canal, error: canalErr } = await sb
     .from("canais")
     .select("id")
     .eq("slug", canalSlug)
     .single();
-  return data?.id;
-}
 
-/* ================= PROGRAMA ================= */
-async function carregarProgramaAtual(){
-  const canalId = await getCanalId();
-  if(!canalId) return;
+  if(canalErr || !canal){
+    console.error("Canal não encontrado");
+    return;
+  }
 
-  const agora = new Date().toISOString();
+  const { data, error } = await sb
+    .from("canal_playlist")
+    .select("ordem, filmes(*)")
+    .eq("canal_id", canal.id)
+    .eq("ativo", true)
+    .order("ordem");
 
-  const { data: prog } = await sb
-    .from("programacao_ao_vivo")
-    .select("*, filmes(*)")
-    .eq("canal_id", canalId)
-    .lte("inicio", agora)
-    .gte("fim", agora)
-    .single();
+  if(error){
+    console.error("Erro ao carregar playlist", error);
+    return;
+  }
 
-  if(!prog) return;
-
-  // 👇 NÃO recarrega se for o mesmo programa
-  if(programaIdAtual === prog.id) return;
-
-  programaIdAtual = prog.id;
-  iniciarPlayer(prog);
+  playlist = data || [];
 }
 
 /* ================= PLAYER ================= */
-function iniciarPlayer(prog){
-  inicioPrograma = new Date(prog.inicio).getTime();
+function tocarAtual(){
+  if(!playlist.length) return;
+
+  const item = playlist[indiceAtual].filmes;
 
   video.pause();
-  video.removeAttribute("src");
+  video.src = item.video_url;
   video.load();
 
-  video.src = prog.filmes.video_url;
-
   video.onloadedmetadata = () => {
-    const offset = Math.floor((Date.now() - inicioPrograma) / 1000);
-    video.currentTime = offset > 0 ? offset : 0;
+    video.currentTime = 0;
     video.play().catch(()=>{});
   };
 }
 
-/* ================= DRIFT FIX ================= */
-setInterval(() => {
-  if (!inicioPrograma || !video.duration) return;
-
-  const esperado = (Date.now() - inicioPrograma) / 1000;
-  const diff = video.currentTime - esperado;
-
-  if (Math.abs(diff) > 3) {
-    video.currentTime = esperado;
+/* ================= PRÓXIMO ================= */
+video.addEventListener("ended", () => {
+  indiceAtual++;
+  if(indiceAtual >= playlist.length){
+    indiceAtual = 0; // 🔁 loop do canal
   }
-}, 5000);
+  tocarAtual();
+});
 
-/* ================= AUTO TROCA ================= */
-video.addEventListener("ended", carregarProgramaAtual);
-
-/* START */
-carregarProgramaAtual();
-setInterval(carregarProgramaAtual, 30000);
+/* ================= START ================= */
+(async ()=>{
+  await carregarPlaylist();
+  tocarAtual();
+})();
 </script>
 
 </body>
