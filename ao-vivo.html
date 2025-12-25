@@ -126,6 +126,7 @@ video{
   <video
     id="video"
     autoplay
+    muted
     playsinline
     preload="auto"
   ></video>
@@ -144,84 +145,108 @@ video{
 </div>
 
 <script>
-/* ================= CONFIG ================= */
+/* ================= SUPABASE ================= */
 const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
 );
 
-const CANAL_SLUG = "clena-series";
-const video = document.getElementById("video");
+const video   = document.getElementById("video");
+const titulo  = document.getElementById("titulo");
+const meta    = document.getElementById("meta");
+const lista   = document.getElementById("lista");
 
 video.controls = false;
 video.disablePictureInPicture = true;
 video.controlsList = "nodownload noplaybackrate nofullscreen";
 
-let playlist = [];
-let indiceAtual = 0;
+let programacao = [];
+let indexAtual = 0;
 
-/* ================= PLAYLIST ================= */
-async function carregarPlaylist(){
-  const { data: canal } = await sb
-    .from("canais")
-    .select("id")
-    .eq("slug", CANAL_SLUG)
-    .single();
+/* ================= HELPERS ================= */
+function isBunnyId(v){
+  return /^[a-f0-9-]{20,}$/i.test(v);
+}
+function bunnyToHls(id){
+  return `https://vz-827c2cae-692.b-cdn.net/${id}/playlist.m3u8`;
+}
 
-  if(!canal) return;
+/* ================= CARREGAR PROGRAMAÇÃO ================= */
+async function carregarProgramacao(){
+  const { data, error } = await sb
+    .from("programacao")
+    .select("inicio, filmes(*)")
+    .order("inicio", { ascending:true });
 
-  const { data } = await sb
-    .from("canal_playlist")
-    .select("ordem, filmes(*)")
-    .eq("canal_id", canal.id)
-    .eq("ativo", true)
-    .order("ordem");
+  if(error || !data){
+    console.error("Erro ao carregar programação", error);
+    return;
+  }
 
-  playlist = data || [];
+  programacao = data;
+
+  const agora = new Date();
+
+  indexAtual = programacao.findIndex((p,i)=>{
+    const ini = new Date(p.inicio);
+    const prox = programacao[i+1]
+      ? new Date(programacao[i+1].inicio)
+      : null;
+
+    return ini <= agora && (!prox || agora < prox);
+  });
+
+  if(indexAtual < 0) indexAtual = 0;
 }
 
 /* ================= PLAYER ================= */
 function tocarAtual(){
-  if(!playlist.length) return;
+  if(!programacao.length) return;
 
-  const item = playlist[indiceAtual].filmes;
+  const item = programacao[indexAtual].filmes;
+
+  let src = item.video_url;
+  if(isBunnyId(src)){
+    src = bunnyToHls(src);
+  }
 
   video.pause();
-  video.src = item.video_url;
+  video.src = src;
   video.load();
 
-  video.onloadedmetadata = () => {
-    video.currentTime = 0;
+  video.onloadedmetadata = ()=>{
     video.play().catch(()=>{});
+    setTimeout(()=>{
+      video.muted = false;
+      video.volume = 1;
+    },300);
   };
 
-  document.getElementById("titulo").textContent =
-    item.titulo || item.serie_nome;
+  titulo.textContent = item.titulo || item.serie_nome || "Ao vivo";
 
-  document.getElementById("meta").textContent =
+  meta.textContent =
     item.tipo === "serie"
       ? `${item.serie_nome} • T${item.temporada} Ep ${item.episodio}`
-      : item.categoria;
+      : item.categoria || "";
 
   renderGrade();
 }
 
-/* ================= PRÓXIMO ================= */
-video.addEventListener("ended", () => {
-  indiceAtual++;
-  if(indiceAtual >= playlist.length){
-    indiceAtual = 0; // loop do canal
+/* ================= LOOP ================= */
+video.addEventListener("ended", ()=>{
+  indexAtual++;
+  if(indexAtual >= programacao.length){
+    indexAtual = 0;
   }
   tocarAtual();
 });
 
 /* ================= GRADE ================= */
 function renderGrade(){
-  const box = document.getElementById("lista");
-  box.innerHTML = "";
+  lista.innerHTML = "";
 
-  playlist.slice(indiceAtual, indiceAtual + 6).forEach((p,i)=>{
-    box.innerHTML += `
+  programacao.slice(indexAtual, indexAtual + 6).forEach((p,i)=>{
+    lista.innerHTML += `
       <div class="item ${i===0?'ativo':''}">
         ${p.filmes.titulo || p.filmes.serie_nome}
       </div>
@@ -231,7 +256,7 @@ function renderGrade(){
 
 /* ================= START ================= */
 (async ()=>{
-  await carregarPlaylist();
+  await carregarProgramacao();
   tocarAtual();
 })();
 </script>
