@@ -1,3 +1,7 @@
+export const config = {
+  runtime: "nodejs"
+};
+
 import fetch from "node-fetch";
 import { createClient } from "@supabase/supabase-js";
 
@@ -8,10 +12,24 @@ const sb = createClient(
 
 export default async function handler(req, res) {
   try {
-    const paymentId = req.query["data.id"];
-    if (!paymentId) return res.status(200).end();
+    // 🔒 Webhook SEMPRE responde 200
+    if (req.method !== "POST") {
+      return res.status(200).end();
+    }
 
-    // 🔎 Consulta pagamento no Mercado Pago
+    const { type, data } = req.body || {};
+
+    // 🎯 Processa apenas eventos de pagamento
+    if (type !== "payment") {
+      return res.status(200).end();
+    }
+
+    const paymentId = data?.id;
+    if (!paymentId) {
+      return res.status(200).end();
+    }
+
+    // 🔎 Busca pagamento no Mercado Pago
     const mpRes = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
@@ -23,11 +41,12 @@ export default async function handler(req, res) {
 
     const payment = await mpRes.json();
 
+    // ⛔ Só continua se estiver aprovado
     if (payment.status !== "approved") {
       return res.status(200).end();
     }
 
-    // 🔁 Evita duplicidade
+    // 🔁 Evita pagamento duplicado
     const { data: existente } = await sb
       .from("pagamentos")
       .select("id")
@@ -38,28 +57,32 @@ export default async function handler(req, res) {
       return res.status(200).end();
     }
 
+    // 📩 Dados essenciais
     const email = payment.external_reference || payment.payer?.email;
-    const planoNome = payment.additional_info?.items?.[0]?.title;
-    const valorPago = payment.transaction_amount;
+    const planoNome =
+      payment.additional_info?.items?.[0]?.title ||
+      payment.description;
 
-    if (!email || !planoNome) {
+    const valorPago = Number(payment.transaction_amount);
+
+    if (!email || !planoNome || !valorPago) {
       return res.status(200).end();
     }
 
-    // 🔎 BUSCA PLANO NO SUPABASE
-    const { data: plano, error: planoError } = await sb
+    // 🔎 Busca plano válido
+    const { data: plano } = await sb
       .from("planos")
       .select("*")
       .eq("nome", planoNome)
       .eq("ativo", true)
       .single();
 
-    if (planoError || !plano) {
+    if (!plano) {
       return res.status(200).end();
     }
 
-    // 🔐 Validação de valor
-    if (Number(plano.valor) !== Number(valorPago)) {
+    // 🔐 Valida valor
+    if (Number(plano.valor) !== valorPago) {
       return res.status(200).end();
     }
 
@@ -76,9 +99,9 @@ export default async function handler(req, res) {
 
     // ⏱ Calcula vencimento
     const vencimento = new Date();
-    vencimento.setDate(vencimento.getDate() + plano.dias);
+    vencimento.setDate(vencimento.getDate() + Number(plano.dias));
 
-    // 🧾 Histórico de pagamentos
+    // 🧾 Registra pagamento
     await sb.from("pagamentos").insert({
       user_id: user.id,
       plano: plano.nome,
@@ -89,7 +112,8 @@ export default async function handler(req, res) {
     });
 
     // 👤 Atualiza assinatura do usuário
-    await sb.from("usuarios")
+    await sb
+      .from("usuarios")
       .update({
         status: "aprovado",
         tipo_assinatura: plano.nome,
@@ -100,9 +124,9 @@ export default async function handler(req, res) {
 
     return res.status(200).end();
 
-  } catch (e) {
-    // ❗ Webhook NUNCA deve retornar erro
-    console.error("Webhook erro:", e);
+  } catch (err) {
+    // ❗ Webhook NUNCA deve falhar
+    console.error("Webhook erro:", err);
     return res.status(200).end();
   }
 }
