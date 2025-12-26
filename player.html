@@ -121,16 +121,25 @@ select{
 
 <div id="player">
 
-  <div id="topActions">
-    <button class="topBtn" onclick="sair()">← Voltar</button>
-  </div>
+ <div id="topActions">
+  <button class="topBtn" onclick="sair()">← Voltar</button>
+  <button class="topBtn" id="castBtn">📺</button>
+</div>
+
 
   <div id="layout">
 
     <!-- PLAYER -->
     <div id="playerArea">
       <div class="playerWrapper">
-        <video id="video" controls playsinline></video>
+<video
+  id="video"
+  controls
+  autoplay
+  playsinline
+  webkit-playsinline
+  x-webkit-airplay="allow"
+></video>
         <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
       </div>
     </div>
@@ -199,20 +208,24 @@ function tocarFonte(source){
     iframe.remove();
     video.src = source;
     video.play().catch(()=>{});
+    ativarCastSePossivel(); // ✅ ATIVA CAST
   }
   else if(isIframeUrl(source)){
     video.remove();
     iframe.src = source;
+    castBtn.style.display = "none"; // 🚫 iframe não suporta cast
   }
   else if(isBunnyId(source)){
     video.remove();
     iframe.src = `https://iframe.mediadelivery.net/embed/${LIBRARY_ID}/${source}`;
+    castBtn.style.display = "none"; // 🚫 iframe não suporta cast
   }
   else{
     alert("Formato de vídeo não suportado");
     sair();
   }
 }
+
 
 tocarFonte(item.video_url);
 
@@ -272,6 +285,31 @@ function sair(){
   if(video) video.pause();
   location.replace("index.html");
 }
+const castBtn = document.getElementById("castBtn");
+
+function ativarCastSePossivel() {
+  // só funciona se o <video> existir
+  if (!video || !document.body.contains(video)) {
+    castBtn.style.display = "none";
+    return;
+  }
+
+  if ("remote" in HTMLMediaElement.prototype) {
+    castBtn.style.display = "inline-block";
+
+    castBtn.onclick = async () => {
+      try {
+        await video.remote.prompt();
+      } catch (e) {
+        console.log("Cast cancelado");
+      }
+    };
+  } else {
+    castBtn.style.display = "none";
+  }
+}
+
+  
 </script>
 
 </body>
