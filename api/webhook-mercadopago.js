@@ -1,6 +1,4 @@
-export const config = {
-  runtime: "nodejs",
-};
+export const config = { runtime: "nodejs" };
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -13,25 +11,16 @@ export default async function handler(req, res) {
   try {
     console.log("📩 Webhook recebido:", JSON.stringify(req.body));
 
-    // Mercado Pago exige resposta 200 rápida
     if (req.method !== "POST") {
       return res.status(200).json({ ok: true });
     }
 
-    const body = req.body || {};
-
-    // 🛡️ Suporte TOTAL ao payload de teste e real
-    const paymentId =
-      body?.data?.id ||
-      body?.resource?.split("/")?.pop() ||
-      null;
-
+    const paymentId = req.body?.data?.id;
     if (!paymentId) {
-      console.log("⚠️ Webhook sem paymentId (ignorado)");
       return res.status(200).json({ ignored: true });
     }
 
-    // 🔎 Consulta pagamento real
+    // 🔎 Consulta pagamento REAL
     const mpRes = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
@@ -44,32 +33,38 @@ export default async function handler(req, res) {
     const payment = await mpRes.json();
 
     if (!mpRes.ok) {
-      console.error("❌ Erro MP:", payment);
-      return res.status(200).json({ error: "MP fetch failed" });
+      console.log("⚠️ Payment não encontrado (teste ou retry)");
+      return res.status(200).json({ ignored: true });
     }
 
-    console.log("💳 Status pagamento:", payment.status);
+    console.log("💳 Pagamento real:", {
+      id: payment.id,
+      status: payment.status,
+      reference: payment.external_reference,
+    });
 
-    // 💾 Atualiza pagamento (não quebra se não existir)
-    await sb
+    // ✅ ATUALIZA PELO external_reference
+    const { error } = await sb
       .from("pagamentos")
       .update({
         payment_id: payment.id,
         status: payment.status,
         status_detail: payment.status_detail,
-        valor: payment.transaction_amount,
-        payer_email: payment.payer?.email,
         aprovado_em: payment.date_approved,
+        metodo: payment.payment_method_id,
         updated_at: new Date(),
       })
-      .eq("payment_id", payment.id);
+      .eq("referencia", payment.external_reference);
 
-    console.log("✅ Webhook processado com sucesso");
+    if (error) {
+      console.error("❌ Erro Supabase:", error);
+    }
+
+    console.log("✅ Pagamento sincronizado no Supabase");
 
     return res.status(200).json({ success: true });
   } catch (err) {
     console.error("🔥 ERRO WEBHOOK:", err);
-    // ⚠️ NUNCA devolver 500 para o Mercado Pago
     return res.status(200).json({ recovered: true });
   }
 }
