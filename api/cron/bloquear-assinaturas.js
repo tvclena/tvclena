@@ -7,7 +7,16 @@ const sb = createClient(
 
 export default async function handler(req, res) {
   try {
+    // 🔐 Proteção do CRON
+    const auth = req.headers.authorization;
+
+    if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).json({ error: "unauthorized" });
+    }
+
+    // ⏰ Executa a função do banco
     await sb.rpc("bloquear_assinaturas_vencidas");
+
     return res.json({ ok: true });
   } catch (err) {
     console.error("Cron erro:", err);
