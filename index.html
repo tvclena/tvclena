@@ -1266,6 +1266,24 @@ const searchMobileBox = document.getElementById("searchMobileBox");
 const buscaMobile = document.getElementById("buscaMobile");
 const searchResults = document.getElementById("searchResults");
 const searchGrid = document.getElementById("searchGrid");
+searchGrid.addEventListener("click", e => {
+  const card = e.target.closest(".search-card");
+  if (!card) return;
+
+  const itemEncoded = card.dataset.item;
+  if (!itemEncoded) return;
+
+  // fecha a busca
+  document.body.classList.remove("search-open");
+  searchResults.style.display = "none";
+  searchMobileBox.style.display = "none";
+
+  // abre o player
+  setTimeout(() => {
+    location.href = `player.html?item=${itemEncoded}`;
+  }, 50);
+});
+
 const busca = document.getElementById("busca");
 function executarBusca(texto) {
   if (!dadosCarregados) {
@@ -1307,22 +1325,18 @@ const resultados = [
   if (!resultados.length) {
     searchGrid.innerHTML =
       "<p style='color:#777'>Nenhum resultado encontrado</p>";
-  } else {
-searchGrid.addEventListener("click", e => {
-  const card = e.target.closest(".search-card");
-  if (!card) return;
 
-  const itemEncoded = card.dataset.item;
+    
+} else {
+  searchGrid.innerHTML = resultados.map(r => `
+    <div class="search-card"
+         data-item='${encodeURIComponent(JSON.stringify(r))}'>
+      <img src="${r.capa_url}">
+      <span>${r.titulo || r.serie_nome}</span>
+    </div>
+  `).join("");
+}
 
-  document.body.classList.remove("search-open");
-  searchResults.style.display = "none";
-  searchMobileBox.style.display = "none";
-
-  setTimeout(() => {
-    location.href = `player.html?item=${itemEncoded}`;
-  }, 50);
-});
-  }
 
   searchResults.style.display = "block";
 }
@@ -1706,23 +1720,6 @@ Gostaria de regularizar minha assinatura.`
   usuario = { email };
   return true;
 }
-
-
-function abrirResultado(e, itemEncoded){
-  e.preventDefault();
-  e.stopPropagation();
-
-  // fecha busca ANTES de navegar
-  document.body.classList.remove("search-open");
-  searchResults.style.display = "none";
-  searchMobileBox.style.display = "none";
-
-  // pequena espera para evitar cancelamento
-  setTimeout(() => {
-    location.href = `player.html?item=${itemEncoded}`;
-  }, 50);
-}
-
 
 
 
