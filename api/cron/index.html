@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Painel de CRON • Monitoramento</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #020617;
+      --line: #1e293b;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --success: #22c55e;
+      --error: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    header h1 {
+      font-size: 20px;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    header span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 500;
+      border-bottom: 1px solid var(--line);
+    }
+
+    tr {
+      border-bottom: 1px solid var(--line);
+    }
+
+    tr:last-child {
+      border-bottom: none;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .success {
+      color: var(--success);
+      background: rgba(34,197,94,.15);
+    }
+
+    .error {
+      color: var(--error);
+      background: rgba(239,68,68,.15);
+    }
+
+    .footer {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Monitor de CRON</h1>
+  <span>Atualização automática a cada 30s</span>
+</header>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Job</th>
+        <th>Status</th>
+        <th>Mensagem</th>
+        <th>Executado em</th>
+      </tr>
+    </thead>
+    <tbody id="logs">
+      <tr>
+        <td colspan="4" class="empty">Carregando logs…</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="footer">
+  Painel administrativo • somente leitura
+</div>
+
+<script>
+  async function carregarLogs() {
+    try {
+      const res = await fetch("/api/cron/logs");
+      const logs = await res.json();
+
+      const tbody = document.getElementById("logs");
+      tbody.innerHTML = "";
+
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML =
+          "<tr><td colspan='4' class='empty'>Nenhum log encontrado</td></tr>";
+        return;
+      }
+
+      logs.forEach(log => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${log.job}</td>
+          <td>
+            <span class="badge ${log.status}">
+              ${log.status}
+            </span>
+          </td>
+          <td>${log.mensagem || "-"}</td>
+          <td>${new Date(log.executado_em).toLocaleString()}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+    } catch (err) {
+      document.getElementById("logs").innerHTML =
+        "<tr><td colspan='4' class='empty'>Erro ao carregar logs</td></tr>";
+    }
+  }
+
+  carregarLogs();
+  setInterval(carregarLogs, 30000);
+</script>
+
+</body>
+</html>
