@@ -1,6 +1,4 @@
-export const config = {
-  runtime: "nodejs"
-};
+export const config = { runtime: "nodejs" };
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -11,20 +9,13 @@ const sb = createClient(
 
 export default async function handler(req, res) {
   try {
-    if (req.method !== "POST") {
-      return res.status(200).end();
-    }
+    if (req.method !== "POST") return res.status(200).end();
 
     const { type, data } = req.body || {};
-
-    if (type !== "payment") {
-      return res.status(200).end();
-    }
+    if (type !== "payment") return res.status(200).end();
 
     const paymentId = data?.id;
-    if (!paymentId) {
-      return res.status(200).end();
-    }
+    if (!paymentId) return res.status(200).end();
 
     const mpRes = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
@@ -35,31 +26,18 @@ export default async function handler(req, res) {
       }
     );
 
-    if (!mpRes.ok) {
-      return res.status(200).end();
-    }
-
+    if (!mpRes.ok) return res.status(200).end();
     const payment = await mpRes.json();
 
-    if (payment.status !== "approved") {
-      return res.status(200).end();
-    }
+    if (payment.status !== "approved") return res.status(200).end();
 
-    // 🔴 EMAIL OBRIGATÓRIO VIA external_reference
     const email = payment.external_reference;
-    if (!email) {
-      console.log("Pagamento sem external_reference", paymentId);
-      return res.status(200).end();
-    }
+    if (!email) return res.status(200).end();
 
     const planoNome =
-      payment.additional_info?.items?.[0]?.title ||
-      payment.description;
+      payment.additional_info?.items?.[0]?.title || payment.description;
 
-    if (!planoNome) {
-      console.log("Pagamento sem plano", paymentId);
-      return res.status(200).end();
-    }
+    if (!planoNome) return res.status(200).end();
 
     const valorPago = Number(payment.transaction_amount);
 
@@ -69,26 +47,17 @@ export default async function handler(req, res) {
       .eq("mp_payment_id", paymentId)
       .maybeSingle();
 
-    if (existente) {
-      return res.status(200).end();
-    }
+    if (existente) return res.status(200).end();
 
     const { data: plano } = await sb
       .from("planos")
       .select("*")
-      .ilike("nome", planoNome) // 🔥 tolerante
+      .ilike("nome", planoNome)
       .eq("ativo", true)
       .maybeSingle();
 
-    if (!plano) {
-      console.log("Plano não encontrado:", planoNome);
-      return res.status(200).end();
-    }
-
-    if (Number(plano.valor) !== valorPago) {
-      console.log("Valor divergente", plano.valor, valorPago);
-      return res.status(200).end();
-    }
+    if (!plano) return res.status(200).end();
+    if (Number(plano.valor) !== valorPago) return res.status(200).end();
 
     const { data: user } = await sb
       .from("usuarios")
@@ -96,10 +65,7 @@ export default async function handler(req, res) {
       .eq("email", email)
       .maybeSingle();
 
-    if (!user) {
-      console.log("Usuário não encontrado:", email);
-      return res.status(200).end();
-    }
+    if (!user) return res.status(200).end();
 
     const vencimento = new Date();
     vencimento.setDate(vencimento.getDate() + Number(plano.dias));
@@ -113,8 +79,7 @@ export default async function handler(req, res) {
       metodo: payment.payment_method_id
     });
 
-    await sb
-      .from("usuarios")
+    await sb.from("usuarios")
       .update({
         status: "aprovado",
         tipo_assinatura: plano.nome,
