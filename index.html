@@ -1266,23 +1266,24 @@ const searchMobileBox = document.getElementById("searchMobileBox");
 const buscaMobile = document.getElementById("buscaMobile");
 const searchResults = document.getElementById("searchResults");
 const searchGrid = document.getElementById("searchGrid");
-searchGrid.addEventListener("click", e => {
-  const card = e.target.closest(".search-card");
-  if (!card) return;
 
+  
+function abrirResultadoMobile(e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const card = e.currentTarget;
   const itemEncoded = card.dataset.item;
   if (!itemEncoded) return;
 
-  // fecha a busca
   document.body.classList.remove("search-open");
   searchResults.style.display = "none";
   searchMobileBox.style.display = "none";
 
-  // abre o player
   setTimeout(() => {
     location.href = `player.html?item=${itemEncoded}`;
-  }, 50);
-});
+  }, 100);
+}
 
 const busca = document.getElementById("busca");
 function executarBusca(texto) {
@@ -1328,14 +1329,15 @@ const resultados = [
 
     
 } else {
-  searchGrid.innerHTML = resultados.map(r => `
-    <div class="search-card"
-         data-item='${encodeURIComponent(JSON.stringify(r))}'>
-      <img src="${r.capa_url}">
-      <span>${r.titulo || r.serie_nome}</span>
-    </div>
-  `).join("");
-}
+searchGrid.innerHTML = resultados.map(r => `
+  <div class="search-card"
+       ontouchstart="abrirResultadoMobile(event)"
+       onclick="abrirResultadoMobile(event)"
+       data-item='${encodeURIComponent(JSON.stringify(r))}'>
+    <img src="${r.capa_url}">
+    <span>${r.titulo || r.serie_nome}</span>
+  </div>
+`).join("");
 
 
   searchResults.style.display = "block";
