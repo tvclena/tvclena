@@ -1,8 +1,6 @@
 export const config = {
   runtime: "nodejs"
 };
-
-import fetch from "node-fetch";
 import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
