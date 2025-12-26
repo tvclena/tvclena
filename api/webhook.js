@@ -1,6 +1,7 @@
 export const config = {
   runtime: "nodejs"
 };
+
 import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
@@ -12,6 +13,12 @@ export default async function handler(req, res) {
   try {
     // 🔒 Webhook SEMPRE responde 200
     if (req.method !== "POST") {
+      return res.status(200).end();
+    }
+
+    // 🧪 IGNORA simulação do painel do Mercado Pago
+    // (o simulador usa payment fake e live_mode=false)
+    if (req.body?.live_mode === false) {
       return res.status(200).end();
     }
 
@@ -27,7 +34,7 @@ export default async function handler(req, res) {
       return res.status(200).end();
     }
 
-    // 🔎 Busca pagamento no Mercado Pago
+    // 🔎 Busca pagamento REAL no Mercado Pago
     const mpRes = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
@@ -36,6 +43,11 @@ export default async function handler(req, res) {
         }
       }
     );
+
+    if (!mpRes.ok) {
+      // pagamento inexistente ou não acessível
+      return res.status(200).end();
+    }
 
     const payment = await mpRes.json();
 
@@ -56,7 +68,10 @@ export default async function handler(req, res) {
     }
 
     // 📩 Dados essenciais
-    const email = payment.external_reference || payment.payer?.email;
+    const email =
+      payment.external_reference ||
+      payment.payer?.email;
+
     const planoNome =
       payment.additional_info?.items?.[0]?.title ||
       payment.description;
@@ -97,7 +112,9 @@ export default async function handler(req, res) {
 
     // ⏱ Calcula vencimento
     const vencimento = new Date();
-    vencimento.setDate(vencimento.getDate() + Number(plano.dias));
+    vencimento.setDate(
+      vencimento.getDate() + Number(plano.dias)
+    );
 
     // 🧾 Registra pagamento
     await sb.from("pagamentos").insert({
@@ -123,7 +140,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
 
   } catch (err) {
-    // ❗ Webhook NUNCA deve falhar
+    // ❗ Webhook NUNCA deve quebrar
     console.error("Webhook erro:", err);
     return res.status(200).end();
   }
