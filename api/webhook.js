@@ -11,20 +11,12 @@ const sb = createClient(
 
 export default async function handler(req, res) {
   try {
-    // 🔒 Webhook SEMPRE responde 200
     if (req.method !== "POST") {
-      return res.status(200).end();
-    }
-
-    // 🧪 IGNORA simulação do painel do Mercado Pago
-    // (o simulador usa payment fake e live_mode=false)
-    if (req.body?.live_mode === false) {
       return res.status(200).end();
     }
 
     const { type, data } = req.body || {};
 
-    // 🎯 Processa apenas eventos de pagamento
     if (type !== "payment") {
       return res.status(200).end();
     }
@@ -34,7 +26,6 @@ export default async function handler(req, res) {
       return res.status(200).end();
     }
 
-    // 🔎 Busca pagamento REAL no Mercado Pago
     const mpRes = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
@@ -45,18 +36,33 @@ export default async function handler(req, res) {
     );
 
     if (!mpRes.ok) {
-      // pagamento inexistente ou não acessível
       return res.status(200).end();
     }
 
     const payment = await mpRes.json();
 
-    // ⛔ Só continua se estiver aprovado
     if (payment.status !== "approved") {
       return res.status(200).end();
     }
 
-    // 🔁 Evita pagamento duplicado
+    // 🔴 EMAIL OBRIGATÓRIO VIA external_reference
+    const email = payment.external_reference;
+    if (!email) {
+      console.log("Pagamento sem external_reference", paymentId);
+      return res.status(200).end();
+    }
+
+    const planoNome =
+      payment.additional_info?.items?.[0]?.title ||
+      payment.description;
+
+    if (!planoNome) {
+      console.log("Pagamento sem plano", paymentId);
+      return res.status(200).end();
+    }
+
+    const valorPago = Number(payment.transaction_amount);
+
     const { data: existente } = await sb
       .from("pagamentos")
       .select("id")
@@ -67,39 +73,23 @@ export default async function handler(req, res) {
       return res.status(200).end();
     }
 
-    // 📩 Dados essenciais
-    const email =
-      payment.external_reference ||
-      payment.payer?.email;
-
-    const planoNome =
-      payment.additional_info?.items?.[0]?.title ||
-      payment.description;
-
-    const valorPago = Number(payment.transaction_amount);
-
-    if (!email || !planoNome || !valorPago) {
-      return res.status(200).end();
-    }
-
-    // 🔎 Busca plano válido
     const { data: plano } = await sb
       .from("planos")
       .select("*")
-      .eq("nome", planoNome)
+      .ilike("nome", planoNome) // 🔥 tolerante
       .eq("ativo", true)
-      .single();
+      .maybeSingle();
 
     if (!plano) {
+      console.log("Plano não encontrado:", planoNome);
       return res.status(200).end();
     }
 
-    // 🔐 Valida valor
     if (Number(plano.valor) !== valorPago) {
+      console.log("Valor divergente", plano.valor, valorPago);
       return res.status(200).end();
     }
 
-    // 👤 Busca usuário
     const { data: user } = await sb
       .from("usuarios")
       .select("id")
@@ -107,16 +97,13 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (!user) {
+      console.log("Usuário não encontrado:", email);
       return res.status(200).end();
     }
 
-    // ⏱ Calcula vencimento
     const vencimento = new Date();
-    vencimento.setDate(
-      vencimento.getDate() + Number(plano.dias)
-    );
+    vencimento.setDate(vencimento.getDate() + Number(plano.dias));
 
-    // 🧾 Registra pagamento
     await sb.from("pagamentos").insert({
       user_id: user.id,
       plano: plano.nome,
@@ -126,7 +113,6 @@ export default async function handler(req, res) {
       metodo: payment.payment_method_id
     });
 
-    // 👤 Atualiza assinatura do usuário
     await sb
       .from("usuarios")
       .update({
@@ -140,7 +126,6 @@ export default async function handler(req, res) {
     return res.status(200).end();
 
   } catch (err) {
-    // ❗ Webhook NUNCA deve quebrar
     console.error("Webhook erro:", err);
     return res.status(200).end();
   }
