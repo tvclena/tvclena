@@ -161,10 +161,11 @@ const LIBRARY_ID = "569072";
 
 /* ================= SUPABASE ================= */
 const sb = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+  window.ENV.SUPABASE_URL,
+  window.ENV.SUPABASE_ANON_KEY
 );
 
+  
 /* ================= ITEM ================= */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get("item"))
