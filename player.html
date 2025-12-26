@@ -189,7 +189,9 @@ meta.innerHTML = `
 `;
 
 /* ================= HELPERS ================= */
-function isVideoFile(v){ return /\.(mp4|webm|m3u8)$/i.test(v); }
+function isVideoFile(v){
+  return /\.m3u8$/i.test(v);
+}
 function isIframeUrl(v){ return v.includes("iframe.mediadelivery.net"); }
 function isBunnyId(v){ return /^[a-f0-9\-]{20,}$/i.test(v); }
 
