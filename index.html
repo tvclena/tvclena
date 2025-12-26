@@ -223,10 +223,42 @@ input, textarea, select {
 
 /* ================= FILTROS ================= */
 
+/* ================= FILTROS CATEGORIAS (SCROLL HORIZONTAL) ================= */
+
 .filtros-categorias{
-  padding-top:12px;
-  flex-wrap:wrap;
+  padding:12px 40px 0;
+  display:flex;
+  gap:12px;
+
+  overflow-x:auto;
+  overflow-y:hidden;
+
+  white-space:nowrap;
+  scroll-behavior:smooth;
+
+  -webkit-overflow-scrolling:touch;
 }
+
+/* garante que os botões não quebrem */
+.filtros-categorias button{
+  flex:0 0 auto;
+}
+
+/* esconde scrollbar */
+.filtros-categorias::-webkit-scrollbar{
+  display:none;
+}
+.filtros-categorias{
+  scrollbar-width:none;
+}
+
+/* MOBILE */
+@media (max-width:768px){
+  .filtros-categorias{
+    padding:10px 16px 0;
+  }
+}
+
 
 .filtros{
   padding:30px 40px 0;
