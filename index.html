@@ -1294,6 +1294,7 @@ function executarBusca(texto) {
     return;
   }
 
+  
   const q = texto.trim().toLowerCase();
 
   if (q.length < 2) {
@@ -1338,7 +1339,7 @@ searchGrid.innerHTML = resultados.map(r => `
     <span>${r.titulo || r.serie_nome}</span>
   </div>
 `).join("");
-
+  }
 
   searchResults.style.display = "block";
 }
