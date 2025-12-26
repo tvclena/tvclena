@@ -9,89 +9,134 @@ const sb = createClient(
 
 export default async function handler(req, res) {
   try {
-    if (req.method !== "POST") return res.status(200).end();
+    if (req.method !== "POST") {
+      return res.status(200).json({ ok: true });
+    }
 
-    const { type, data } = req.body || {};
-    if (type !== "payment") return res.status(200).end();
+    const paymentId = req.body?.data?.id;
+    if (!paymentId) {
+      return res.status(200).json({ ignored: true });
+    }
 
-    const paymentId = data?.id;
-    if (!paymentId) return res.status(200).end();
-
+    // 🔎 Consulta pagamento REAL
     const mpRes = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
         headers: {
-          Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`
-        }
+          Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+        },
       }
     );
 
-    if (!mpRes.ok) return res.status(200).end();
+    if (!mpRes.ok) {
+      console.log("⚠️ Payment não encontrado (retry ou teste)");
+      return res.status(200).json({ ignored: true });
+    }
+
     const payment = await mpRes.json();
 
-    if (payment.status !== "approved") return res.status(200).end();
+    const {
+      status,
+      status_detail,
+      transaction_amount,
+      payment_method_id,
+      external_reference,
+      date_approved,
+    } = payment;
 
-    const email = payment.external_reference;
-    if (!email) return res.status(200).end();
+    if (!external_reference) {
+      console.error("❌ Pagamento sem external_reference");
+      return res.status(200).json({ error: true });
+    }
 
-    const planoNome =
-      payment.additional_info?.items?.[0]?.title || payment.description;
-
-    if (!planoNome) return res.status(200).end();
-
-    const valorPago = Number(payment.transaction_amount);
-
-    const { data: existente } = await sb
+    // 🔐 Atualiza pagamento PELO external_reference
+    const { data: pagamento, error: errPagamento } = await sb
       .from("pagamentos")
-      .select("id")
-      .eq("mp_payment_id", paymentId)
+      .update({
+        payment_id: paymentId,
+        status,
+        status_detail,
+        metodo: payment_method_id,
+        valor: transaction_amount,
+        aprovado_em: date_approved,
+        updated_at: new Date(),
+      })
+      .eq("referencia", external_reference)
+      .select("*")
       .maybeSingle();
 
-    if (existente) return res.status(200).end();
+    if (errPagamento || !pagamento) {
+      console.error("❌ Pagamento não encontrado no banco");
+      return res.status(200).json({ error: true });
+    }
 
+    // 🔁 Idempotência: se já processado, ignora
+    if (pagamento.processado) {
+      return res.status(200).json({ ok: true });
+    }
+
+    // 🔎 Busca usuário
+    const { data: user } = await sb
+      .from("usuarios")
+      .select("*")
+      .eq("id", pagamento.user_id)
+      .maybeSingle();
+
+    if (!user) {
+      console.error("❌ Usuário não encontrado");
+      return res.status(200).json({ error: true });
+    }
+
+    // 🔎 Busca plano
     const { data: plano } = await sb
       .from("planos")
       .select("*")
-      .ilike("nome", planoNome)
-      .eq("ativo", true)
+      .eq("id", pagamento.plano_id)
       .maybeSingle();
 
-    if (!plano) return res.status(200).end();
-    if (Number(plano.valor) !== valorPago) return res.status(200).end();
+    if (!plano) {
+      console.error("❌ Plano não encontrado");
+      return res.status(200).json({ error: true });
+    }
 
-    const { data: user } = await sb
-      .from("usuarios")
-      .select("id")
-      .eq("email", email)
-      .maybeSingle();
+    // 🔓 APROVADO
+    if (status === "approved") {
+      const vencimento = new Date();
+      vencimento.setDate(vencimento.getDate() + Number(plano.dias));
 
-    if (!user) return res.status(200).end();
+      await sb.from("usuarios")
+        .update({
+          status: "aprovado",
+          tipo_assinatura: plano.nome,
+          valor_assinatura: transaction_amount,
+          vencimento_assinatura: vencimento.toISOString(),
+        })
+        .eq("id", user.id);
+    }
 
-    const vencimento = new Date();
-    vencimento.setDate(vencimento.getDate() + Number(plano.dias));
+    // 🔒 ESTORNO / CANCELAMENTO
+    if (status === "refunded" || status === "cancelled") {
+      await sb.from("usuarios")
+        .update({
+          status: "bloqueado",
+          tipo_assinatura: null,
+          valor_assinatura: null,
+          vencimento_assinatura: null,
+        })
+        .eq("id", user.id);
+    }
 
-    await sb.from("pagamentos").insert({
-      user_id: user.id,
-      plano: plano.nome,
-      mp_payment_id: paymentId,
-      status: "approved",
-      valor: valorPago,
-      metodo: payment.payment_method_id
-    });
+    // ✅ Marca como processado (idempotência)
+    await sb.from("pagamentos")
+      .update({ processado: true })
+      .eq("id", pagamento.id);
 
-    await sb.from("usuarios")
-      .update({
-        status: "aprovado",
-        tipo_assinatura: plano.nome,
-        valor_assinatura: valorPago,
-        vencimento_assinatura: vencimento.toISOString()
-      })
-      .eq("id", user.id);
+    console.log("✅ Webhook processado:", status);
 
-    return res.status(200).end();
+    return res.status(200).json({ success: true });
 
   } catch (err) {
-    console.error("Webhook erro:", err);
-    return res.status(200).end();
+    console.error("🔥 ERRO WEBHOOK:", err);
+    return res.status(200).json({ recovered: true });
   }
 }
