@@ -222,6 +222,12 @@ input, textarea, select {
 
 
 /* ================= FILTROS ================= */
+
+.filtros-categorias{
+  padding-top:12px;
+  flex-wrap:wrap;
+}
+
 .filtros{
   padding:30px 40px 0;
   display:flex;
@@ -917,6 +923,9 @@ body.search-open {
 <button onclick="setFiltro('serie', this)">Séries</button>
 <button onclick="setFiltro('jogos_ao_vivo', this)">Jogos ao vivo</button>
 </div>
+<div class="filtros filtros-categorias" id="filtrosCategorias">
+  <!-- categorias geradas via JS -->
+</div>
 
 <section>
   <h3>Catálogo</h3>
@@ -1186,6 +1195,7 @@ let dados=[], heroItem=null, filtro='todos', usuario=null;
 let serieAtual=[], filmeAtual=null;
 let episodioIndexAtual = 0;
 let dadosCarregados = false;
+let categoriaAtiva = "todas";
 
 
 // ================= ELEMENTOS DOM =================
@@ -1226,6 +1236,7 @@ if (error) {
 
   dados = data || [];
   dadosCarregados = true;
+montarFiltrosCategorias(); // 👈 ADICIONE AQUI
 
   if (!dados.length) {
     console.warn("⚠️ Nenhum filme ativo encontrado");
@@ -1426,9 +1437,18 @@ function card(i){
 function render(buscaTxt = "") {
   grid.innerHTML = "";
 
+  // 🔹 LISTA BASE (dados → categoria)
+  let lista = dados;
+
+  if (categoriaAtiva !== "todas") {
+    lista = lista.filter(d =>
+      (d.categoria || "").toLowerCase() === categoriaAtiva.toLowerCase()
+    );
+  }
+
   // 🎬 FILMES
   if (filtro === "todos" || filtro === "filme") {
-    dados
+    lista
       .filter(d => (d.tipo || "").toLowerCase() === "filme")
       .filter(d => JSON.stringify(d).toLowerCase().includes(buscaTxt))
       .forEach(f => grid.innerHTML += card(f));
@@ -1438,7 +1458,7 @@ function render(buscaTxt = "") {
   if (filtro === "todos" || filtro === "serie") {
     const series = [
       ...new Map(
-        dados
+        lista
           .filter(d => (d.tipo || "").toLowerCase() === "serie")
           .map(s => [s.serie_nome, s])
       ).values()
@@ -1451,13 +1471,12 @@ function render(buscaTxt = "") {
 
   // 🔴 JOGOS AO VIVO
   if (filtro === "todos" || filtro === "jogos_ao_vivo") {
-    dados
+    lista
       .filter(d => (d.tipo || "").toLowerCase() === "jogos_ao_vivo")
       .filter(d => JSON.stringify(d).toLowerCase().includes(buscaTxt))
       .forEach(j => grid.innerHTML += card(j));
   }
 }
-
 
 
 function formatarReal(valor){
@@ -1776,6 +1795,37 @@ async function carregarAvatarHeader() {
   setInterval(validarSessao, 15000);
 
 })();
+function montarFiltrosCategorias(){
+  const box = document.getElementById("filtrosCategorias");
+
+  const categorias = [
+    "todas",
+    ...new Set(
+      dados
+        .map(d => (d.categoria || "").trim())
+        .filter(Boolean)
+    )
+  ];
+
+  box.innerHTML = categorias.map((c,i) => `
+    <button
+      class="${i===0 ? "active" : ""}"
+      onclick="setCategoria('${c}', this)">
+      ${c.charAt(0).toUpperCase() + c.slice(1)}
+    </button>
+  `).join("");
+}
+function setCategoria(cat, el){
+  categoriaAtiva = cat;
+
+  document
+    .querySelectorAll(".filtros-categorias button")
+    .forEach(b => b.classList.remove("active"));
+
+  el.classList.add("active");
+
+  render(busca?.value?.toLowerCase() || "");
+}
 
 
 </script>
