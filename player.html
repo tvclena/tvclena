@@ -6,13 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  window.ENV = {
-    SUPABASE_URL: "%%SUPABASE_URL%%",
-    SUPABASE_ANON_KEY: "%%SUPABASE_ANON_KEY%%"
-  };
-</script>
-
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -168,11 +161,10 @@ const LIBRARY_ID = "569072";
 
 /* ================= SUPABASE ================= */
 const sb = supabase.createClient(
-  window.ENV.SUPABASE_URL,
-  window.ENV.SUPABASE_ANON_KEY
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-  
 /* ================= ITEM ================= */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get("item"))
