@@ -1072,57 +1072,55 @@ function perfilFechar(){
 
 async function perfilCarregar(){
   const email = localStorage.getItem("usuario_email");
+  if (!email) return;
 
-  // 1️⃣ Busca usuário
-  const { data: user } = await sb
+  const { data: user, error } = await sb
     .from("usuarios")
-    .select("id, email, nome_usuario, username, avatar_url")
+    .select(`
+      id,
+      email,
+      nome_usuario,
+      username,
+      avatar_url,
+      tipo_assinatura,
+      valor_assinatura,
+      vencimento_assinatura
+    `)
     .eq("email", email)
     .single();
 
-  if(!user) return;
+  if (error || !user) {
+    console.error("Erro ao carregar perfil:", error);
+    return;
+  }
 
   perfilUserId = user.id;
 
+  // 📧 Dados básicos
   pEmail.textContent = user.email;
   pNome.value = user.nome_usuario || "";
   pUser.value = user.username || "";
 
+  // 🖼 Avatar
   pAvatar.src =
     user.avatar_url ||
     `https://ui-avatars.com/api/?name=${(user.nome_usuario || "U")[0]}&background=e50914&color=fff`;
 
-const { data: pagamento } = await sb
-  .from("pagamentos")
-  .select("status, valor, created_at, plano_id")
-  .eq("user_id", user.id)
-  .order("created_at", { ascending: false })
-  .limit(1)
-  .maybeSingle();
+  // 💳 Plano (vem DIRETO do usuário)
+  pPlano.textContent = user.tipo_assinatura || "-";
 
+  pValor.textContent = user.valor_assinatura
+    ? Number(user.valor_assinatura).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      })
+    : "-";
 
-  
-let planoNome = "-";
-
-if (pagamento?.plano_id) {
-  const { data: plano } = await sb
-    .from("planos")
-    .select("nome")
-    .eq("id", pagamento.plano_id)
-    .single();
-
-  planoNome = plano?.nome || "-";
+  pVenc.textContent = user.vencimento_assinatura
+    ? new Date(user.vencimento_assinatura).toLocaleDateString("pt-BR")
+    : "-";
 }
 
-pPlano.textContent = planoNome;
-pValor.textContent = pagamento?.valor
-  ? pagamento.valor.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-  : "-";
-
-pVenc.textContent = pagamento?.created_at
-  ? new Date(pagamento.created_at).toLocaleDateString("pt-BR")
-  : "-";
-}
 
 async function perfilValidarUsername(){
   const u = pUser.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
