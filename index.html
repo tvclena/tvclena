@@ -856,7 +856,7 @@ body.search-open {
 <div id="perfilBtn" onclick="perfilAbrir()"><span>US</span></div>
 
   <!-- mobile -->
-  <div id="searchBtn" onclick="toggleSearch()">🔍</div>
+<div id="searchBtn">🔍</div>
 </header>
 
 <!-- 🔍 BUSCA MOBILE -->
@@ -1354,6 +1354,19 @@ function toggleSearch(){
   // força foco sem zoom
   setTimeout(() => buscaMobile.focus(), 100);
 }
+const searchBtn = document.getElementById("searchBtn");
+
+searchBtn.addEventListener("touchstart", e => {
+  e.preventDefault();
+  e.stopPropagation();
+  toggleSearch();
+});
+
+searchBtn.addEventListener("click", e => {
+  e.preventDefault();
+  e.stopPropagation();
+  toggleSearch();
+});
 
 
 buscaMobile.oninput = () => {
@@ -1369,9 +1382,10 @@ if (busca) {
 
 document.addEventListener("click", e => {
   if (
-    searchResults.contains(e.target) ||   // ✅ clicou em resultado
-    searchMobileBox.contains(e.target) || // ✅ clicou no input
-    e.target.closest(".search-card")      // ✅ clicou no card
+    searchResults.contains(e.target) ||
+    searchMobileBox.contains(e.target) ||
+    e.target.closest(".search-card") ||
+    e.target.closest("#searchBtn") // 🔥 ESSENCIAL
   ) {
     return;
   }
