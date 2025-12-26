@@ -826,6 +826,10 @@ body.search-open {
   overflow: hidden;
 }
 
+#searchResults,
+#searchResults * {
+  pointer-events: auto !important;
+}
 
 
   
@@ -1304,14 +1308,20 @@ const resultados = [
     searchGrid.innerHTML =
       "<p style='color:#777'>Nenhum resultado encontrado</p>";
   } else {
-    searchGrid.innerHTML = resultados.map(r => `
-<div class="search-card"
-     onclick="abrirResultado(event, ${encodeURIComponent(JSON.stringify(r))})">
+searchGrid.addEventListener("click", e => {
+  const card = e.target.closest(".search-card");
+  if (!card) return;
 
-        <img src="${r.capa_url}">
-        <span>${r.titulo || r.serie_nome}</span>
-      </div>
-    `).join("");
+  const itemEncoded = card.dataset.item;
+
+  document.body.classList.remove("search-open");
+  searchResults.style.display = "none";
+  searchMobileBox.style.display = "none";
+
+  setTimeout(() => {
+    location.href = `player.html?item=${itemEncoded}`;
+  }, 50);
+});
   }
 
   searchResults.style.display = "block";
@@ -1342,15 +1352,19 @@ if (busca) {
 
 document.addEventListener("click", e => {
   if (
-    !searchMobileBox.contains(e.target) &&
-    e.target.id !== "searchBtn"
+    searchResults.contains(e.target) ||   // ✅ clicou em resultado
+    searchMobileBox.contains(e.target) || // ✅ clicou no input
+    e.target.closest(".search-card")      // ✅ clicou no card
   ) {
-    searchMobileBox.style.display = "none";
-    searchResults.style.display = "none";
-    searchGrid.innerHTML = "";
-    document.body.classList.remove("search-open");
+    return;
   }
+
+  searchMobileBox.style.display = "none";
+  searchResults.style.display = "none";
+  searchGrid.innerHTML = "";
+  document.body.classList.remove("search-open");
 });
+
 
 
 
