@@ -1760,23 +1760,55 @@ if ("serviceWorker" in navigator) {
 }
 async function validarSessao() {
   const email = localStorage.getItem("usuario_email");
+  const tokenLocal = localStorage.getItem("session_token");
 
-  if (!email) {
-    location.replace("login.html");
-    return false;
-  }
-
-  const { data, error } = await sb
-    .from("usuarios")
-    .select("status, trial_expires_at")
-    .eq("email", email)
-    .maybeSingle();
-
-  if (error || !data) {
+  // 🛑 PASSO 3 — SE NÃO TIVER EMAIL OU TOKEN, CAI FORA
+  if (!email || !tokenLocal) {
     localStorage.clear();
     location.replace("login.html");
     return false;
   }
+
+
+ const { data, error } = await sb
+  .from("usuarios")
+  .select("id, status, trial_expires_at, session_token, controle_sessao")
+  .eq("email", email)
+  .maybeSingle();
+
+
+// 🔐 PASSO 4 — CONTROLE DE SESSÃO (OUTRO DISPOSITIVO)
+if (data.controle_sessao === true) {
+  if (data.session_token !== tokenLocal) {
+
+    const { data: ultimoLogin } = await sb
+      .from("login_logs")
+      .select("user_agent, created_at")
+      .eq("user_id", data.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const agente =
+      ultimoLogin?.user_agent || "Outro dispositivo";
+
+    alert(
+      "Sua conta foi acessada em outro dispositivo.\n\n" +
+      "Dispositivo:\n" + agente
+    );
+
+    localStorage.clear();
+
+    if (window.matchMedia("(display-mode: standalone)").matches) {
+      location.href = "login.html";
+    } else {
+      location.replace("login.html");
+    }
+
+    return false;
+  }
+}
+
 
   const agora = new Date();
   const expira = new Date(data.trial_expires_at);
