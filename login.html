@@ -235,6 +235,9 @@ btnLogin.onclick = async () => {
   msg.textContent = "";
   msg.className = "msg";
 
+  const redirect = localStorage.getItem("redirect_after_login");
+
+
   const emailInput = email.value.trim();
   const senhaInput = senha.value;
 
@@ -299,19 +302,30 @@ btnLogin.onclick = async () => {
       user_agent: navigator.userAgent
     });
 
-  // 💾 SALVA LOCAL
-  localStorage.setItem("usuario_email", data.email);
-  localStorage.setItem("session_token", sessionToken);
 
-  // 🔁 REDIRECT
-  const redirect = localStorage.getItem("redirect_after_login");
-  if (redirect) {
-    localStorage.removeItem("redirect_after_login");
-    location.replace(redirect);
-  } else {
-    location.replace("index.html");
-  }
-};
+// 💾 SALVA LOCAL
+localStorage.setItem("usuario_email", data.email);
+localStorage.setItem("auth_token", sessionToken);
+
+
+// 🔁 SE VEIO PARA PAGAMENTO → VOLTA PARA PLANOS
+if (redirect === "planos.html") {
+  localStorage.removeItem("redirect_after_login");
+  location.replace("planos.html");
+  return;
+}
+
+// 🚫 BLOQUEIA ACESSO NORMAL SEM ASSINATURA
+if (data.status !== "aprovado") {
+  msg.textContent = "Acesso bloqueado. Regularize sua assinatura.";
+  msg.className = "msg error";
+  return;
+}
+
+// ✅ ACESSO NORMAL
+location.replace("player.html");
+}; // 🔴 FECHA O btnLogin.onclick AQUI
+;
 
 
 /* CADASTRO – SALVA IGUAL ANTES */
