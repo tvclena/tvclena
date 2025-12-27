@@ -49,17 +49,20 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Usuário não encontrado" });
     }
 
-    // 🔐 Referência interna
-    const referencia = crypto.randomUUID();
+  const referencia = crypto.randomUUID().toString();
 
-    // 💾 INSERT PENDENTE (OBRIGATÓRIO)
-    const { error: insertError } = await sb.from("pagamentos").insert({
-      referencia,
-      user_id: user.id,
-      plano_id: planoDB.id,
-      status: "pending",
-      valor: planoDB.valor,
-    });
+const { error: insertError } = await sb
+  .from("pagamentos")
+  .insert({
+    referencia,
+    user_id: user.id,
+    plano_id: planoDB.id,
+    status: "pending",
+    valor: planoDB.valor,
+    processado: false,
+    created_at: new Date(),
+  });
+
 
     if (insertError) {
       console.error("Erro insert pagamentos:", insertError);
