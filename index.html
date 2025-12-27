@@ -1637,11 +1637,18 @@ function render(buscaTxt = "") {
   // 🔹 LISTA BASE (dados → categoria)
   let lista = dados;
 
-  if (categoriaAtiva !== "todas") {
-    lista = lista.filter(d =>
-      (d.categoria || "").toLowerCase() === categoriaAtiva.toLowerCase()
-    );
-  }
+if (categoriaAtiva !== "todas") {
+  lista = lista.filter(d => {
+    if (!d.categoria) return false;
+
+    const categorias = d.categoria
+      .split(",")
+      .map(c => c.trim().toLowerCase());
+
+    return categorias.includes(categoriaAtiva.toLowerCase());
+  });
+}
+
 
   // 🎬 FILMES
   if (filtro === "todos" || filtro === "filme") {
@@ -2049,26 +2056,34 @@ async function carregarAvatarHeader() {
   setInterval(validarSessao, 15000);
 
 })();
+
+
+  
 function montarFiltrosCategorias(){
   const box = document.getElementById("filtrosCategorias");
 
-  const categorias = [
-    "todas",
-    ...new Set(
-      dados
-        .map(d => (d.categoria || "").trim())
-        .filter(Boolean)
+  const todasCategorias = dados
+    .flatMap(d =>
+      (d.categoria || "")
+        .split(",")
+        .map(c => c.trim())
     )
+    .filter(Boolean);
+
+  const categoriasUnicas = [
+    "todas",
+    ...new Set(todasCategorias.map(c => c.toLowerCase()))
   ];
 
-  box.innerHTML = categorias.map((c,i) => `
+  box.innerHTML = categoriasUnicas.map((c,i) => `
     <button
-      class="${i===0 ? "active" : ""}"
+      class="${i === 0 ? "active" : ""}"
       onclick="setCategoria('${c}', this)">
       ${c.charAt(0).toUpperCase() + c.slice(1)}
     </button>
   `).join("");
 }
+
 function setCategoria(cat, el){
   categoriaAtiva = cat;
 
