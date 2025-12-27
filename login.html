@@ -341,12 +341,13 @@ if (redirect === "planos.html") {
   return;
 }
 
-// 🚫 BLOQUEIA ACESSO NORMAL SEM ASSINATURA
-if (data.status !== "aprovado") {
-  msg.textContent = "Acesso bloqueado. Regularize sua assinatura.";
+// 🚫 BLOQUEIA SOMENTE SE ESTIVER BLOQUEADO
+if (data.status === "bloqueado") {
+  msg.textContent = "Seu acesso foi bloqueado.";
   msg.className = "msg error";
   return;
 }
+
 
 // ✅ ACESSO NORMAL
 location.replace("player.html");
