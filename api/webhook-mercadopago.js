@@ -42,29 +42,61 @@ export default async function handler(req, res) {
       .eq("referencia", payment.external_reference);
 
     if (payment.status === "approved") {
-      const { data: pag } = await sb
-        .from("pagamentos")
-        .select(`
-          user_id,
-          valor,
-          planos ( nome, dias )
-        `)
-        .eq("referencia", payment.external_reference)
-        .single();
+  const { data: pag } = await sb
+    .from("pagamentos")
+    .select(`
+      user_id,
+      valor,
+      planos ( nome, dias )
+    `)
+    .eq("referencia", payment.external_reference)
+    .single();
 
-      const vencimento = pag?.planos?.dias
-        ? new Date(Date.now() + pag.planos.dias * 86400000)
-        : null;
+  const vencimento = pag?.planos?.dias
+    ? new Date(Date.now() + pag.planos.dias * 86400000)
+    : null;
 
-      await sb.from("usuarios")
-        .update({
-          status: "aprovado",
-          valor_assinatura: pag.valor,
-          tipo_assinatura: pag.planos.nome,
-          vencimento_assinatura: vencimento,
-        })
-        .eq("id", pag.user_id);
+  // ✅ Atualiza usuário
+  await sb.from("usuarios")
+    .update({
+      status: "aprovado",
+      valor_assinatura: pag.valor,
+      tipo_assinatura: pag.planos.nome,
+      vencimento_assinatura: vencimento,
+    })
+    .eq("id", pag.user_id);
+
+  // 🔽🔽🔽 AQUI É O LUGAR CERTO 🔽🔽🔽
+  // 📊 ENVIA COMPRA PARA GA4 (SERVER-SIDE)
+  await fetch(
+    `https://www.google-analytics.com/mp/collect?measurement_id=${process.env.GA_MEASUREMENT_ID}&api_secret=${process.env.GA_API_SECRET}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: String(pag.user_id),
+        events: [
+          {
+            name: "purchase",
+            params: {
+              transaction_id: payment.external_reference,
+              value: pag.valor,
+              currency: "BRL",
+              items: [
+                {
+                  item_name: pag.planos.nome,
+                  price: pag.valor,
+                  quantity: 1
+                }
+              ]
+            }
+          }
+        ]
+      })
     }
+  );
+}
+
 
     return res.status(200).json({ success: true });
   } catch (err) {
