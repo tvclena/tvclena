@@ -1800,14 +1800,22 @@ const { data: ultimoLogin } = await sb
 // 🧠 mensagem detalhada
 const agente = ultimoLogin?.user_agent || "Dispositivo desconhecido";
 
-// 💬 POPUP
 mostrarSessaoEncerrada(agente);
 
-// ⏳ espera o usuário ver
+// 🔥 força foco no app (importante no PWA)
+window.focus();
+
+// ⏳ tempo maior para PWA
 setTimeout(() => {
   localStorage.clear();
-  location.replace("login.html");
-}, 4000);
+
+  // 🔁 força reload mesmo no modo standalone
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    location.href = "login.html";
+  } else {
+    location.replace("login.html");
+  }
+}, 6000);
 
 return false;
 
