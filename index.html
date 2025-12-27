@@ -1762,23 +1762,22 @@ async function validarSessao() {
   const email = localStorage.getItem("usuario_email");
   const tokenLocal = localStorage.getItem("session_token");
 
-  if (!email) {
+  if (!email || !tokenLocal) {
     location.replace("login.html");
     return false;
   }
 
-const { data, error } = await sb
-  .from("usuarios")
-  .select(`
-    id,
-    session_token,
-    controle_sessao,
-    status,
-    trial_expires_at
-  `)
-  .eq("email", email)
-  .single();
-;
+  const { data, error } = await sb
+    .from("usuarios")
+    .select(`
+      id,
+      session_token,
+      controle_sessao,
+      status,
+      trial_expires_at
+    `)
+    .eq("email", email)
+    .single();
 
   if (error || !data) {
     localStorage.clear();
@@ -1786,38 +1785,36 @@ const { data, error } = await sb
     return false;
   }
 
-  // 🔒 SÓ BLOQUEIA SE O ADMIN ATIVAR
-// 🔒 CONTROLE DE SESSÃO
-if (data.controle_sessao === true) {
-  if (!tokenLocal || data.session_token !== tokenLocal) {
+  // 🔒 CONTROLE DE SESSÃO (LOGIN EM OUTRO DISPOSITIVO)
+  if (data.controle_sessao === true) {
+    if (data.session_token !== tokenLocal) {
 
-    const { data: ultimoLogin } = await sb
-      .from("login_logs")
-      .select("user_agent, created_at")
-      .eq("user_id", data.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      const { data: ultimoLogin } = await sb
+        .from("login_logs")
+        .select("user_agent, created_at")
+        .eq("user_id", data.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    const agente = ultimoLogin?.user_agent || "Dispositivo desconhecido";
+      const agente = ultimoLogin?.user_agent || "Dispositivo desconhecido";
 
-    mostrarSessaoEncerrada(agente);
-    window.focus();
+      mostrarSessaoEncerrada(agente);
+      window.focus();
 
-    setTimeout(() => {
-      localStorage.clear();
+      setTimeout(() => {
+        localStorage.clear();
 
-      if (window.matchMedia('(display-mode: standalone)').matches) {
-        location.href = "login.html";
-      } else {
-        location.replace("login.html");
-      }
-    }, 6000);
+        if (window.matchMedia("(display-mode: standalone)").matches) {
+          location.href = "login.html";
+        } else {
+          location.replace("login.html");
+        }
+      }, 6000);
 
-    return false;
+      return false;
+    }
   }
-}
-
 
   // 🚫 BLOQUEADO
   if (data.status === "bloqueado") {
@@ -1828,8 +1825,9 @@ if (data.controle_sessao === true) {
 
   // ⏳ TRIAL
   if (data.trial_expires_at) {
-const agora = new Date();
-const expira = new Date(data.trial_expires_at);
+    const agora = new Date();
+    const expira = new Date(data.trial_expires_at);
+
     if (agora > expira && data.status !== "aprovado") {
       localStorage.clear();
       location.replace("login.html");
@@ -1839,6 +1837,7 @@ const expira = new Date(data.trial_expires_at);
 
   return true;
 }
+
 
 
   const agora = new Date();
