@@ -9,16 +9,19 @@ const sb = createClient(
 
 export default async function handler(req, res) {
   try {
+    console.log("📩 Webhook recebido:", JSON.stringify(req.body));
+
     if (req.method !== "POST") {
       return res.status(200).json({ ok: true });
     }
 
     const paymentId = req.body?.data?.id;
     if (!paymentId) {
+      console.log("⚠️ Webhook sem payment id");
       return res.status(200).json({ ignored: true });
     }
 
-    // 🔎 Consulta pagamento REAL
+    // 🔎 Consulta pagamento no Mercado Pago
     const mpRes = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
@@ -28,111 +31,84 @@ export default async function handler(req, res) {
       }
     );
 
+    const payment = await mpRes.json();
+
     if (!mpRes.ok) {
-      console.log("⚠️ Payment não encontrado (retry ou teste)");
+      console.log("⚠️ Pagamento não encontrado no MP");
       return res.status(200).json({ ignored: true });
     }
 
-    const payment = await mpRes.json();
+    console.log("💳 Pagamento MP:", {
+      id: payment.id,
+      status: payment.status,
+      reference: payment.external_reference,
+      value: payment.transaction_amount,
+    });
 
-    const {
-      status,
-      status_detail,
-      transaction_amount,
-      payment_method_id,
-      external_reference,
-      date_approved,
-    } = payment;
-
-    if (!external_reference) {
-      console.error("❌ Pagamento sem external_reference");
-      return res.status(200).json({ error: true });
-    }
-
-    // 🔐 Atualiza pagamento PELO external_reference
-    const { data: pagamento, error: errPagamento } = await sb
-      .from("pagamentos")
+    // 🔄 Atualiza PAGAMENTOS
+    await sb.from("pagamentos")
       .update({
-        payment_id: paymentId,
-        status,
-        status_detail,
-        metodo: payment_method_id,
-        valor: transaction_amount,
-        aprovado_em: date_approved,
+        payment_id: payment.id,
+        status: payment.status,
+        status_detail: payment.status_detail,
+        metodo: payment.payment_method_id,
+        valor: payment.transaction_amount,
         updated_at: new Date(),
       })
-      .eq("referencia", external_reference)
-      .select("*")
-      .maybeSingle();
+      .eq("referencia", payment.external_reference);
 
-    if (errPagamento || !pagamento) {
-      console.error("❌ Pagamento não encontrado no banco");
-      return res.status(200).json({ error: true });
-    }
+    // ======================================================
+    // ✅ SE APROVADO → LIBERA USUÁRIO
+    // ======================================================
+    if (payment.status === "approved") {
 
-    // 🔁 Idempotência: se já processado, ignora
-    if (pagamento.processado) {
-      return res.status(200).json({ ok: true });
-    }
+      // 🔎 Busca pagamento + plano
+      const { data: pagamentoDB, error } = await sb
+        .from("pagamentos")
+        .select(`
+          user_id,
+          valor,
+          planos (
+            nome,
+            dias
+          )
+        `)
+        .eq("referencia", payment.external_reference)
+        .single();
 
-    // 🔎 Busca usuário
-    const { data: user } = await sb
-      .from("usuarios")
-      .select("*")
-      .eq("id", pagamento.user_id)
-      .maybeSingle();
+      if (error || !pagamentoDB) {
+        console.error("❌ Pagamento não encontrado no Supabase");
+        return res.status(200).json({ recovered: true });
+      }
 
-    if (!user) {
-      console.error("❌ Usuário não encontrado");
-      return res.status(200).json({ error: true });
-    }
+      // 📅 Calcula vencimento pelo plano
+      let vencimento = null;
+      if (pagamentoDB.planos?.dias) {
+        vencimento = new Date(
+          Date.now() + pagamentoDB.planos.dias * 24 * 60 * 60 * 1000
+        );
+      }
 
-    // 🔎 Busca plano
-    const { data: plano } = await sb
-      .from("planos")
-      .select("*")
-      .eq("id", pagamento.plano_id)
-      .maybeSingle();
-
-    if (!plano) {
-      console.error("❌ Plano não encontrado");
-      return res.status(200).json({ error: true });
-    }
-
-    // 🔓 APROVADO
-    if (status === "approved") {
-      const vencimento = new Date();
-      vencimento.setDate(vencimento.getDate() + Number(plano.dias));
-
-      await sb.from("usuarios")
+      // 🔓 Atualiza USUÁRIO
+      const { error: userErr } = await sb
+        .from("usuarios")
         .update({
           status: "aprovado",
-          tipo_assinatura: plano.nome,
-          valor_assinatura: transaction_amount,
-          vencimento_assinatura: vencimento.toISOString(),
+          valor_assinatura: pagamentoDB.valor,
+          tipo_assinatura: pagamentoDB.planos.nome,
+          vencimento_assinatura: vencimento,
+          updated_at: new Date(),
         })
-        .eq("id", user.id);
+        .eq("id", pagamentoDB.user_id);
+
+      if (userErr) {
+        console.error("❌ Erro ao atualizar usuário:", userErr);
+      } else {
+        console.log("✅ Usuário liberado com sucesso");
+      }
     }
 
-    // 🔒 ESTORNO / CANCELAMENTO
-    if (status === "refunded" || status === "cancelled") {
-      await sb.from("usuarios")
-        .update({
-          status: "bloqueado",
-          tipo_assinatura: null,
-          valor_assinatura: null,
-          vencimento_assinatura: null,
-        })
-        .eq("id", user.id);
-    }
-
-    // ✅ Marca como processado (idempotência)
-    await sb.from("pagamentos")
-      .update({ processado: true })
-      .eq("id", pagamento.id);
-
-    console.log("✅ Webhook processado:", status);
-
+    console.log("✅ Webhook finalizado");
     return res.status(200).json({ success: true });
 
   } catch (err) {
