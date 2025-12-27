@@ -49,7 +49,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Usuário não encontrado" });
     }
 
-  const referencia = crypto.randomUUID().toString();
+ const referencia = crypto.randomUUID();
 
 const { error: insertError } = await sb
   .from("pagamentos")
@@ -61,13 +61,17 @@ const { error: insertError } = await sb
     valor: planoDB.valor,
     processado: false,
     created_at: new Date(),
+    updated_at: new Date(),
   });
 
+if (insertError) {
+  console.error("❌ ERRO INSERT PAGAMENTOS:", insertError);
+  return res.status(500).json({
+    error: "Erro ao registrar pagamento",
+    detail: insertError.message,
+  });
+}
 
-    if (insertError) {
-      console.error("Erro insert pagamentos:", insertError);
-      return res.status(500).json({ error: "Erro ao registrar pagamento" });
-    }
 
     // 💳 Preference Mercado Pago
     const preference = {
