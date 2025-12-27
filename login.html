@@ -167,12 +167,24 @@ input:focus{outline:none;border-color:var(--accent)}
 
     <div class="group">
       <label>CPF</label>
-      <input id="c_cpf" placeholder="000.000.000-00">
+<input
+  id="c_cpf"
+  type="text"
+  inputmode="numeric"
+  pattern="[0-9]*"
+  placeholder="000.000.000-00"
+>
     </div>
 
     <div class="group">
       <label>WhatsApp</label>
-      <input id="c_whats" placeholder="(99) 99999-9999">
+<input
+  id="c_whats"
+  type="text"
+  inputmode="numeric"
+  pattern="[0-9]*"
+  placeholder="(99) 99999-9999"
+>
     </div>
 
     <div class="group">
