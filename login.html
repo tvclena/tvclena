@@ -327,15 +327,16 @@ location.replace("player.html");
 }; // 🔴 FECHA O btnLogin.onclick AQUI
 ;
 
-
-/* CADASTRO – SALVA IGUAL ANTES */
 btnCadastro.onclick = async ()=>{
   msgCadastro.textContent="";
-  if (c_senha.value.length < 4) {
-    msgCadastro.textContent = "A senha deve ter no mínimo 4 caracteres";
+
+  const redirect = localStorage.getItem("redirect_after_login");
+  if (redirect !== "planos.html") {
+    msgCadastro.textContent = "Cadastro permitido apenas para pagamento.";
     msgCadastro.className = "msg error";
     return;
   }
+
 
   if(c_senha.value!==c_confirma.value){
     msgCadastro.textContent="As senhas não conferem";
