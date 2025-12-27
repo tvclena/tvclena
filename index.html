@@ -1878,9 +1878,17 @@ if (!email || !tokenLocal) {
 
  const { data, error } = await sb
   .from("usuarios")
-  .select("id, status, trial_expires_at, session_token, controle_sessao")
+.select("id, status, trial_expires_at, session_token, controle_sessao, tipo_assinatura")
   .eq("email", email)
   .maybeSingle();
+// 🔥 REGRA OPÇÃO A — LOGADO MAS SEM PLANO → PLANOS
+if (!data.tipo_assinatura) {
+  if (!redirecionando) {
+    redirecionando = true;
+    location.replace("planos.html");
+  }
+  return false;
+}
 
 
 // 🔐 PASSO 4 — CONTROLE DE SESSÃO (OUTRO DISPOSITIVO)
