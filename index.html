@@ -1831,7 +1831,7 @@ document.body.innerHTML = `
       </div>
 
       <!-- 💳 PLANOS AQUI EMBAIXO -->
-<div id="planosBloqueio"></div>
+      <div id="planosContainer"></div>
 
     </div>
   </div>
@@ -1921,75 +1921,54 @@ function setCategoria(cat, el){
 
   render(busca?.value?.toLowerCase() || "");
 }
-
-
-  
-async function carregarPlanosBloqueio(){
+async function carregarPlanosBloqueio() {
   const res = await fetch("/api/get-planos");
   const planos = await res.json();
 
-  const container = document.getElementById("planosBloqueio");
-  container.innerHTML = "";
+  const box = document.getElementById("planosContainer");
 
-  planos.forEach((plano, index) => {
-    const card = document.createElement("div");
-    card.className = "plano";
+  box.innerHTML = `
+    <div class="planos-bloqueio">
+      ${planos.map((plano, i) => `
+<div class="plano-card ${i === 1 ? "destaque" : ""}">
+          <h3>${plano.nome}</h3>
 
-    card.innerHTML = `
-      ${index === 1 ? `<div class="popular">MAIS VENDIDO</div>` : ""}
+          <div class="plano-preco">
+            R$ ${Number(plano.valor).toFixed(2).replace(".", ",")}
+            <span>/mês</span>
+          </div>
 
-      <h2>${plano.nome}</h2>
+          <ul>
+            <li>Acesso completo</li>
+            <li>Conteúdo exclusivo</li>
+            <li>Qualidade máxima</li>
+          </ul>
 
-      <div class="preco">
-        R$ ${Number(plano.valor).toFixed(2).replace(".", ",")}
-        <span>/ mês</span>
-      </div>
-
-      <div class="duracao">${plano.dias} dias de acesso</div>
-
-      <ul class="beneficios">
-        <li>Acesso completo</li>
-        <li>Conteúdo exclusivo</li>
-        <li>Qualidade máxima</li>
-      </ul>
-
-      <button class="btn" onclick="assinar('${plano.nome}')">
-        Assinar agora
-      </button>
-    `;
-
-    container.appendChild(card);
-  });
+          <button class="plano-btn"
+            onclick="assinarPlanoBloqueio('${plano.nome}')">
+            Assinar agora
+          </button>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
-
-async function assinar(plano){
+async function assinarPlanoBloqueio(plano) {
   const email = localStorage.getItem("usuario_email");
-
-  if(!email){
-    localStorage.setItem("redirect_after_login", "index.html");
-    alert("Faça login para continuar");
+  if (!email) {
     location.href = "login.html";
     return;
   }
 
-  try{
-    const res = await fetch("/api/create-payment",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ plano, email })
-    });
+  const res = await fetch("/api/create-payment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ plano, email })
+  });
 
-    const data = await res.json();
-
-    if(data.url){
-      window.location.href = data.url;
-    }else{
-      alert("Erro ao iniciar pagamento");
-    }
-  }catch(e){
-    alert("Falha de conexão com o servidor");
-  }
+  const data = await res.json();
+  if (data.url) location.href = data.url;
 }
 
 
