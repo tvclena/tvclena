@@ -258,7 +258,7 @@ const token = localStorage.getItem("session_token");
   if(!email || !token){
     localStorage.setItem("redirect_after_login", "planos.html");
     alert("Faça login para continuar");
-    location.href = "login.html";
+    location.href = "plogin.html";
     return;
   }
 
@@ -275,7 +275,7 @@ const token = localStorage.getItem("session_token");
     if(res.status === 401){
       alert("Sessão expirada. Faça login novamente.");
       localStorage.clear();
-      location.href = "login.html";
+      location.href = "plogin.html";
       return;
     }
 
