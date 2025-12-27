@@ -1217,6 +1217,9 @@ const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
 );
+
+let redirecionando = false;
+
 /* ================= PERFIL NOVO ISOLADO ================= */
 let perfilUserId = null;
 
@@ -1861,11 +1864,16 @@ async function validarSessao() {
   const tokenLocal = localStorage.getItem("session_token");
 
   // 🛑 PASSO 3 — SE NÃO TIVER EMAIL OU TOKEN, CAI FORA
-  if (!email || !tokenLocal) {
-    localStorage.clear();
+if (!email || !tokenLocal) {
+  localStorage.clear();
+
+  if (!redirecionando) {
+    redirecionando = true;
     location.replace("login.html");
-    return false;
   }
+
+  return false;
+}
 
 
  const { data, error } = await sb
@@ -1971,11 +1979,7 @@ return false;
 }
 
 
-  if (agora > expira && data.status !== "aprovado") {
-    localStorage.clear();
-    location.replace("login.html");
-    return false;
-  }
+
 
   usuario = { email };
   return true;
@@ -2053,7 +2057,11 @@ async function carregarAvatarHeader() {
   await carregarAvatarHeader(); // ✅ ESSENCIAL
   iniciarApp();
 
-  setInterval(validarSessao, 15000);
+setInterval(() => {
+  if (!redirecionando) {
+    validarSessao();
+  }
+}, 15000);
 
 })();
 
