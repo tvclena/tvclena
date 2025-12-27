@@ -1840,11 +1840,6 @@ carregarPlanosBloqueio();
 return false;
 
 }
-const LINKS_PLANOS = {
-  "Básico": "https://SEU-LINK-DO-BASICO",
-  "Padrão": "https://SEU-LINK-DO-PADRAO",
-  "Premium": "https://SEU-LINK-DO-PREMIUM"
-};
 
 
   if (agora > expira && data.status !== "aprovado") {
@@ -1858,6 +1853,44 @@ const LINKS_PLANOS = {
 }
 
 
+<script>
+async function abrirLinkPlano(nomePlano) {
+  const email = localStorage.getItem("usuario_email");
+
+  if (!email) {
+    alert("Faça login para continuar");
+    location.href = "login.html";
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/create-payment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        plano: nomePlano,
+        email: email
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.url) {
+      // 🔥 REDIRECIONA PARA O MERCADO PAGO
+      window.location.href = data.url;
+    } else {
+      alert("Erro ao gerar link de pagamento");
+      console.error(data);
+    }
+
+  } catch (err) {
+    alert("Erro de conexão com o servidor");
+    console.error(err);
+  }
+}
+</script>
 
 
   
@@ -1958,16 +1991,6 @@ async function carregarPlanosBloqueio() {
       `).join("")}
     </div>
   `;
-}
-function abrirLinkPlano(nomePlano) {
-  const link = LINKS_PLANOS[nomePlano];
-
-  if (!link) {
-    alert("Link do plano não configurado");
-    return;
-  }
-
-  window.location.href = link;
 }
 
 
