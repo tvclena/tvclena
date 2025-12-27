@@ -182,19 +182,7 @@ header{
   .preco{font-size:38px}
 }
 </style>
-<script>
-(function(){
-  const token = localStorage.getItem("auth_token");
-  const email = localStorage.getItem("usuario_email");
 
-  if(!token || !email){
-    localStorage.setItem("redirect_after_login", "planos.html");
-    location.replace("login.html");
-  }
-})();
-</script>
-
-  
 </head>
 
 <body>
