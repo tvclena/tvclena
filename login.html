@@ -1,28 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
 <meta charset="UTF-8">
+<title>Login | CLENA TV</title>
 
-<title>CLENA TV – Login e Cadastro</title>
-
-<meta name="description"
-      content="Acesse a CLENA TV para assistir filmes, séries e conteúdos exclusivos. Faça login ou crie sua conta e aproveite.">
-
-<!-- Open Graph -->
-<meta property="og:type" content="website">
-<meta property="og:title" content="CLENA TV – Login e Cadastro">
-<meta property="og:description" content="Acesse a CLENA TV para assistir filmes, séries e conteúdos exclusivos.">
-<meta property="og:image" content="https://www.clena.com.br/logo1.png">
-<meta property="og:url" content="https://www.clena.com.br/login.html">
-
-<!-- Twitter -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://www.clena.com.br/og-login.jpg">
-
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -251,12 +233,11 @@ c_whats.oninput = e=>{
 /* LOGIN */
 btnLogin.onclick = async ()=>{
   msg.textContent="";
-const { data } = await sb
-  .from("usuarios")
-  .select("id, email, senha, status, trial_expires_at")
-  .eq("email", email.value.trim())
-  .maybeSingle();
-
+  const { data } = await sb
+    .from("usuarios")
+    .select("email, senha, status, trial_expires_at")
+    .eq("email", email.value.trim())
+    .maybeSingle();
 
   if(!data){ msg.textContent="Usuário não encontrado"; return; }
   if(data.senha!==senha.value){ msg.textContent="Senha incorreta"; return; }
@@ -264,42 +245,18 @@ const { data } = await sb
   const agora=new Date();
   const expira=new Date(data.trial_expires_at);
 
-if (agora <= expira) {
+ if(agora<=expira){
+  localStorage.setItem("usuario_email", data.email);
 
-  // 🔐 1. GERA TOKEN DE SESSÃO
-  const sessionToken = crypto.randomUUID();
-
-  // 💾 2. SALVA TOKEN NO BANCO
-  await sb
-    .from("usuarios")
-    .update({ session_token: sessionToken })
-.eq("id", data.id);
-await sb
-  .from("login_logs")
-  .insert({
-    user_id: data.id,
-    email: data.email,
-    ip: null,
-    user_agent: navigator.userAgent
-  });
-
-  // 💾 3. SALVA TOKEN LOCAL
-localStorage.setItem("usuario_email", data.email);
-localStorage.setItem("session_token", sessionToken);
-
-
-
-  // 🔁 4. REDIRECIONA
   const redirect = localStorage.getItem("redirect_after_login");
 
-  if (redirect) {
+  if(redirect){
     localStorage.removeItem("redirect_after_login");
     location.replace(redirect);
-  } else {
+  }else{
     location.replace("index.html");
   }
 }
-
 
   else{
     msg.textContent="Período de teste expirado";
