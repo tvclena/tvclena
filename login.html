@@ -251,11 +251,12 @@ c_whats.oninput = e=>{
 /* LOGIN */
 btnLogin.onclick = async ()=>{
   msg.textContent="";
-  const { data } = await sb
-    .from("usuarios")
-    .select("email, senha, status, trial_expires_at")
-    .eq("email", email.value.trim())
-    .maybeSingle();
+const { data } = await sb
+  .from("usuarios")
+  .select("id, email, senha, status, trial_expires_at")
+  .eq("email", email.value.trim())
+  .maybeSingle();
+
 
   if(!data){ msg.textContent="Usuário não encontrado"; return; }
   if(data.senha!==senha.value){ msg.textContent="Senha incorreta"; return; }
@@ -273,10 +274,20 @@ if (agora <= expira) {
     .from("usuarios")
     .update({ session_token: sessionToken })
     .eq("email", data.email);
+await sb
+  .from("login_logs")
+  .insert({
+    user_id: data.id,
+    email: data.email,
+    ip: null,
+    user_agent: navigator.userAgent
+  });
 
   // 💾 3. SALVA TOKEN LOCAL
-  localStorage.setItem("usuario_email", data.email);
-  localStorage.setItem("session_token", sessionToken);
+localStorage.setItem("usuario_email", data.email);
+localStorage.setItem("session_token", sessionToken);
+
+
 
   // 🔁 4. REDIRECIONA
   const redirect = localStorage.getItem("redirect_after_login");
