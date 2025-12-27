@@ -236,6 +236,12 @@ btnLogin.onclick = async () => {
   msg.className = "msg";
 
   const redirect = localStorage.getItem("redirect_after_login");
+// 🚫 LOGIN SÓ É PERMITIDO PARA PAGAMENTO
+if (redirect !== "planos.html") {
+  msg.textContent = "Acesso permitido apenas para pagamento.";
+  msg.className = "msg error";
+  return;
+}
 
 
   const emailInput = email.value.trim();
@@ -259,12 +265,6 @@ btnLogin.onclick = async () => {
     return;
   }
 
-  // 🔒 BLOQUEADO
-  if (data.status === "bloqueado") {
-    msg.textContent = "Acesso bloqueado. Regularize sua assinatura.";
-    msg.className = "msg error";
-    return;
-  }
 
   // 🔐 SENHA
   if (data.senha !== senhaInput) {
