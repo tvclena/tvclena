@@ -245,18 +245,32 @@ btnLogin.onclick = async ()=>{
   const agora=new Date();
   const expira=new Date(data.trial_expires_at);
 
- if(agora<=expira){
-  localStorage.setItem("usuario_email", data.email);
+if (agora <= expira) {
 
+  // 🔐 1. GERA TOKEN DE SESSÃO
+  const sessionToken = crypto.randomUUID();
+
+  // 💾 2. SALVA TOKEN NO BANCO
+  await sb
+    .from("usuarios")
+    .update({ session_token: sessionToken })
+    .eq("email", data.email);
+
+  // 💾 3. SALVA TOKEN LOCAL
+  localStorage.setItem("usuario_email", data.email);
+  localStorage.setItem("session_token", sessionToken);
+
+  // 🔁 4. REDIRECIONA
   const redirect = localStorage.getItem("redirect_after_login");
 
-  if(redirect){
+  if (redirect) {
     localStorage.removeItem("redirect_after_login");
     location.replace(redirect);
-  }else{
+  } else {
     location.replace("index.html");
   }
 }
+
 
   else{
     msg.textContent="Período de teste expirado";
