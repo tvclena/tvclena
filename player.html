@@ -2,6 +2,19 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<!-- Google tag (GA4) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-T97MS35TJ6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-T97MS35TJ6', {
+    page_title: 'Player',
+    page_location: location.href
+  });
+</script>
+
 <title>Sessão • Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -170,8 +183,41 @@ const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
 
+/* ================= ANALYTICS ================= */
+function track(event, params = {}) {
+  if (typeof gtag !== "function") return;
+
+  gtag("event", event, {
+    content_title: item.titulo || item.serie_nome || "Conteúdo",
+    content_type: item.tipo,
+    categoria: item.categoria || "Geral",
+    ...params
+  });
+}
+
+
+
+  
 /* ================= ELEMENTOS ================= */
 const video = document.getElementById("video");
+let inicioAssistido = 0;
+
+video.addEventListener("play", () => {
+  inicioAssistido = Date.now();
+  track("video_play");
+});
+
+video.addEventListener("pause", () => {
+  if (!inicioAssistido) return;
+
+  const segundos = Math.round((Date.now() - inicioAssistido) / 1000);
+  track("video_pause", { segundos_assistidos: segundos });
+});
+
+video.addEventListener("ended", () => {
+  track("video_end");
+});
+
 const iframe = document.getElementById("iframe");
 const titulo = document.getElementById("titulo");
 const meta = document.getElementById("meta");
@@ -218,14 +264,23 @@ function tocarFonte(source){
 
 tocarFonte(item.video_url);
 
+track("open_content", {
+  video_url: item.video_url
+});
+
+
+  
 /* ================= FULLSCREEN ================= */
 function abrirFullscreen(){
+  track("fullscreen_open");
+
   if(video && video.requestFullscreen){
     video.requestFullscreen();
   }else if(iframe && iframe.requestFullscreen){
     iframe.requestFullscreen();
   }
 }
+
 
 /* ================= SÉRIES ================= */
 let serie = [];
@@ -258,16 +313,32 @@ async function carregarSerie(){
 
 function trocarTemporada(){
   const eps = serie.filter(e => e.temporada == selTemporada.value);
+
+  track("select_season", {
+    serie: item.serie_nome,
+    temporada: selTemporada.value
+  });
+
   selEpisodio.innerHTML = eps.map((e,i) =>
     `<option value="${i}">Episódio ${e.episodio}</option>`
   ).join("");
+
   tocarFonte(eps[0].video_url);
 }
 
+
 function trocarEpisodio(){
   const eps = serie.filter(e => e.temporada == selTemporada.value);
+
+  track("select_episode", {
+    serie: item.serie_nome,
+    temporada: selTemporada.value,
+    episodio: eps[selEpisodio.value].episodio
+  });
+
   tocarFonte(eps[selEpisodio.value].video_url);
 }
+
 
 /* ================= SAIR ================= */
 function sair(){
