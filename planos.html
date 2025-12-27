@@ -182,6 +182,19 @@ header{
   .preco{font-size:38px}
 }
 </style>
+<script>
+(function(){
+  const token = localStorage.getItem("auth_token");
+  const email = localStorage.getItem("usuario_email");
+
+  if(!token || !email){
+    localStorage.setItem("redirect_after_login", "planos.html");
+    location.replace("login.html");
+  }
+})();
+</script>
+
+  
 </head>
 
 <body>
@@ -252,22 +265,31 @@ async function carregarPlanos(){
 /* INICIAR PAGAMENTO */
 async function assinar(plano){
   const email = localStorage.getItem("usuario_email");
+  const token = localStorage.getItem("auth_token");
 
-if(!email){
-  // salva para onde o usuário deve voltar
-  localStorage.setItem("redirect_after_login", "planos.html");
-  alert("Faça login para continuar");
-  location.href = "login.html";
-  return;
-}
-
+  if(!email || !token){
+    localStorage.setItem("redirect_after_login", "planos.html");
+    alert("Faça login para continuar");
+    location.href = "login.html";
+    return;
+  }
 
   try{
     const res = await fetch("/api/create-payment",{
       method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ plano, email })
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer " + token
+      },
+      body: JSON.stringify({ plano })
     });
+
+    if(res.status === 401){
+      alert("Sessão expirada. Faça login novamente.");
+      localStorage.clear();
+      location.href = "login.html";
+      return;
+    }
 
     const data = await res.json();
 
@@ -276,10 +298,12 @@ if(!email){
     }else{
       alert("Erro ao iniciar pagamento");
     }
+
   }catch(e){
-    alert("Falha de conexão com o servidor");
+    alert("Falha de conexão");
   }
 }
+
 
 /* INIT */
 carregarPlanos();
