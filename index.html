@@ -1767,16 +1767,18 @@ async function validarSessao() {
     return false;
   }
 
-  const { data, error } = await sb
-    .from("usuarios")
-    .select(`
-      session_token,
-      controle_sessao,
-      status,
-      trial_expires_at
-    `)
-    .eq("email", email)
-    .single();
+const { data, error } = await sb
+  .from("usuarios")
+  .select(`
+    id,
+    session_token,
+    controle_sessao,
+    status,
+    trial_expires_at
+  `)
+  .eq("email", email)
+  .single();
+;
 
   if (error || !data) {
     localStorage.clear();
@@ -1784,40 +1786,37 @@ async function validarSessao() {
     return false;
   }
 
-  // 🔓 PADRÃO: NÃO BLOQUEIA
   // 🔒 SÓ BLOQUEIA SE O ADMIN ATIVAR
-  if (data.controle_sessao === true) {
-    if (!tokenLocal || data.session_token !== tokenLocal) {
-     // 🔍 busca último login (novo dispositivo)
-const { data: ultimoLogin } = await sb
-  .from("login_logs")
-  .select("user_agent, created_at")
-  .eq("user_id", data.id)
-  .order("created_at", { ascending: false })
-  .limit(1)
-  .maybeSingle();
+// 🔒 CONTROLE DE SESSÃO
+if (data.controle_sessao === true) {
+  if (!tokenLocal || data.session_token !== tokenLocal) {
 
-// 🧠 mensagem detalhada
-const agente = ultimoLogin?.user_agent || "Dispositivo desconhecido";
+    const { data: ultimoLogin } = await sb
+      .from("login_logs")
+      .select("user_agent, created_at")
+      .eq("user_id", data.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-mostrarSessaoEncerrada(agente);
+    const agente = ultimoLogin?.user_agent || "Dispositivo desconhecido";
 
-// 🔥 força foco no app (importante no PWA)
-window.focus();
+    mostrarSessaoEncerrada(agente);
+    window.focus();
 
-// ⏳ tempo maior para PWA
-setTimeout(() => {
-  localStorage.clear();
+    setTimeout(() => {
+      localStorage.clear();
 
-  // 🔁 força reload mesmo no modo standalone
-  if (window.matchMedia('(display-mode: standalone)').matches) {
-    location.href = "login.html";
-  } else {
-    location.replace("login.html");
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        location.href = "login.html";
+      } else {
+        location.replace("login.html");
+      }
+    }, 6000);
+
+    return false;
   }
-}, 6000);
-
-return false;
+}
 
 
   // 🚫 BLOQUEADO
@@ -1829,8 +1828,8 @@ return false;
 
   // ⏳ TRIAL
   if (data.trial_expires_at) {
-    const agora = new Date();
-    const expira = new Date(data.trial_expires_at);
+const agora = new Date();
+const expira = new Date(data.trial_expires_at);
     if (agora > expira && data.status !== "aprovado") {
       localStorage.clear();
       location.replace("login.html");
