@@ -253,7 +253,7 @@ async function carregarPlanos(){
 /* INICIAR PAGAMENTO */
 async function assinar(plano){
   const email = localStorage.getItem("usuario_email");
-  const token = localStorage.getItem("auth_token");
+const token = localStorage.getItem("session_token");
 
   if(!email || !token){
     localStorage.setItem("redirect_after_login", "planos.html");
