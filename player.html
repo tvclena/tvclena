@@ -180,6 +180,51 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
+// 🔒 PROTEÇÃO DO PLAYER
+async function protegerPlayer() {
+  const email = localStorage.getItem("usuario_email");
+
+  // ❌ Não está logado
+  if (!email) {
+    location.replace("login.html");
+    return false;
+  }
+
+  const { data, error } = await sb
+    .from("usuarios")
+    .select("status, trial_expires_at")
+    .eq("email", email)
+    .maybeSingle();
+
+  // ❌ Usuário inválido
+  if (error || !data) {
+    localStorage.clear();
+    location.replace("login.html");
+    return false;
+  }
+
+  const agora = new Date();
+  const expira = new Date(data.trial_expires_at);
+
+  // 🚫 Usuário bloqueado
+  if (data.status === "bloqueado") {
+    location.replace("index.html");
+    return false;
+  }
+
+  // ⏱️ Trial expirado e não aprovado
+  if (agora > expira && data.status !== "aprovado") {
+    localStorage.clear();
+    location.replace("login.html");
+    return false;
+  }
+
+  // ✅ Pode assistir
+  return true;
+}
+
+
+  
 /* ================= ITEM ================= */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get("item"))
@@ -264,7 +309,12 @@ function tocarFonte(source){
   }
 }
 
-tocarFonte(item.video_url);
+(async () => {
+  const autorizado = await protegerPlayer();
+  if (!autorizado) return;
+
+  tocarFonte(item.video_url);
+})();
 track("open_content", {
   video_url: item.video_url
 });
