@@ -264,13 +264,10 @@ btnLogin.onclick = async () => {
   msg.textContent = "";
   msg.className = "msg";
 
-  const redirect = localStorage.getItem("redirect_after_login");
-// 🚫 LOGIN SÓ É PERMITIDO PARA PAGAMENTO
-if (redirect !== "planos.html") {
-  msg.textContent = "Acesso permitido apenas para pagamento.";
-  msg.className = "msg error";
-  return;
-}
+const redirect = localStorage.getItem("redirect_after_login");
+
+// permite cadastro livre
+// mas mantém regra de acesso depois
 
 
   const emailInput = email.value.trim();
