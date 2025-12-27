@@ -266,30 +266,30 @@ const { data } = await sb
 
 if (agora <= expira) {
 
-  // 🔐 1. GERA TOKEN
+  // 🔐 1. GERA TOKEN DE SESSÃO
   const sessionToken = crypto.randomUUID();
 
-  // 💾 2. SALVA TOKEN NO USUÁRIO
+  // 💾 2. SALVA TOKEN NO BANCO
   await sb
     .from("usuarios")
     .update({ session_token: sessionToken })
-    .eq("id", data.id);
+.eq("id", data.id);
+await sb
+  .from("login_logs")
+  .insert({
+    user_id: data.id,
+    email: data.email,
+    ip: null,
+    user_agent: navigator.userAgent
+  });
 
-  // 🧾 3. REGISTRA LOGIN
-  await sb
-    .from("login_logs")
-    .insert({
-      user_id: data.id,
-      email: data.email,
-      ip: null,
-      user_agent: navigator.userAgent
-    });
+  // 💾 3. SALVA TOKEN LOCAL
+localStorage.setItem("usuario_email", data.email);
+localStorage.setItem("session_token", sessionToken);
 
-  // 💾 4. SALVA LOCAL
-  localStorage.setItem("usuario_email", data.email);
-  localStorage.setItem("session_token", sessionToken);
 
-  // 🔁 5. REDIRECIONA
+
+  // 🔁 4. REDIRECIONA
   const redirect = localStorage.getItem("redirect_after_login");
 
   if (redirect) {
@@ -299,7 +299,6 @@ if (agora <= expira) {
     location.replace("index.html");
   }
 }
-
 
 
   else{
