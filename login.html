@@ -273,7 +273,7 @@ if (agora <= expira) {
   await sb
     .from("usuarios")
     .update({ session_token: sessionToken })
-    .eq("email", data.email);
+.eq("id", data.id);
 await sb
   .from("login_logs")
   .insert({
