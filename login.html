@@ -356,12 +356,7 @@ location.replace("player.html");
 btnCadastro.onclick = async ()=>{
   msgCadastro.textContent="";
 
-  const redirect = localStorage.getItem("redirect_after_login");
-  if (redirect !== "planos.html") {
-    msgCadastro.textContent = "Cadastro permitido apenas para pagamento.";
-    msgCadastro.className = "msg error";
-    return;
-  }
+ 
 
 
   if(c_senha.value!==c_confirma.value){
