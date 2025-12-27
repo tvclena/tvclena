@@ -1930,7 +1930,7 @@ async function carregarPlanosBloqueio() {
   box.innerHTML = `
     <div class="planos-bloqueio">
       ${planos.map((plano, i) => `
-        <div class="plano-card">
+<div class="plano-card ${i === 1 ? "destaque" : ""}">
           <h3>${plano.nome}</h3>
 
           <div class="plano-preco">
