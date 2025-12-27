@@ -231,32 +231,88 @@ c_whats.oninput = e=>{
 };
 
 /* LOGIN */
-btnLogin.onclick = async ()=>{
-  msg.textContent="";
-  const { data } = await sb
+btnLogin.onclick = async () => {
+  msg.textContent = "";
+  msg.className = "msg";
+
+  const emailInput = email.value.trim();
+  const senhaInput = senha.value;
+
+  if (!emailInput || !senhaInput) {
+    msg.textContent = "Preencha email e senha";
+    msg.className = "msg error";
+    return;
+  }
+
+  const { data, error } = await sb
     .from("usuarios")
-    .select("email, senha, status, trial_expires_at")
-    .eq("email", email.value.trim())
+    .select("id, email, senha, status, trial_expires_at, controle_sessao")
+    .eq("email", emailInput)
     .maybeSingle();
 
-  if(!data){ msg.textContent="Usuário não encontrado"; return; }
-  if(data.senha!==senha.value){ msg.textContent="Senha incorreta"; return; }
+  if (error || !data) {
+    msg.textContent = "Usuário não encontrado";
+    msg.className = "msg error";
+    return;
+  }
 
-  const agora=new Date();
-  const expira=new Date(data.trial_expires_at);
+  // 🔒 BLOQUEADO
+  if (data.status === "bloqueado") {
+    msg.textContent = "Acesso bloqueado. Regularize sua assinatura.";
+    msg.className = "msg error";
+    return;
+  }
 
- if(agora<=expira){
+  // 🔐 SENHA
+  if (data.senha !== senhaInput) {
+    msg.textContent = "Senha incorreta";
+    msg.className = "msg error";
+    return;
+  }
+
+  // ⏳ TRIAL
+  const agora = new Date();
+  const expira = new Date(data.trial_expires_at);
+
+  if (agora > expira && data.status !== "aprovado") {
+    msg.textContent = "Período de teste expirado";
+    msg.className = "msg error";
+    return;
+  }
+
+  // 🔑 GERA TOKEN DE SESSÃO
+  const sessionToken = crypto.randomUUID();
+
+  // 💾 SALVA TOKEN NO USUÁRIO
+  await sb
+    .from("usuarios")
+    .update({ session_token: sessionToken })
+    .eq("id", data.id);
+
+  // 🧾 LOG DE LOGIN
+  await sb
+    .from("login_logs")
+    .insert({
+      user_id: data.id,
+      email: data.email,
+      ip: null,
+      user_agent: navigator.userAgent
+    });
+
+  // 💾 SALVA LOCAL
   localStorage.setItem("usuario_email", data.email);
+  localStorage.setItem("session_token", sessionToken);
 
+  // 🔁 REDIRECT
   const redirect = localStorage.getItem("redirect_after_login");
-
-  if(redirect){
+  if (redirect) {
     localStorage.removeItem("redirect_after_login");
     location.replace(redirect);
-  }else{
+  } else {
     location.replace("index.html");
   }
-}
+};
+
 
   else{
     msg.textContent="Período de teste expirado";
