@@ -946,6 +946,97 @@ body.search-open {
     grid-template-columns: 1fr;
   }
 }
+/* 🔐 POPUP SESSÃO PREMIUM */
+#sessaoOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.9);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+  backdrop-filter: blur(6px);
+}
+
+.sessaoPopup{
+  width:420px;
+  max-width:92%;
+  background:linear-gradient(180deg,#1b1b1e,#121214);
+  border-radius:20px;
+  padding:40px 32px;
+  text-align:center;
+  box-shadow:0 50px 120px rgba(0,0,0,.85);
+  animation:popupIn .35s cubic-bezier(.2,.8,.2,1);
+}
+
+@keyframes popupIn{
+  from{opacity:0;transform:translateY(12px) scale(.96)}
+  to{opacity:1;transform:none}
+}
+
+.sessaoIcon{
+  width:64px;
+  height:64px;
+  margin:0 auto 18px;
+  border-radius:50%;
+  background:rgba(229,9,20,.15);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+  color:#e50914;
+}
+
+.sessaoPopup h2{
+  margin:0 0 12px;
+  font-size:24px;
+  font-weight:900;
+}
+
+.sessaoText{
+  font-size:15px;
+  color:#cfcfcf;
+  line-height:1.5;
+  margin-bottom:22px;
+}
+
+.sessaoBox{
+  background:#0f0f10;
+  border:1px solid #2c2c2c;
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:26px;
+  text-align:left;
+}
+
+.sessaoLabel{
+  font-size:11px;
+  color:#888;
+  display:block;
+  margin-bottom:6px;
+}
+
+.sessaoDevice{
+  font-size:13px;
+  color:#e5e5e5;
+  word-break:break-word;
+}
+
+.sessaoBtn{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:none;
+  background:#e50914;
+  color:#fff;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.sessaoBtn:hover{
+  filter:brightness(1.1);
+}
 
   
 </style>
@@ -1792,10 +1883,9 @@ if (data.controle_sessao === true) {
     const agente =
       ultimoLogin?.user_agent || "Outro dispositivo";
 
-    alert(
-      "Sua conta foi acessada em outro dispositivo.\n\n" +
-      "Dispositivo:\n" + agente
-    );
+mostrarSessaoEncerrada(agente);
+return false;
+
 
     localStorage.clear();
 
@@ -2023,9 +2113,53 @@ async function carregarPlanosBloqueio() {
     </div>
   `;
 }
+function mostrarSessaoEncerrada(userAgent){
+  document.getElementById("sessaoDevice").textContent =
+    userAgent || "Outro dispositivo";
+
+  document.getElementById("sessaoOverlay").style.display = "flex";
+}
+
+function sessaoSair(){
+  localStorage.clear();
+  sessionStorage.clear();
+
+  if (window.matchMedia("(display-mode: standalone)").matches) {
+    location.href = "login.html";
+  } else {
+    location.replace("login.html");
+  }
+}
 
 
 
 </script>
+  <!-- 🔐 POPUP SESSÃO ENCERRADA -->
+<div id="sessaoOverlay" style="display:none">
+  <div class="sessaoPopup">
+    
+    <div class="sessaoIcon">🔒</div>
+
+    <h2>Você foi desconectado</h2>
+
+    <p class="sessaoText">
+      Detectamos um novo login na sua conta.
+      <br>Por segurança, esta sessão foi encerrada.
+    </p>
+
+    <div class="sessaoBox">
+      <span class="sessaoLabel">Dispositivo:</span>
+      <div class="sessaoDevice" id="sessaoDevice">
+        Outro dispositivo
+      </div>
+    </div>
+
+    <button class="sessaoBtn" onclick="sessaoSair()">
+      Entendi, sair
+    </button>
+
+  </div>
+</div>
+
 </body>
 </html>
