@@ -2,241 +2,351 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Acesso | CLENA TV</title>
+<title>Login | CLENA TV</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+html,body{margin:0;height:100%;background:#0f0f10;color:#fff}
 
 :root{
-  --bg:#0f0f10;
   --surface:#1b1b1e;
-  --card:#232326;
   --accent:#e50914;
-  --text:#fff;
   --muted:#b5b5b5;
+  --border:#2b2b2b;
+  --error:#f87171;
+  --success:#22c55e;
 }
 
 body{
-  min-height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:radial-gradient(80% 60% at 50% 10%, #1a1a1a 0%, #0f0f10 65%);
-  color:var(--text);
+  background:radial-gradient(70% 60% at 50% 25%, #1a1a1a 0%, #0f0f10 60%);
 }
 
-.box{
-  width:100%;
-  max-width:440px;
-  background:linear-gradient(180deg,#232326,#1a1a1c);
-  border-radius:22px;
-  padding:36px 32px;
-  box-shadow:0 30px 60px rgba(0,0,0,.65);
+.container{
+  width:420px;
+  max-width:92%;
+  background:rgba(27,27,30,.85);
+  backdrop-filter:blur(14px);
+  padding:42px;
+  border-radius:20px;
+  box-shadow:0 40px 90px rgba(0,0,0,.7);
 }
 
-.logo{
-  text-align:center;
-  font-size:26px;
+h1{
+  margin:0 0 32px;
+  font-size:36px;
   font-weight:900;
-  margin-bottom:6px;
-}
-.logo span{color:var(--accent)}
-
-.subtitle{
   text-align:center;
-  font-size:14px;
-  color:var(--muted);
-  margin-bottom:26px;
 }
+h1 span{color:var(--accent)}
 
-.tabs{
-  display:flex;
-  background:#111;
-  border-radius:14px;
-  overflow:hidden;
-  margin-bottom:26px;
-}
-.tabs button{
-  flex:1;
-  padding:14px;
-  background:none;
-  border:none;
-  color:#aaa;
-  font-weight:800;
-  cursor:pointer;
-}
-.tabs button.active{
-  background:var(--accent);
-  color:#fff;
-}
+.group{margin-bottom:22px}
+label{font-size:14px;color:var(--muted);margin-bottom:6px;display:block}
 
-.field{
-  margin-bottom:16px;
-}
-.field label{
-  font-size:13px;
-  color:#ccc;
-  display:block;
-  margin-bottom:6px;
-}
-.field input{
+input{
   width:100%;
-  padding:14px;
+  padding:14px 16px;
+  font-size:15px;
   border-radius:12px;
-  border:none;
-  background:#111;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,.45);
   color:#fff;
-  font-size:14px;
 }
+input:focus{outline:none;border-color:var(--accent)}
 
-button.submit{
+.btn{
   width:100%;
   padding:16px;
+  margin-top:12px;
   border:none;
   border-radius:14px;
   background:var(--accent);
   color:#fff;
   font-size:16px;
-  font-weight:900;
+  font-weight:800;
   cursor:pointer;
 }
-button.submit:hover{filter:brightness(1.1)}
 
-.msg{
-  margin-top:14px;
-  font-size:13px;
-  color:#ffb4b4;
+.link{
+  margin-top:18px;
   text-align:center;
+  font-size:14px;
+  text-decoration:underline;
+  cursor:pointer;
+}
+
+.msg{margin-top:14px;min-height:20px;font-size:14px}
+.msg.error{color:var(--error)}
+.msg.success{color:var(--success)}
+
+.modal{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.85);
   display:none;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal-box{
+  width:420px;
+  max-width:92%;
+  background:var(--surface);
+  padding:36px;
+  border-radius:20px;
+}
+
+/* ANIMAÇÃO SUCESSO */
+.success-anim{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  margin-top:20px;
+  animation:fadeUp .4s ease;
+}
+.check{
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  background:var(--success);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:38px;
+  color:#fff;
+  animation:pop .5s ease;
+}
+@keyframes pop{
+  0%{transform:scale(.3);opacity:0}
+  80%{transform:scale(1.1)}
+  100%{transform:scale(1);opacity:1}
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* POLÍTICAS */
+.politica-texto{
+  font-size:12px;
+  color:var(--muted);
+  text-align:center;
+  margin-top:14px;
+}
+.politica-texto button{
+  background:none;
+  border:none;
+  color:var(--accent);
+  cursor:pointer;
+  font-weight:600;
+  padding:0;
 }
 </style>
 </head>
 
 <body>
 
-<div class="box">
-  <div class="logo">CLENA <span>TV</span></div>
-  <div class="subtitle">Entre ou crie sua conta para assinar</div>
+<!-- LOGIN -->
+<div class="container">
+  <h1>CLENA <span>TV</span></h1>
 
-  <div class="tabs">
-    <button id="tabLogin" class="active" onclick="trocar('login')">Login</button>
-    <button id="tabCadastro" onclick="trocar('cadastro')">Cadastro</button>
+  <div class="group">
+    <label>Email</label>
+    <input id="email" type="email">
   </div>
 
-  <!-- LOGIN -->
-  <div id="login">
-    <div class="field">
-      <label>E-mail</label>
-      <input type="email" id="loginEmail">
-    </div>
-    <div class="field">
-      <label>Senha</label>
-      <input type="password" id="loginSenha">
-    </div>
-    <button class="submit" onclick="login()">Entrar</button>
+  <div class="group">
+    <label>Senha</label>
+    <input id="senha" type="password">
   </div>
 
-  <!-- CADASTRO -->
-  <div id="cadastro" style="display:none">
-    <div class="field">
-      <label>E-mail</label>
-      <input type="email" id="cadEmail">
-    </div>
-    <div class="field">
-      <label>Senha</label>
-      <input type="password" id="cadSenha">
-    </div>
-    <button class="submit" onclick="cadastrar()">Criar conta</button>
-  </div>
-
+  <button id="btnLogin" class="btn">Entrar</button>
+  <div class="link" id="abrirCadastro">Ainda não tenho uma conta</div>
   <div class="msg" id="msg"></div>
 </div>
 
+<!-- CADASTRO -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h2>Criar conta</h2>
+
+    <div class="group">
+      <label>Email</label>
+      <input id="c_email" type="email">
+    </div>
+
+    <div class="group">
+      <label>CPF</label>
+      <input id="c_cpf" type="text" placeholder="000.000.000-00">
+    </div>
+
+    <div class="group">
+      <label>WhatsApp</label>
+      <input id="c_whats" type="text" placeholder="(99) 99999-9999">
+    </div>
+
+    <div class="group">
+      <label>Senha</label>
+      <input id="c_senha" type="password">
+    </div>
+
+    <div class="group">
+      <label>Confirmar senha</label>
+      <input id="c_confirma" type="password">
+    </div>
+
+    <button id="btnCadastro" class="btn">Cadastrar</button>
+
+    <p class="politica-texto">
+      Ao se cadastrar você concorda com as
+      <button onclick="abrirPoliticas()">políticas de privacidade</button>
+    </p>
+
+    <div class="link" id="fecharCadastro">Cancelar</div>
+    <div class="msg" id="msgCadastro"></div>
+  </div>
+</div>
+
 <script>
-function trocar(tipo){
-  document.getElementById("login").style.display = tipo==="login" ? "block" : "none";
-  document.getElementById("cadastro").style.display = tipo==="cadastro" ? "block" : "none";
-  document.getElementById("tabLogin").classList.toggle("active", tipo==="login");
-  document.getElementById("tabCadastro").classList.toggle("active", tipo==="cadastro");
-  document.getElementById("msg").style.display = "none";
-}
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
 
-function salvarSessao(email, token){
-  localStorage.setItem("usuario_email", email);
-  localStorage.setItem("session_token", token);
+/* MODAL */
+abrirCadastro.onclick = ()=> modal.style.display="flex";
+fecharCadastro.onclick = ()=> modal.style.display="none";
 
-  const redirect = localStorage.getItem("redirect_after_login") || "planos.html";
-  localStorage.removeItem("redirect_after_login");
-  location.href = redirect;
-}
+/* MÁSCARAS */
+c_cpf.oninput = e=>{
+  e.target.value=e.target.value.replace(/\D/g,"")
+    .replace(/(\d{3})(\d)/,"$1.$2")
+    .replace(/(\d{3})(\d)/,"$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/,"$1-$2").slice(0,14);
+};
+c_whats.oninput = e=>{
+  e.target.value=e.target.value.replace(/\D/g,"")
+    .replace(/^(\d{2})(\d)/,"($1) $2")
+    .replace(/(\d{5})(\d)/,"$1-$2").slice(0,15);
+};
 
-async function login(){
-  const email = loginEmail.value.trim();
-  const senha = loginSenha.value.trim();
-  const msg = document.getElementById("msg");
+/* LOGIN */
+btnLogin.onclick = async ()=>{
+  msg.textContent="";
+  msg.className="msg";
 
-  if(!email || !senha){
-    msg.innerText = "Preencha e-mail e senha";
-    msg.style.display = "block";
+  const emailInput=email.value.trim();
+  const senhaInput=senha.value;
+  const redirect=localStorage.getItem("redirect_after_login");
+
+  if(!emailInput||!senhaInput){
+    msg.textContent="Preencha email e senha";
+    msg.className="msg error";
     return;
   }
 
-  try{
-    const res = await fetch("/api/login",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ email, senha })
-    });
+  const {data,error}=await sb.from("usuarios")
+    .select("*").eq("email",emailInput).maybeSingle();
 
-    if(!res.ok){
-      msg.innerText = "E-mail ou senha inválidos";
-      msg.style.display = "block";
-      return;
-    }
-
-    const data = await res.json();
-    salvarSessao(email, data.token);
-
-  }catch{
-    msg.innerText = "Erro de conexão";
-    msg.style.display = "block";
-  }
-}
-
-async function cadastrar(){
-  const email = cadEmail.value.trim();
-  const senha = cadSenha.value.trim();
-  const msg = document.getElementById("msg");
-
-  if(!email || !senha){
-    msg.innerText = "Preencha e-mail e senha";
-    msg.style.display = "block";
+  if(error||!data){
+    msg.textContent="Usuário não encontrado";
+    msg.className="msg error";
     return;
   }
 
-  try{
-    const res = await fetch("/api/register",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ email, senha })
-    });
-
-    if(!res.ok){
-      msg.innerText = "Não foi possível criar a conta";
-      msg.style.display = "block";
-      return;
-    }
-
-    const data = await res.json();
-    salvarSessao(email, data.token);
-
-  }catch{
-    msg.innerText = "Erro de conexão";
-    msg.style.display = "block";
+  if(data.senha!==senhaInput){
+    msg.textContent="Senha incorreta";
+    msg.className="msg error";
+    return;
   }
+
+  if(new Date()>new Date(data.trial_expires_at) && data.status!=="aprovado"){
+    msg.textContent="Período de teste expirado";
+    msg.className="msg error";
+    return;
+  }
+
+  const token=crypto.randomUUID();
+  await sb.from("usuarios").update({session_token:token}).eq("id",data.id);
+
+  localStorage.setItem("usuario_email",data.email);
+  localStorage.setItem("session_token",token);
+
+  if(redirect==="planos.html"){
+    localStorage.removeItem("redirect_after_login");
+    location.replace("planos.html");
+    return;
+  }
+
+  location.replace("planos.html");
+};
+
+/* CADASTRO */
+btnCadastro.onclick = async ()=>{
+  msgCadastro.textContent="";
+
+  if(c_senha.value!==c_confirma.value){
+    msgCadastro.textContent="As senhas não conferem";
+    msgCadastro.className="msg error";
+    return;
+  }
+
+  const trial=new Date(Date.now()+10*86400000);
+
+  const {error}=await sb.from("usuarios").insert({
+    email:c_email.value.trim(),
+    cpf:c_cpf.value.replace(/\D/g,""),
+    whatsapp:c_whats.value.replace(/\D/g,""),
+    senha:c_senha.value,
+    status:"pendente",
+    trial_expires_at:trial.toISOString()
+  });
+
+  if(error){
+    msgCadastro.textContent="Erro ao cadastrar";
+    msgCadastro.className="msg error";
+    return;
+  }
+
+  msgCadastro.innerHTML=`
+    <div class="success-anim">
+      <div class="check">✓</div>
+      <strong>Teste liberado por 10 dias</strong>
+      <span>Voltando...</span>
+    </div>`;
+
+  setTimeout(()=>{
+    modal.style.display="none";
+    email.value=c_email.value;
+    senha.value=c_senha.value;
+    msg.textContent="Conta criada! Clique em Entrar 🚀";
+    msg.className="msg success";
+  },2200);
+};
+
+function abrirPoliticas(){
+  document.getElementById("modalPoliticas").style.display="flex";
+}
+function fecharPoliticas(){
+  document.getElementById("modalPoliticas").style.display="none";
 }
 </script>
+
+<!-- MODAL POLÍTICAS -->
+<div class="modal" id="modalPoliticas">
+  <div class="modal-box" style="max-height:85vh;overflow:hidden;">
+    <h2>Políticas de Privacidade</h2>
+    <div style="max-height:60vh;overflow-y:auto;font-size:14px;line-height:1.6;color:#ddd;">
+      <p>Esta Política descreve como coletamos e protegemos seus dados.</p>
+    </div>
+    <div class="link" onclick="fecharPoliticas()">Fechar</div>
+  </div>
+</div>
 
 </body>
 </html>
