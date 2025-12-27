@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acesso | CLENA TV</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+
+:root{
+  --bg:#0f0f10;
+  --surface:#1b1b1e;
+  --card:#232326;
+  --accent:#e50914;
+  --text:#fff;
+  --muted:#b5b5b5;
+}
+
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(80% 60% at 50% 10%, #1a1a1a 0%, #0f0f10 65%);
+  color:var(--text);
+}
+
+.box{
+  width:100%;
+  max-width:440px;
+  background:linear-gradient(180deg,#232326,#1a1a1c);
+  border-radius:22px;
+  padding:36px 32px;
+  box-shadow:0 30px 60px rgba(0,0,0,.65);
+}
+
+.logo{
+  text-align:center;
+  font-size:26px;
+  font-weight:900;
+  margin-bottom:6px;
+}
+.logo span{color:var(--accent)}
+
+.subtitle{
+  text-align:center;
+  font-size:14px;
+  color:var(--muted);
+  margin-bottom:26px;
+}
+
+.tabs{
+  display:flex;
+  background:#111;
+  border-radius:14px;
+  overflow:hidden;
+  margin-bottom:26px;
+}
+.tabs button{
+  flex:1;
+  padding:14px;
+  background:none;
+  border:none;
+  color:#aaa;
+  font-weight:800;
+  cursor:pointer;
+}
+.tabs button.active{
+  background:var(--accent);
+  color:#fff;
+}
+
+.field{
+  margin-bottom:16px;
+}
+.field label{
+  font-size:13px;
+  color:#ccc;
+  display:block;
+  margin-bottom:6px;
+}
+.field input{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:none;
+  background:#111;
+  color:#fff;
+  font-size:14px;
+}
+
+button.submit{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:14px;
+  background:var(--accent);
+  color:#fff;
+  font-size:16px;
+  font-weight:900;
+  cursor:pointer;
+}
+button.submit:hover{filter:brightness(1.1)}
+
+.msg{
+  margin-top:14px;
+  font-size:13px;
+  color:#ffb4b4;
+  text-align:center;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <div class="logo">CLENA <span>TV</span></div>
+  <div class="subtitle">Entre ou crie sua conta para assinar</div>
+
+  <div class="tabs">
+    <button id="tabLogin" class="active" onclick="trocar('login')">Login</button>
+    <button id="tabCadastro" onclick="trocar('cadastro')">Cadastro</button>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="login">
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="loginEmail">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="loginSenha">
+    </div>
+    <button class="submit" onclick="login()">Entrar</button>
+  </div>
+
+  <!-- CADASTRO -->
+  <div id="cadastro" style="display:none">
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="cadEmail">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="cadSenha">
+    </div>
+    <button class="submit" onclick="cadastrar()">Criar conta</button>
+  </div>
+
+  <div class="msg" id="msg"></div>
+</div>
+
+<script>
+function trocar(tipo){
+  document.getElementById("login").style.display = tipo==="login" ? "block" : "none";
+  document.getElementById("cadastro").style.display = tipo==="cadastro" ? "block" : "none";
+  document.getElementById("tabLogin").classList.toggle("active", tipo==="login");
+  document.getElementById("tabCadastro").classList.toggle("active", tipo==="cadastro");
+  document.getElementById("msg").style.display = "none";
+}
+
+function salvarSessao(email, token){
+  localStorage.setItem("usuario_email", email);
+  localStorage.setItem("session_token", token);
+
+  const redirect = localStorage.getItem("redirect_after_login") || "planos.html";
+  localStorage.removeItem("redirect_after_login");
+  location.href = redirect;
+}
+
+async function login(){
+  const email = loginEmail.value.trim();
+  const senha = loginSenha.value.trim();
+  const msg = document.getElementById("msg");
+
+  if(!email || !senha){
+    msg.innerText = "Preencha e-mail e senha";
+    msg.style.display = "block";
+    return;
+  }
+
+  try{
+    const res = await fetch("/api/login",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ email, senha })
+    });
+
+    if(!res.ok){
+      msg.innerText = "E-mail ou senha inválidos";
+      msg.style.display = "block";
+      return;
+    }
+
+    const data = await res.json();
+    salvarSessao(email, data.token);
+
+  }catch{
+    msg.innerText = "Erro de conexão";
+    msg.style.display = "block";
+  }
+}
+
+async function cadastrar(){
+  const email = cadEmail.value.trim();
+  const senha = cadSenha.value.trim();
+  const msg = document.getElementById("msg");
+
+  if(!email || !senha){
+    msg.innerText = "Preencha e-mail e senha";
+    msg.style.display = "block";
+    return;
+  }
+
+  try{
+    const res = await fetch("/api/register",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ email, senha })
+    });
+
+    if(!res.ok){
+      msg.innerText = "Não foi possível criar a conta";
+      msg.style.display = "block";
+      return;
+    }
+
+    const data = await res.json();
+    salvarSessao(email, data.token);
+
+  }catch{
+    msg.innerText = "Erro de conexão";
+    msg.style.display = "block";
+  }
+}
+</script>
+
+</body>
+</html>
