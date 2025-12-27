@@ -1788,12 +1788,29 @@ async function validarSessao() {
   // 🔒 SÓ BLOQUEIA SE O ADMIN ATIVAR
   if (data.controle_sessao === true) {
     if (!tokenLocal || data.session_token !== tokenLocal) {
-      alert("Sua conta foi acessada em outro dispositivo.");
-      localStorage.clear();
-      location.replace("login.html");
-      return false;
-    }
-  }
+     // 🔍 busca último login (novo dispositivo)
+const { data: ultimoLogin } = await sb
+  .from("login_logs")
+  .select("user_agent, created_at")
+  .eq("user_id", data.id)
+  .order("created_at", { ascending: false })
+  .limit(1)
+  .maybeSingle();
+
+// 🧠 mensagem detalhada
+const agente = ultimoLogin?.user_agent || "Dispositivo desconhecido";
+
+// 💬 POPUP
+mostrarSessaoEncerrada(agente);
+
+// ⏳ espera o usuário ver
+setTimeout(() => {
+  localStorage.clear();
+  location.replace("login.html");
+}, 4000);
+
+return false;
+
 
   // 🚫 BLOQUEADO
   if (data.status === "bloqueado") {
@@ -2028,6 +2045,57 @@ async function carregarPlanosBloqueio() {
       `).join("")}
     </div>
   `;
+}
+function mostrarSessaoEncerrada(userAgent) {
+  const overlay = document.createElement("div");
+  overlay.style = `
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.85);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:99999;
+    font-family:Inter,Arial;
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      background:#1b1b1e;
+      padding:28px;
+      border-radius:16px;
+      max-width:420px;
+      width:90%;
+      text-align:center;
+      box-shadow:0 20px 50px rgba(0,0,0,.6);
+    ">
+      <h2 style="color:#e50914;margin-bottom:10px">
+        ⚠️ Sessão encerrada
+      </h2>
+
+      <p style="color:#ccc;margin-bottom:14px">
+        Sua conta foi acessada em outro dispositivo.
+      </p>
+
+      <div style="
+        background:#111;
+        border:1px solid #333;
+        border-radius:8px;
+        padding:10px;
+        font-size:12px;
+        color:#9ca3af;
+        word-break:break-word;
+      ">
+        ${userAgent}
+      </div>
+
+      <p style="margin-top:14px;font-size:12px;color:#777">
+        Você será redirecionado para o login.
+      </p>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
 }
 
 
