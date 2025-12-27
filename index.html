@@ -1760,6 +1760,7 @@ if ("serviceWorker" in navigator) {
 }
 async function validarSessao() {
   const email = localStorage.getItem("usuario_email");
+  const tokenLocal = localStorage.getItem("session_token");
 
   if (!email) {
     location.replace("login.html");
@@ -1768,15 +1769,53 @@ async function validarSessao() {
 
   const { data, error } = await sb
     .from("usuarios")
-    .select("status, trial_expires_at")
+    .select(`
+      session_token,
+      controle_sessao,
+      status,
+      trial_expires_at
+    `)
     .eq("email", email)
-    .maybeSingle();
+    .single();
 
   if (error || !data) {
     localStorage.clear();
     location.replace("login.html");
     return false;
   }
+
+  // 🔓 PADRÃO: NÃO BLOQUEIA
+  // 🔒 SÓ BLOQUEIA SE O ADMIN ATIVAR
+  if (data.controle_sessao === true) {
+    if (!tokenLocal || data.session_token !== tokenLocal) {
+      alert("Sua conta foi acessada em outro dispositivo.");
+      localStorage.clear();
+      location.replace("login.html");
+      return false;
+    }
+  }
+
+  // 🚫 BLOQUEADO
+  if (data.status === "bloqueado") {
+    localStorage.clear();
+    location.replace("login.html");
+    return false;
+  }
+
+  // ⏳ TRIAL
+  if (data.trial_expires_at) {
+    const agora = new Date();
+    const expira = new Date(data.trial_expires_at);
+    if (agora > expira && data.status !== "aprovado") {
+      localStorage.clear();
+      location.replace("login.html");
+      return false;
+    }
+  }
+
+  return true;
+}
+
 
   const agora = new Date();
   const expira = new Date(data.trial_expires_at);
@@ -1915,18 +1954,17 @@ async function carregarAvatarHeader() {
 }
 
 
-
 (async () => {
-
   const ok = await validarSessao();
   if (!ok) return;
 
-  await carregarAvatarHeader(); // ✅ ESSENCIAL
+  await carregarAvatarHeader();
   iniciarApp();
 
+  // 🔁 verifica a cada 15 segundos
   setInterval(validarSessao, 15000);
-
 })();
+
 function montarFiltrosCategorias(){
   const box = document.getElementById("filtrosCategorias");
 
