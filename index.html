@@ -1762,7 +1762,7 @@ async function validarSessao() {
   const email = localStorage.getItem("usuario_email");
   const tokenLocal = localStorage.getItem("session_token");
 
-  if (!email || !tokenLocal) {
+  if (!email) {
     location.replace("login.html");
     return false;
   }
@@ -1770,7 +1770,6 @@ async function validarSessao() {
   const { data, error } = await sb
     .from("usuarios")
     .select(`
-      id,
       session_token,
       controle_sessao,
       status,
@@ -1785,33 +1784,13 @@ async function validarSessao() {
     return false;
   }
 
-  // 🔒 CONTROLE DE SESSÃO (LOGIN EM OUTRO DISPOSITIVO)
+  // 🔓 PADRÃO: NÃO BLOQUEIA
+  // 🔒 SÓ BLOQUEIA SE O ADMIN ATIVAR
   if (data.controle_sessao === true) {
-    if (data.session_token !== tokenLocal) {
-
-      const { data: ultimoLogin } = await sb
-        .from("login_logs")
-        .select("user_agent, created_at")
-        .eq("user_id", data.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const agente = ultimoLogin?.user_agent || "Dispositivo desconhecido";
-
-      mostrarSessaoEncerrada(agente);
-      window.focus();
-
-      setTimeout(() => {
-        localStorage.clear();
-
-        if (window.matchMedia("(display-mode: standalone)").matches) {
-          location.href = "login.html";
-        } else {
-          location.replace("login.html");
-        }
-      }, 6000);
-
+    if (!tokenLocal || data.session_token !== tokenLocal) {
+      alert("Sua conta foi acessada em outro dispositivo.");
+      localStorage.clear();
+      location.replace("login.html");
       return false;
     }
   }
@@ -1827,7 +1806,6 @@ async function validarSessao() {
   if (data.trial_expires_at) {
     const agora = new Date();
     const expira = new Date(data.trial_expires_at);
-
     if (agora > expira && data.status !== "aprovado") {
       localStorage.clear();
       location.replace("login.html");
@@ -1837,7 +1815,6 @@ async function validarSessao() {
 
   return true;
 }
-
 
 
   const agora = new Date();
@@ -2051,57 +2028,6 @@ async function carregarPlanosBloqueio() {
       `).join("")}
     </div>
   `;
-}
-function mostrarSessaoEncerrada(userAgent) {
-  const overlay = document.createElement("div");
-  overlay.style = `
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.85);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index:99999;
-    font-family:Inter,Arial;
-  `;
-
-  overlay.innerHTML = `
-    <div style="
-      background:#1b1b1e;
-      padding:28px;
-      border-radius:16px;
-      max-width:420px;
-      width:90%;
-      text-align:center;
-      box-shadow:0 20px 50px rgba(0,0,0,.6);
-    ">
-      <h2 style="color:#e50914;margin-bottom:10px">
-        ⚠️ Sessão encerrada
-      </h2>
-
-      <p style="color:#ccc;margin-bottom:14px">
-        Sua conta foi acessada em outro dispositivo.
-      </p>
-
-      <div style="
-        background:#111;
-        border:1px solid #333;
-        border-radius:8px;
-        padding:10px;
-        font-size:12px;
-        color:#9ca3af;
-        word-break:break-word;
-      ">
-        ${userAgent}
-      </div>
-
-      <p style="margin-top:14px;font-size:12px;color:#777">
-        Você será redirecionado para o login.
-      </p>
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
 }
 
 
