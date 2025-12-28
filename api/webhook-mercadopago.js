@@ -1,6 +1,7 @@
 export const config = { runtime: "nodejs" };
 
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
 const sb = createClient(
   process.env.SUPABASE_URL,
@@ -93,35 +94,38 @@ if (pag.planos.dias > 0) {
 }
 
 
-  // 🔽🔽🔽 AQUI É O LUGAR CERTO 🔽🔽🔽
-  // 📊 ENVIA COMPRA PARA GA4 (SERVER-SIDE)
-  await fetch(
-    `https://www.google-analytics.com/mp/collect?measurement_id=${process.env.GA_MEASUREMENT_ID}&api_secret=${process.env.GA_API_SECRET}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        client_id: String(pag.user_id),
-        events: [
-          {
-            name: "purchase",
-            params: {
-              transaction_id: payment.external_reference,
-              value: pag.valor,
-              currency: "BRL",
-              items: [
-                {
-                  item_name: pag.planos.nome,
-                  price: pag.valor,
-                  quantity: 1
-                }
-              ]
-            }
+
+ const gaRes = await fetch(
+  `https://www.google-analytics.com/mp/collect?measurement_id=${process.env.GA_MEASUREMENT_ID}&api_secret=${process.env.GA_API_SECRET}`,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      client_id: crypto.randomUUID(),   // ✅ sessão
+      user_id: String(pag.user_id),     // ✅ usuário real
+      events: [
+        {
+          name: "purchase",
+          params: {
+            transaction_id: payment.external_reference,
+            value: pag.valor,
+            currency: "BRL",
+            items: [
+              {
+                item_name: pag.planos.nome,
+                price: pag.valor,
+                quantity: 1
+              }
+            ]
           }
-        ]
-      })
-    }
-  );
+        }
+      ]
+    })
+  }
+);
+
+if (!gaRes.ok) {
+  console.error("❌ GA4 erro:", await gaRes.text());
 }
 
 
