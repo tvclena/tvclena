@@ -1199,126 +1199,146 @@ body.modal-open{
 @keyframes neo-giro{
   to{ transform:rotate(360deg); }
 }
-/* ================= PERFIL MOBILE — MODELO NOVO ================= */
+/* ================= PERFIL MOBILE — MODELO NOVO LIMPO ================= */
 @media (max-width: 520px){
 
+  /* Overlay */
   #perfilOverlayNovo{
     align-items:flex-end;
   }
 
+  /* Popup */
   #perfilPopupNovo{
     width:100%;
     max-width:100%;
     max-height:94vh;
 
-    padding:16px 14px 120px;
+    padding:18px 16px 140px;
     border-radius:20px 20px 0 0;
+
+    background:#0f0f10;
 
     display:flex;
     flex-direction:column;
-    gap:16px;
+    gap:18px;
 
     overflow-y:auto;
-    background:#0f0f10;
-
-    animation:perfilIn .3s ease;
+    animation:perfilIn .32s ease;
   }
 
   @keyframes perfilIn{
-    from{transform:translateY(40px);opacity:0}
+    from{transform:translateY(36px);opacity:0}
     to{transform:none;opacity:1}
   }
 
-  /* ================= HEADER PERFIL ================= */
+  /* ================= TOPO PERFIL ================= */
   .avatar-col{
     display:flex;
-    align-items:center;
-    gap:14px;
-    padding-bottom:12px;
-    border-bottom:1px solid #222;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:8px;
   }
 
   .avatar-col img{
-    width:68px;
-    height:68px;
+    width:76px;
+    height:76px;
     border-radius:50%;
+    object-fit:cover;
   }
 
+  /* botão editar foto (embaixo da foto) */
   .avatar-upload-novo{
-    display:none;
+    display:inline-block;
+    font-size:12px;
+    color:#3ea6ff;
+    cursor:pointer;
+  }
+
+  /* bloco nome + user */
+  .dados-col{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
   }
 
   .dados-col h3{
     margin:0;
-    font-size:17px;
+    font-size:18px;
     font-weight:800;
   }
 
   .username-box-novo{
-    margin-top:2px;
-    max-width:160px;
+    max-width:180px;
   }
 
   .username-box-novo input{
-    font-size:13px;
+    font-size:14px;
   }
 
   #perfilUsernameStatus{
-    font-size:11px;
+    font-size:12px;
     margin-top:2px;
   }
 
-  /* ================= CARDS ================= */
-  .dados-col > label,
-  .dados-col > input,
-  .perfil-info-novo,
-  .perfil-apex,
-  .btn-neo-apex{
-    background:#111;
-    border:1px solid #262626;
-    border-radius:14px;
-    padding:14px;
+  /* ================= SEPARADOR ================= */
+  .dados-col::after{
+    content:"";
+    display:block;
+    height:1px;
+    background:#222;
+    margin:14px 0 6px;
   }
 
+  /* ================= FORM EM CARDS ================= */
   .dados-col label{
-    display:block;
-    background:none;
-    border:none;
-    padding:0;
-    margin-top:12px;
     font-size:11px;
     color:#aaa;
+    margin-top:12px;
   }
 
   .dados-col input{
     margin-top:6px;
-    font-size:15px;
-    padding:12px;
-    border-radius:10px;
+    padding:14px;
+    font-size:16px;
+    border-radius:12px;
+    border:1px solid #333;
+    background:#111;
+    color:#fff;
   }
 
   .perfil-info-novo{
+    margin-top:14px;
+    background:#111;
+    border:1px solid #262626;
+    border-radius:14px;
+    padding:14px;
     font-size:13px;
     line-height:1.5;
   }
 
   /* ================= APEX ================= */
-  .perfil-apex{
-    text-align:center;
+  .btn-neo-apex{
+    margin-top:14px;
   }
 
-  /* ================= BOTÕES ================= */
+  .perfil-apex{
+    margin-top:12px;
+    border-radius:14px;
+  }
+
+  /* ================= AÇÕES FIXAS ================= */
   .perfil-acoes{
     position:fixed;
     left:0;
     right:0;
-    bottom:14px;
+    bottom:18px;
 
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:12px;
 
-    padding:14px;
+    padding:14px 16px;
+
     background:linear-gradient(
       to top,
       rgba(15,15,16,.98),
@@ -1334,20 +1354,22 @@ body.modal-open{
     border-radius:14px;
   }
 
-  .btn-sair{
+  /* ordem correta */
+  .perfil-acoes .btn-sair{
     background:#222;
+    order:1;
   }
 
-  .btn-salvar{
+  .perfil-acoes .btn-salvar{
     background:#e50914;
+    order:2;
   }
 
-  .btn-fechar{
+  .perfil-acoes .btn-fechar{
     display:none;
   }
 }
 
-  
 </style>
 </head>
 
