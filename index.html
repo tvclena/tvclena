@@ -1199,7 +1199,7 @@ body.modal-open{
 @keyframes neo-giro{
   to{ transform:rotate(360deg); }
 }
-/* ================= PERFIL MOBILE REORGANIZADO ================= */
+/* ================= PERFIL MOBILE FINAL ================= */
 @media (max-width: 520px){
 
   #perfilOverlayNovo{
@@ -1209,10 +1209,9 @@ body.modal-open{
   #perfilPopupNovo{
     width:100%;
     max-width:100%;
-    height:auto;
     max-height:92vh;
 
-    padding:18px 16px 110px;
+    padding:18px 16px 130px; /* espaço real para botões */
     border-radius:18px 18px 0 0;
 
     display:flex;
@@ -1228,12 +1227,11 @@ body.modal-open{
     to{transform:none;opacity:1}
   }
 
-  /* 🔥 TOPO: FOTO + NOME + USER */
+  /* 🔝 TOPO: FOTO + NOME + USER */
   .avatar-col{
     flex-direction:row;
     align-items:center;
     gap:14px;
-    margin-bottom:4px;
   }
 
   .avatar-col img{
@@ -1243,31 +1241,30 @@ body.modal-open{
   }
 
   .avatar-upload-novo{
-    display:none; /* mantém ação, mas visual limpo */
+    display:none; /* mantém função mas limpa visual */
   }
 
-  /* bloco nome */
   .dados-col h3{
     margin:0;
     font-size:18px;
     font-weight:800;
   }
 
-  #perfilUsernameStatus{
-    margin-top:2px;
-  }
-
-  /* username logo abaixo do nome */
   .username-box-novo{
     margin-top:4px;
-    max-width:180px;
+    max-width:200px;
   }
 
   .username-box-novo input{
     font-size:14px;
   }
 
-  /* 🔽 RESTO CONTINUA NORMAL */
+  #perfilUsernameStatus{
+    margin-top:2px;
+    font-size:12px;
+  }
+
+  /* 🔽 RESTANTE DO FORM */
   .dados-col label{
     font-size:11px;
     margin-top:12px;
@@ -1292,14 +1289,13 @@ body.modal-open{
     margin-top:14px;
   }
 
-  /* 🔘 BOTÕES FIXOS */
+  /* 🔘 AÇÕES FIXAS (MOBILE) */
   .perfil-acoes{
     position:fixed;
     left:0;
     right:0;
-    bottom:0;
-
-    padding:12px;
+    bottom:14px;          /* 🔥 sobe da borda */
+    padding:14px 16px;
     gap:10px;
 
     background:linear-gradient(
@@ -1308,6 +1304,7 @@ body.modal-open{
       rgba(15,15,16,.9),
       rgba(15,15,16,0)
     );
+
     backdrop-filter:blur(8px);
   }
 
@@ -1317,7 +1314,16 @@ body.modal-open{
     border-radius:14px;
   }
 
-  .btn-fechar{
+  /* 🔁 ORDEM DOS BOTÕES */
+  .perfil-acoes .btn-sair{
+    order:1;
+  }
+
+  .perfil-acoes .btn-salvar{
+    order:2;
+  }
+
+  .perfil-acoes .btn-fechar{
     display:none;
   }
 }
