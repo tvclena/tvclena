@@ -51,13 +51,14 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "MP_ACCESS_TOKEN ausente" });
     }
 
-    // 🔎 Busca plano
     const { data: planoDB } = await sb
-      .from("planos")
-      .select("*")
-      .eq("nome", plano)
-      .eq("ativo", true)
-      .single();
+  .from("planos")
+  .select("*")
+  .eq("nome", plano)
+  .eq("ativo", true)
+  .gt("dias", 0) // 🔒 GARANTE QUE É ASSINATURA
+  .single();
+
 
     if (!planoDB) {
       return res.status(400).json({ error: "Plano inválido" });
