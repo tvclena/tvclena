@@ -20,19 +20,19 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  
+}
+
+/* agora sim */
 .container{
   width:100%;
   height:100%;
-  overflow-y:auto;       /* ✅ rolagem interna */
+  overflow-y:auto;       /* rolagem interna */
   padding:32px 26px;
 
-  -webkit-overflow-scrolling: touch; /* 🔥 iOS suave */
-  scrollbar-width:none;              /* Firefox */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width:none;
 }
-.container::-webkit-scrollbar{
-  display:none;                      /* Chrome / Safari */
-}
+
 
 
 @keyframes fadeUp{
