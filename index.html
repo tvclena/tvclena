@@ -1199,11 +1199,11 @@ body.modal-open{
 @keyframes neo-giro{
   to{ transform:rotate(360deg); }
 }
-/* ================= PERFIL MOBILE FINAL ================= */
+/* ================= PERFIL MOBILE – LAYOUT CORRETO ================= */
 @media (max-width: 520px){
 
   #perfilOverlayNovo{
-    align-items: flex-end;
+    align-items:flex-end;
   }
 
   #perfilPopupNovo{
@@ -1211,13 +1211,16 @@ body.modal-open{
     max-width:100%;
     max-height:92vh;
 
-    padding:18px 16px 130px; /* espaço real para botões */
+    padding:18px 16px 130px;
     border-radius:18px 18px 0 0;
 
-    display:flex;
-    flex-direction:column;
-    gap:18px;
+    display:grid;
+    grid-template-columns:80px 1fr;
+    grid-template-areas:
+      "avatar topo"
+      "conteudo conteudo";
 
+    gap:16px;
     overflow-y:auto;
     animation:perfilMobileIn .3s ease;
   }
@@ -1227,11 +1230,10 @@ body.modal-open{
     to{transform:none;opacity:1}
   }
 
-  /* 🔝 TOPO: FOTO + NOME + USER */
+  /* ================= FOTO ================= */
   .avatar-col{
-    flex-direction:row;
-    align-items:center;
-    gap:14px;
+    grid-area:avatar;
+    align-items:flex-start;
   }
 
   .avatar-col img{
@@ -1241,7 +1243,12 @@ body.modal-open{
   }
 
   .avatar-upload-novo{
-    display:none; /* mantém função mas limpa visual */
+    display:none;
+  }
+
+  /* ================= TOPO (NOME + @) ================= */
+  .dados-col{
+    grid-area:topo;
   }
 
   .dados-col h3{
@@ -1252,7 +1259,7 @@ body.modal-open{
 
   .username-box-novo{
     margin-top:4px;
-    max-width:200px;
+    max-width:180px;
   }
 
   .username-box-novo input{
@@ -1264,7 +1271,11 @@ body.modal-open{
     font-size:12px;
   }
 
-  /* 🔽 RESTANTE DO FORM */
+  /* ================= RESTO ABAIXO ================= */
+  .dados-col > *:not(h3):not(.username-box-novo):not(#perfilUsernameStatus){
+    grid-area:conteudo;
+  }
+
   .dados-col label{
     font-size:11px;
     margin-top:12px;
@@ -1289,12 +1300,13 @@ body.modal-open{
     margin-top:14px;
   }
 
-  /* 🔘 AÇÕES FIXAS (MOBILE) */
+  /* ================= BOTÕES ================= */
   .perfil-acoes{
     position:fixed;
     left:0;
     right:0;
-    bottom:14px;          /* 🔥 sobe da borda */
+    bottom:14px;
+
     padding:14px 16px;
     gap:10px;
 
@@ -1304,7 +1316,6 @@ body.modal-open{
       rgba(15,15,16,.9),
       rgba(15,15,16,0)
     );
-
     backdrop-filter:blur(8px);
   }
 
@@ -1314,18 +1325,10 @@ body.modal-open{
     border-radius:14px;
   }
 
-  /* 🔁 ORDEM DOS BOTÕES */
-  .perfil-acoes .btn-sair{
-    order:1;
-  }
-
-  .perfil-acoes .btn-salvar{
-    order:2;
-  }
-
-  .perfil-acoes .btn-fechar{
-    display:none;
-  }
+  /* ORDEM: SAIR → SALVAR */
+  .perfil-acoes .btn-sair{order:1}
+  .perfil-acoes .btn-salvar{order:2}
+  .perfil-acoes .btn-fechar{display:none}
 }
 
   
