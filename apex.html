@@ -224,26 +224,8 @@ html, body{
   <!-- 💳 RECARGA -->
 <div class="recarga-box">
 
-  <div class="recarga-grid">
-    <div class="recarga-card" onclick="selecionarPlano('APEX 5', 5)">
-      <strong>R$ 5</strong>
-      <span>75 Apex</span>
-    </div>
-
-    <div class="recarga-card" onclick="selecionarPlano('APEX 10', 10)">
-      <strong>R$ 10</strong>
-      <span>150 Apex</span>
-    </div>
-
-    <div class="recarga-card" onclick="selecionarPlano('APEX 20', 20)">
-      <strong>R$ 20</strong>
-      <span>300 Apex</span>
-    </div>
-
-    <div class="recarga-card" onclick="selecionarPlano('APEX 50', 50)">
-      <strong>R$ 50</strong>
-      <span>750 Apex</span>
-    </div>
+  <div class="recarga-grid" id="recargaGrid">
+    <!-- cards gerados via JS -->
   </div>
 
   <div class="conversao" id="conversao">
@@ -257,6 +239,7 @@ html, body{
 </div>
 
 
+
   <div class="footer">
     1 real = 15 Apex
   </div>
@@ -264,89 +247,51 @@ html, body{
 </div>
 
 <script>
-function calcularApex(){
-  const v = Number(
-    document.getElementById("valorRecarga").value
-  ) || 0;
-
-  const apex = v * 15;
-
-  document.getElementById("conversao").textContent =
-    apex > 0
-      ? `${apex % 1 === 0 ? apex : apex.toFixed(2)} Apex`
-      : "0 Apex";
-}
-
-function obterPlanoRecarga(valor){
-  if (valor <= 5)  return "APEX 5";
-  if (valor <= 10) return "APEX 10";
-  if (valor <= 20) return "APEX 20";
-  return "APEX 50";
-}
-
-async function recarregar(){
-  const valor = Number(
-    document.getElementById("valorRecarga").value
-  );
-
-  if (!valor || valor < 1) {
-    alert("Informe um valor válido");
-    return;
-  }
-
-  const email = localStorage.getItem("usuario_email");
-  if (!email) {
-    alert("Faça login para continuar");
-    return;
-  }
-
-  // 🔁 transforma valor em plano APEX existente
-  const plano = obterPlanoRecarga(valor);
-
-  try {
-    const res = await fetch("/api/create-payment", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        plano: plano,
-        email: email
-      })
-    });
-
-    const data = await res.json();
-
-    if (data.url) {
-      // 🔥 redireciona para o Mercado Pago
-      window.location.href = data.url;
-    } else {
-      alert("Erro ao gerar pagamento");
-      console.error(data);
-    }
-
-  } catch (err) {
-    alert("Erro de conexão");
-    console.error(err);
-  }
-}
 let planoSelecionado = null;
 let valorSelecionado = 0;
 
-function selecionarPlano(plano, valor){
-  planoSelecionado = plano;
+// 🔹 Carrega planos Apex da tabela
+async function carregarPlanosApex(){
+  try{
+    const res = await fetch("/api/get-planos-apex");
+    const planos = await res.json();
+
+    const grid = document.getElementById("recargaGrid");
+    grid.innerHTML = "";
+
+    planos.forEach(plano => {
+      const apex = plano.valor * 15;
+
+      const card = document.createElement("div");
+      card.className = "recarga-card";
+      card.innerHTML = `
+        <strong>R$ ${Number(plano.valor).toFixed(2)}</strong>
+        <span>${apex} Apex</span>
+      `;
+
+      card.onclick = () =>
+        selecionarPlano(plano.nome, plano.valor, card);
+
+      grid.appendChild(card);
+    });
+
+  }catch(err){
+    console.error("Erro ao carregar planos Apex", err);
+  }
+}
+
+function selecionarPlano(nome, valor, el){
+  planoSelecionado = nome;
   valorSelecionado = valor;
 
   document
     .querySelectorAll(".recarga-card")
     .forEach(c => c.classList.remove("ativo"));
 
-  event.currentTarget.classList.add("ativo");
-
-  const apex = valor * 15;
+  el.classList.add("ativo");
 
   document.getElementById("conversao").textContent =
-    `${apex} Apex`;
+    `${valor * 15} Apex`;
 }
 
 async function continuarPagamento(){
@@ -388,7 +333,10 @@ async function continuarPagamento(){
   }
 }
 
+// 🚀 inicia ao abrir
+carregarPlanosApex();
 </script>
+
 
 
 </body>
