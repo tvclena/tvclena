@@ -12,9 +12,9 @@ const sb = createClient(
 export default async function handler(req, res) {
   const { data, error } = await sb
     .from("planos")
-    .select("nome, valor, dias")
+    .select("id, nome, valor")
     .eq("ativo", true)
-    .gt("dias", 0) // ✅ ASSINATURAS
+    .eq("dias", 0)          // ✅ APEX
     .order("valor", { ascending: true });
 
   if (error) {
