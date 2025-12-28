@@ -35,7 +35,7 @@ if (req.method === "POST" && req.body?.action === "list_apex") {
       return res.status(405).json({ error: "Método inválido" });
     }
 
- const { action, valor, plano, email } = req.body;
+const { action, plano_id, plano, email } = req.body;
 
 if (!email) {
   return res.status(400).json({ error: "Email ausente" });
@@ -49,17 +49,16 @@ let planoQuery = sb
   .eq("ativo", true);
 
 if (isApex) {
-  const valorNumerico = Number(valor);
-
-  if (!valorNumerico) {
-    return res.status(400).json({ error: "Valor Apex inválido" });
+  if (!plano_id) {
+    return res.status(400).json({ error: "Plano Apex ausente" });
   }
 
   planoQuery = planoQuery
-    .eq("valor", valorNumerico)
+    .eq("id", plano_id)
     .eq("dias", 0);
+}
 
-} else {
+else {
   if (!plano) {
     return res.status(400).json({ error: "Plano ausente" });
   }
