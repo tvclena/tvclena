@@ -1380,6 +1380,49 @@ body.modal-open{
     display:none;
   }
 }
+/* ================= TOPO ESCURO NO MOBILE ================= */
+@media (max-width: 768px){
+
+  /* header sempre sólido */
+  header{
+    background:#0f0f10 !important;
+    backdrop-filter:none !important;
+  }
+
+  /* faixa extra para status bar (iOS / Android) */
+  body::before{
+    content:"";
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    height:80px; /* cobre status + header */
+    background:#0f0f10;
+    z-index:99;
+    pointer-events:none;
+  }
+
+  /* garante que nada passe por trás */
+  header{
+    z-index:100;
+  }
+
+  /* empurra hero para baixo do header */
+  .hero{
+    margin-top:56px;
+  }
+
+  /* remove qualquer transparência do gradiente no mobile */
+  .hero::before{
+    background:linear-gradient(
+      to bottom,
+      rgba(15,15,16,1) 0%,
+      rgba(15,15,16,.95) 40%,
+      rgba(15,15,16,.6) 70%,
+      rgba(15,15,16,0) 100%
+    );
+  }
+}
 
 </style>
 </head>
