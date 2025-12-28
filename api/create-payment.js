@@ -39,47 +39,47 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Método inválido" });
     }
 
-    const { action, valor, plano, email } = req.body;
+ const { action, valor, plano, email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ error: "Email ausente" });
-    }
+if (!email) {
+  return res.status(400).json({ error: "Email ausente" });
+}
 
-    const isApex = action === "apex_payment";
+const isApex = action === "apex_payment";
 
-    // =====================================
-    // 🔎 BUSCA PLANO
-    // =====================================
-    let planoQuery = sb
-      .from("planos")
-      .select("*")
-      .eq("ativo", true);
+let planoQuery = sb
+  .from("planos")
+  .select("*")
+  .eq("ativo", true);
 
-    if (isApex) {
-      if (!valor) {
-        return res.status(400).json({ error: "Valor Apex ausente" });
-      }
+if (isApex) {
+  const valorNumerico = Number(valor);
 
-      planoQuery = planoQuery
-        .eq("valor", valor)
-        .eq("dias", 0);
+  if (!valorNumerico) {
+    return res.status(400).json({ error: "Valor Apex inválido" });
+  }
 
-    } else {
-      if (!plano) {
-        return res.status(400).json({ error: "Plano ausente" });
-      }
+  planoQuery = planoQuery
+    .eq("valor", valorNumerico)
+    .eq("dias", 0);
 
-      planoQuery = planoQuery
-        .eq("nome", plano)
-        .gt("dias", 0);
-    }
+} else {
+  if (!plano) {
+    return res.status(400).json({ error: "Plano ausente" });
+  }
 
-    const { data: planoDB, error: planoError } =
-      await planoQuery.single();
+  planoQuery = planoQuery
+    .eq("nome", plano)
+    .gt("dias", 0);
+}
 
-    if (planoError || !planoDB) {
-      return res.status(400).json({ error: "Plano inválido" });
-    }
+const { data: planoDB, error: planoError } =
+  await planoQuery.single();
+
+if (planoError || !planoDB) {
+  return res.status(400).json({ error: "Plano inválido" });
+}
+
 
     // =====================================
     // 🔎 USUÁRIO
