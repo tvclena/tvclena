@@ -12,6 +12,31 @@ const sb = createClient(
 
 export default async function handler(req, res) {
   try {
+    // =====================================
+    // 🔹 LISTAR PLANOS APEX (SEM PAGAMENTO)
+    // =====================================
+    if (
+      req.method === "POST" &&
+      req.body?.action === "list_apex"
+    ) {
+      const { data, error } = await sb
+        .from("planos")
+        .select("nome, valor")
+        .eq("ativo", true)
+        .eq("dias", 0)
+        .order("valor", { ascending: true });
+
+      if (error) {
+        console.error("Erro listar Apex:", error);
+        return res.status(500).json([]);
+      }
+
+      return res.status(200).json(data || []);
+    }
+
+    // =====================================
+    // 🔻 DAQUI PRA BAIXO: PAGAMENTO NORMAL
+    // =====================================
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Método inválido" });
     }
@@ -49,29 +74,28 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Usuário não encontrado" });
     }
 
- const referencia = crypto.randomUUID();
+    const referencia = crypto.randomUUID();
 
-const { error: insertError } = await sb
-  .from("pagamentos")
-  .insert({
-    referencia,
-    user_id: user.id,
-    plano_id: planoDB.id,
-    status: "pending",
-    valor: planoDB.valor,
-    processado: false,
-    created_at: new Date(),
-    updated_at: new Date(),
-  });
+    const { error: insertError } = await sb
+      .from("pagamentos")
+      .insert({
+        referencia,
+        user_id: user.id,
+        plano_id: planoDB.id,
+        status: "pending",
+        valor: planoDB.valor,
+        processado: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
 
-if (insertError) {
-  console.error("❌ ERRO INSERT PAGAMENTOS:", insertError);
-  return res.status(500).json({
-    error: "Erro ao registrar pagamento",
-    detail: insertError.message,
-  });
-}
-
+    if (insertError) {
+      console.error("❌ ERRO INSERT PAGAMENTOS:", insertError);
+      return res.status(500).json({
+        error: "Erro ao registrar pagamento",
+        detail: insertError.message,
+      });
+    }
 
     // 💳 Preference Mercado Pago
     const preference = {
