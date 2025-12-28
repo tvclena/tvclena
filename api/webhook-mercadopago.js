@@ -52,11 +52,16 @@ export default async function handler(req, res) {
     .eq("referencia", payment.external_reference)
     .single();
 
-  const vencimento = pag?.planos?.dias
-    ? new Date(Date.now() + pag.planos.dias * 86400000)
-    : null;
+// 🔀 DECISÃO POR TIPO DE PLANO
+if (pag.planos.dias > 0) {
 
-  // ✅ Atualiza usuário
+  // =====================
+  // 🔐 ASSINATURA
+  // =====================
+  const vencimento = new Date(
+    Date.now() + pag.planos.dias * 86400000
+  );
+
   await sb.from("usuarios")
     .update({
       status: "aprovado",
@@ -65,6 +70,28 @@ export default async function handler(req, res) {
       vencimento_assinatura: vencimento,
     })
     .eq("id", pag.user_id);
+
+} else {
+
+  // =====================
+  // 💰 RECARGA APEX
+  // =====================
+
+  // 🔒 evita crédito duplicado
+  if (pag.processado === true) return;
+
+  // ➕ soma saldo na carteira
+  await sb.rpc("somar_saldo_carteira", {
+    p_user_id: pag.user_id,
+    p_valor: pag.valor
+  });
+
+  // ✅ marca pagamento como processado
+  await sb.from("pagamentos")
+    .update({ processado: true })
+    .eq("referencia", payment.external_reference);
+}
+
 
   // 🔽🔽🔽 AQUI É O LUGAR CERTO 🔽🔽🔽
   // 📊 ENVIA COMPRA PARA GA4 (SERVER-SIDE)
