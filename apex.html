@@ -285,8 +285,9 @@ const res = await fetch("/api/create-payment", {
         <span>${apex} Apex</span>
       `;
 
-      card.onclick = () =>
-        selecionarPlano(plano.nome, plano.valor, card);
+     card.onclick = () =>
+  selecionarPlano(plano.valor, card);
+
 
       grid.appendChild(card);
     });
@@ -296,8 +297,7 @@ const res = await fetch("/api/create-payment", {
   }
 }
 
-function selecionarPlano(nome, valor, el){
-  planoSelecionado = nome;
+function selecionarPlano(valor, el){
   valorSelecionado = valor;
 
   document
@@ -309,6 +309,7 @@ function selecionarPlano(nome, valor, el){
   document.getElementById("conversao").textContent =
     `${valor * 15} Apex`;
 }
+
 
 async function continuarPagamento(){
   if(!planoSelecionado){
@@ -329,10 +330,11 @@ async function continuarPagamento(){
         "Content-Type":"application/json"
       },
 body: JSON.stringify({
-  action: "apex_payment", // 🔥 ISSO ATIVA O FLUXO APEX
-  plano: planoSelecionado,
+  action: "apex_payment",
+  valor: valorSelecionado, // 🔥 ISSO RESOLVE
   email: email
 })
+
 
     });
 
