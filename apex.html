@@ -20,15 +20,17 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-}
-
 .container{
   width:100%;
   max-width:420px;
   padding:32px 26px;
   text-align:center;
   animation:fadeUp .6s ease;
+
+  overflow:hidden;      /* 🚫 remove scroll interno */
+  max-height:100%;
 }
+
 
 @keyframes fadeUp{
   from{opacity:0;transform:translateY(14px)}
@@ -144,6 +146,14 @@ body{
   font-size:11px;
   color:#777;
 }
+html, body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden; /* 🚫 nunca rolar */
+}
+
 </style>
 </head>
 
