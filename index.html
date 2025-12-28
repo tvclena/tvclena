@@ -1037,6 +1037,87 @@ body.search-open {
 .sessaoBtn:hover{
   filter:brightness(1.1);
 }
+.perfil-apex{
+  margin-top:14px;
+  padding:14px;
+  border-radius:12px;
+  background:#111;
+  border:1px solid #333;
+  text-align:center;
+}
+
+.apex-valor{
+  font-size:22px;
+  font-weight:800;
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:6px;
+}
+
+.apex-nome{
+  font-size:20px;
+  font-weight:900;
+}
+
+.apex-a{
+  color:#e50914; /* A vermelho */
+}
+
+.apex-pex{
+  color:#3ea6ff; /* pex azul */
+}
+
+.apex-saiba{
+  margin-top:6px;
+  font-size:13px;
+  color:#3ea6ff;
+  cursor:pointer;
+}
+
+.apex-saiba:hover{
+  text-decoration:underline;
+}
+#apexOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+}
+
+.apexPopup{
+  width:420px;
+  max-width:92%;
+  height:520px;
+  background:#0f0f10;
+  border-radius:16px;
+  overflow:hidden;
+  position:relative;
+  box-shadow:0 30px 80px rgba(0,0,0,.8);
+}
+
+.apexPopup iframe{
+  width:100%;
+  height:100%;
+  border:none;
+}
+
+.apexFechar{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:#222;
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:32px;
+  height:32px;
+  cursor:pointer;
+  font-size:16px;
+}
 
   
 </style>
@@ -1162,6 +1243,13 @@ body.search-open {
 
 
 <!-- ================= PERFIL MODULAR NOVO ================= -->
+<div id="apexOverlay" style="display:none">
+  <div class="apexPopup">
+    <button class="apexFechar" onclick="fecharApexInfo()">✕</button>
+    <iframe src="apex.html"></iframe>
+  </div>
+</div>
+
 <div id="perfilOverlayNovo">
   <div id="perfilPopupNovo">
 
@@ -1192,6 +1280,19 @@ body.search-open {
         <div><strong>Valor:</strong> <span id="perfilValorNovo"></span></div>
         <div><strong>Vencimento:</strong> <span id="perfilVencimentoNovo"></span></div>
       </div>
+
+      <div class="perfil-apex">
+  <div class="apex-valor">
+    <span id="apexQtd">0</span>
+    <span class="apex-nome">
+      <span class="apex-a">A</span><span class="apex-pex">pex</span>
+    </span>
+  </div>
+
+  <div class="apex-saiba" onclick="abrirApexInfo()">
+    Saiba mais
+  </div>
+</div>
 
       <div class="perfil-acoes">
         <button class="btn-salvar" onclick="perfilSalvar()">Salvar</button>
@@ -1290,6 +1391,7 @@ async function perfilCarregar(){
     ? new Date(user.vencimento_assinatura).toLocaleDateString("pt-BR")
     : "-";
 }
+await carregarApex();
 
 
 async function perfilValidarUsername(){
@@ -2160,6 +2262,37 @@ function sessaoSair(){
   } else {
     location.replace("login.html");
   }
+}
+function abrirApexInfo(){
+  document.getElementById("apexOverlay").style.display = "flex";
+}
+
+function fecharApexInfo(){
+  document.getElementById("apexOverlay").style.display = "none";
+}
+async function carregarApex(){
+  if(!perfilUserId) return;
+
+  const { data, error } = await sb
+    .from("carteiras")
+    .select("saldo")
+    .eq("user_id", perfilUserId)
+    .single();
+
+  if (error || !data) {
+    document.getElementById("apexQtd").textContent = "0";
+    return;
+  }
+
+  const saldoReais = Number(data.saldo) || 0;
+
+  // 🔁 Conversão: 1 real = 15 Apex
+  const apex = saldoReais * 15;
+
+  document.getElementById("apexQtd").textContent =
+    apex % 1 === 0
+      ? apex.toFixed(0)
+      : apex.toFixed(2);
 }
 
 
