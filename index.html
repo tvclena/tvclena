@@ -874,7 +874,14 @@ body.search-open {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
+
+  max-height: 70vh;       /* 🔥 limite visível */
+  overflow-y: auto;       /* 🔥 libera rolagem */
+  padding-right: 6px;
+
+  overscroll-behavior: contain;
 }
+
 
 .plano-card {
   background: linear-gradient(180deg,#232326,#1a1a1c);
@@ -940,12 +947,13 @@ body.search-open {
 
 
 
-/* MOBILE */
 @media (max-width: 768px) {
   .planos-bloqueio {
     grid-template-columns: 1fr;
+    max-height: 75vh;   /* 🔥 ainda mais espaço */
   }
 }
+
 /* 🔐 POPUP SESSÃO PREMIUM */
 #sessaoOverlay{
   position:fixed;
