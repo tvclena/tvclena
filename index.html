@@ -1199,7 +1199,7 @@ body.modal-open{
 @keyframes neo-giro{
   to{ transform:rotate(360deg); }
 }
-/* ================= PERFIL MOBILE – LAYOUT CORRETO ================= */
+/* ================= PERFIL MOBILE — MODELO NOVO ================= */
 @media (max-width: 520px){
 
   #perfilOverlayNovo{
@@ -1209,36 +1209,38 @@ body.modal-open{
   #perfilPopupNovo{
     width:100%;
     max-width:100%;
-    max-height:92vh;
+    max-height:94vh;
 
-    padding:18px 16px 130px;
-    border-radius:18px 18px 0 0;
+    padding:16px 14px 120px;
+    border-radius:20px 20px 0 0;
 
-    display:grid;
-    grid-template-columns:80px 1fr;
-    grid-template-areas:
-      "avatar topo"
-      "conteudo conteudo";
-
+    display:flex;
+    flex-direction:column;
     gap:16px;
+
     overflow-y:auto;
-    animation:perfilMobileIn .3s ease;
+    background:#0f0f10;
+
+    animation:perfilIn .3s ease;
   }
 
-  @keyframes perfilMobileIn{
+  @keyframes perfilIn{
     from{transform:translateY(40px);opacity:0}
     to{transform:none;opacity:1}
   }
 
-  /* ================= FOTO ================= */
+  /* ================= HEADER PERFIL ================= */
   .avatar-col{
-    grid-area:avatar;
-    align-items:flex-start;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding-bottom:12px;
+    border-bottom:1px solid #222;
   }
 
   .avatar-col img{
-    width:72px;
-    height:72px;
+    width:68px;
+    height:68px;
     border-radius:50%;
   }
 
@@ -1246,58 +1248,63 @@ body.modal-open{
     display:none;
   }
 
-  /* ================= TOPO (NOME + @) ================= */
-  .dados-col{
-    grid-area:topo;
-  }
-
   .dados-col h3{
     margin:0;
-    font-size:18px;
+    font-size:17px;
     font-weight:800;
   }
 
   .username-box-novo{
-    margin-top:4px;
-    max-width:180px;
+    margin-top:2px;
+    max-width:160px;
   }
 
   .username-box-novo input{
-    font-size:14px;
+    font-size:13px;
   }
 
   #perfilUsernameStatus{
+    font-size:11px;
     margin-top:2px;
-    font-size:12px;
   }
 
-  /* ================= RESTO ABAIXO ================= */
-  .dados-col > *:not(h3):not(.username-box-novo):not(#perfilUsernameStatus){
-    grid-area:conteudo;
+  /* ================= CARDS ================= */
+  .dados-col > label,
+  .dados-col > input,
+  .perfil-info-novo,
+  .perfil-apex,
+  .btn-neo-apex{
+    background:#111;
+    border:1px solid #262626;
+    border-radius:14px;
+    padding:14px;
   }
 
   .dados-col label{
-    font-size:11px;
+    display:block;
+    background:none;
+    border:none;
+    padding:0;
     margin-top:12px;
+    font-size:11px;
+    color:#aaa;
   }
 
   .dados-col input{
-    padding:13px;
-    font-size:16px;
+    margin-top:6px;
+    font-size:15px;
+    padding:12px;
     border-radius:10px;
   }
 
   .perfil-info-novo{
-    margin-top:12px;
-    background:#111;
-    padding:14px;
-    border-radius:12px;
-    border:1px solid #333;
     font-size:13px;
+    line-height:1.5;
   }
 
+  /* ================= APEX ================= */
   .perfil-apex{
-    margin-top:14px;
+    text-align:center;
   }
 
   /* ================= BOTÕES ================= */
@@ -1307,9 +1314,11 @@ body.modal-open{
     right:0;
     bottom:14px;
 
-    padding:14px 16px;
-    gap:10px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
 
+    padding:14px;
     background:linear-gradient(
       to top,
       rgba(15,15,16,.98),
@@ -1325,10 +1334,17 @@ body.modal-open{
     border-radius:14px;
   }
 
-  /* ORDEM: SAIR → SALVAR */
-  .perfil-acoes .btn-sair{order:1}
-  .perfil-acoes .btn-salvar{order:2}
-  .perfil-acoes .btn-fechar{display:none}
+  .btn-sair{
+    background:#222;
+  }
+
+  .btn-salvar{
+    background:#e50914;
+  }
+
+  .btn-fechar{
+    display:none;
+  }
 }
 
   
