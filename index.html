@@ -1390,8 +1390,9 @@ async function perfilCarregar(){
   pVenc.textContent = user.vencimento_assinatura
     ? new Date(user.vencimento_assinatura).toLocaleDateString("pt-BR")
     : "-";
+  await carregarApex();
 }
-await carregarApex();
+
 
 
 async function perfilValidarUsername(){
