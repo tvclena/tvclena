@@ -28,6 +28,7 @@ body{
 }
 
 .container{
+  position:relative;
   width:420px;
   max-width:92%;
   background:rgba(27,27,30,.85);
@@ -156,6 +157,7 @@ input:focus{outline:none;border-color:var(--accent)}
 
 <!-- LOGIN -->
 <div class="container">
+
   <h1>CLENA <span>TV</span></h1>
 
   <div class="group">
@@ -169,11 +171,27 @@ input:focus{outline:none;border-color:var(--accent)}
   </div>
 
   <button id="btnLogin" class="btn">Entrar</button>
-  <div class="link" id="abrirCadastro">Ainda não tenho uma conta</div>
+
+  <div class="link" id="abrirCadastro">
+    Ainda não tenho uma conta
+  </div>
+
   <div class="msg" id="msg"></div>
+
+  <!-- 🔰 BOTÃO WHATSAPP (APARECE SÓ QUANDO BLOQUEADO) -->
+  <a
+    id="btnWhatsapp"
+    href="#"
+    target="_blank"
+    class="whatsapp-float"
+    title="Falar com o suporte no WhatsApp"
+    style="display:none"
+  >
+    <img src="whatsapp.png" alt="WhatsApp">
+  </a>
+
 </div>
 
-<!-- CADASTRO -->
 <!-- CADASTRO -->
 <div class="modal" id="modal">
   <div class="modal-box">
@@ -237,6 +255,7 @@ const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
+const WHATSAPP_SUPORTE = "5575998112535"; // <-- coloque SEU número aqui
 
 /* MODAL */
 abrirCadastro.onclick = () => modal.style.display = "flex";
@@ -363,11 +382,22 @@ if (data.status === "bloqueado") {
     return;
   }
 
-  // 🚫 BLOQUEADO, MAS AINDA DENTRO DO PERÍODO
-  msg.textContent = "🚫 Acesso bloqueado. Entre em contato com o suporte.";
-  msg.className = "msg error";
-  return;
-}
+// 🚫 BLOQUEADO, MAS AINDA DENTRO DO PERÍODO
+msg.textContent = "🚫 Acesso bloqueado. Entre em contato com o suporte.";
+msg.className = "msg error";
+
+// monta mensagem com email do usuário
+const texto = encodeURIComponent(
+  `Olá, meu acesso está bloqueado.\n\nEmail: ${data.email}`
+);
+
+// aponta para o WhatsApp de suporte
+const whatsapp = document.getElementById("btnWhatsapp");
+whatsapp.href = `https://wa.me/${WHATSAPP_SUPORTE}?text=${texto}`;
+whatsapp.style.display = "flex";
+
+return;
+
 
 
 
