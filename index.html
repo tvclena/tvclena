@@ -1199,6 +1199,112 @@ body.modal-open{
 @keyframes neo-giro{
   to{ transform:rotate(360deg); }
 }
+/* ================= PERFIL MOBILE PREMIUM ================= */
+@media (max-width: 520px) {
+
+  #perfilOverlayNovo {
+    align-items: flex-end;
+  }
+
+  #perfilPopupNovo {
+    width: 100%;
+    height: 92vh;
+    max-width: 100%;
+    border-radius: 22px 22px 0 0;
+    padding: 18px 18px 120px; /* espaço para botões */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    animation: perfilMobileIn .35s ease;
+  }
+
+  @keyframes perfilMobileIn {
+    from {
+      transform: translateY(40px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  /* Avatar */
+  .avatar-col img {
+    width: 112px;
+    height: 112px;
+  }
+
+  .avatar-upload-novo {
+    font-size: 14px;
+    margin-top: 10px;
+  }
+
+  /* Título */
+  .dados-col h3 {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 20px;
+  }
+
+  /* Inputs */
+  .dados-col label {
+    font-size: 11px;
+    margin-top: 14px;
+  }
+
+  .dados-col input {
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  .username-box-novo {
+    padding-left: 14px;
+  }
+
+  /* Info */
+  .perfil-info-novo {
+    margin-top: 18px;
+    font-size: 14px;
+    background: #111;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #333;
+  }
+
+  /* Apex */
+  .perfil-apex {
+    margin-top: 18px;
+  }
+
+  /* Botões fixos */
+  .perfil-acoes {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    gap: 10px;
+    padding: 14px;
+    background: linear-gradient(
+      to top,
+      rgba(15,15,16,.98),
+      rgba(15,15,16,.85),
+      rgba(15,15,16,0)
+    );
+    backdrop-filter: blur(8px);
+  }
+
+  .perfil-acoes button {
+    padding: 14px;
+    font-size: 15px;
+    border-radius: 14px;
+  }
+
+  .btn-fechar {
+    display: none; /* fecha pelo gesto ou overlay */
+  }
+}
 
   
 </style>
