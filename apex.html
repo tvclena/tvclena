@@ -156,6 +156,43 @@ html, body{
   height:100%;
   overflow:hidden; /* 🚫 nunca rolar */
 }
+.recarga-grid{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.recarga-card{
+  background:#0f0f10;
+  border:1px solid #2a2a2a;
+  border-radius:14px;
+  padding:14px 10px;
+  text-align:center;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.recarga-card strong{
+  display:block;
+  font-size:18px;
+  margin-bottom:4px;
+}
+
+.recarga-card span{
+  font-size:13px;
+  color:#3ea6ff;
+}
+
+.recarga-card:hover{
+  transform:scale(1.04);
+  border-color:#3ea6ff;
+}
+
+.recarga-card.ativo{
+  border:2px solid #e50914;
+  background:linear-gradient(180deg,#1a1a1c,#0f0f10);
+}
 
 </style>
 </head>
