@@ -149,6 +149,29 @@ input:focus{outline:none;border-color:var(--accent)}
   font-weight:600;
   padding:0;
 }
+.whatsapp-float{
+  position:absolute;
+  bottom:18px;
+  right:18px;
+  width:46px;
+  height:46px;
+  background:#25D366;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 8px 20px rgba(0,0,0,.4);
+  transition:.2s;
+}
+
+.whatsapp-float img{
+  width:26px;
+  height:26px;
+}
+
+.whatsapp-float:hover{
+  transform:scale(1.08);
+}
 
 </style>
 </head>
@@ -397,16 +420,11 @@ whatsapp.href = `https://wa.me/${WHATSAPP_SUPORTE}?text=${texto}`;
 whatsapp.style.display = "flex";
 
 return;
-
-
-
-
-
+} // 🔴 FECHA O IF BLOQUEADO AQUI CORRETAMENTE
 
 // ✅ ACESSO NORMAL
 location.replace("index.html");
-}; // 🔴 FECHA O btnLogin.onclick AQUI
-;
+};
 
 btnCadastro.onclick = async ()=>{
   msgCadastro.textContent="";
