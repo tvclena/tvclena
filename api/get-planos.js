@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     .from("planos")
     .select("id, nome, valor")
     .eq("ativo", true)
-    .eq("dias", 0) // ✅APEX
+    .gt("dias", 0)
     .order("valor", { ascending: true });
 
   if (error) {
