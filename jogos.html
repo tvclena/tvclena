@@ -5,9 +5,6 @@
 <title>Jogos • Clena TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="env.js"></script>
-
 <style>
 :root{
   --bg:#0f0f10;
@@ -120,51 +117,48 @@ h1{
 </main>
 
 <script>
-const sb = supabase.createClient(
-  window.ENV.SUPABASE_URL,
-  window.ENV.SUPABASE_ANON_KEY
-);
-
-async function carregarJogos(){
-  const { data, error } = await sb
-    .from("jogos_desafios")
-    .select("id, nome, capa_url, categoria, jogo_url")
-    .order("created_at", { ascending:false });
-
-  if(error){
-    console.error(error);
-    alert("Erro ao carregar jogos");
-    return;
+// 🔥 LISTA DE JOGOS (FRONT)
+const jogos = [
+  {
+    nome: "Jogo da Velha",
+    arquivo: "jogodavelha.html",
+    capa: "jogodavelha.jpg",
+    categoria: "Clássico"
+  },
+  {
+    nome: "Jogo da Memória",
+    arquivo: "memoria.html",
+    capa: "memoria.jpg",
+    categoria: "Raciocínio"
+  },
+  {
+    nome: "Forca",
+    arquivo: "forca.html",
+    capa: "forca.jpg",
+    categoria: "Palavras"
   }
+];
 
-  const grid = document.getElementById("jogosGrid");
+const grid = document.getElementById("jogosGrid");
 
-  if(!data.length){
-    grid.innerHTML = "<p style='color:#777'>Nenhum jogo disponível</p>";
-    return;
-  }
-
-  grid.innerHTML = data.map(j => `
-    <div class="jogo-card" onclick="abrirJogo('${j.jogo_url}')">
-      <img src="${j.capa_url || 'https://via.placeholder.com/400x600?text=Jogo'}">
+if(!jogos.length){
+  grid.innerHTML = "<p style='color:#777'>Nenhum jogo disponível</p>";
+}else{
+  grid.innerHTML = jogos.map(j => `
+    <div class="jogo-card" onclick="abrirJogo('${j.arquivo}')">
+      <img src="jogos/${j.capa}" onerror="this.src='https://via.placeholder.com/400x600?text=Jogo'">
       <div class="jogo-info">
         <h3>${j.nome}</h3>
-        <span>${j.categoria || ''}</span>
+        <span>${j.categoria}</span>
         <button class="jogar-btn">Jogar</button>
       </div>
     </div>
   `).join("");
 }
 
-function abrirJogo(url){
-  if(!url){
-    alert("Jogo indisponível");
-    return;
-  }
-  window.location.href = url;
+function abrirJogo(arquivo){
+  window.location.href = `jogos/${arquivo}`;
 }
-
-carregarJogos();
 </script>
 
 </body>
