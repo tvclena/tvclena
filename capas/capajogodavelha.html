@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Capa • Jogo da Velha</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jogo da Velha • Capa</title>
 
 <style>
 html, body {
   margin: 0;
   width: 100%;
   height: 100%;
-  background: transparent; /* 🔥 SEM FUNDO */
-  overflow: hidden;
+  background: transparent;
   font-family: Inter, Arial, sans-serif;
 }
 
-/* CONTAINER PRINCIPAL */
 .capa {
   width: 100%;
   height: 100%;
@@ -24,136 +22,94 @@ html, body {
   justify-content: center;
 }
 
-/* CARTÃO */
+/* CARD */
 .card {
   width: 100%;
   height: 100%;
-  max-width: 360px;
-  max-height: 360px;
+  max-width: 320px;
+  max-height: 320px;
   border-radius: 22px;
-  position: relative;
+  padding: 26px 22px;
+
+  background: linear-gradient(180deg, #0b1220, #05070c);
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.75),
+    inset 0 0 0 1px rgba(255,255,255,.05);
+
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-
-  background: radial-gradient(
-    circle at top,
-    #1e40af,
-    #020617 70%
-  );
-
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.06),
-    0 25px 80px rgba(0,0,0,.9);
-
-  animation: flutuar 3.5s ease-in-out infinite;
-}
-
-/* BRILHO */
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 22px;
-  background: linear-gradient(
-    120deg,
-    transparent 30%,
-    rgba(255,255,255,.18),
-    transparent 70%
-  );
-  animation: brilho 4s linear infinite;
+  justify-content: space-between;
 }
 
 /* TÍTULO */
 .titulo {
+  text-align: left;
+}
+
+.titulo small {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.titulo h1 {
+  margin: 0;
+  font-size: 28px;
   font-weight: 900;
-  text-align: center;
-  line-height: 1;
-}
-
-.titulo span:nth-child(1) {
-  display: block;
-  font-size: 22px;
-  color: #facc15;
-  text-shadow: 0 0 18px rgba(250,204,21,.6);
-}
-
-.titulo span:nth-child(2) {
-  display: block;
-  font-size: 38px;
-  color: #38bdf8;
-  text-shadow: 0 0 24px rgba(56,189,248,.9);
+  color: #e5e7eb;
 }
 
 /* TABULEIRO */
 .tabuleiro {
   display: grid;
-  grid-template-columns: repeat(3, 70px);
-  grid-template-rows: repeat(3, 70px);
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
 
 .casa {
+  aspect-ratio: 1/1;
   border-radius: 14px;
-  background: rgba(255,255,255,.08);
+  background: #0f172a;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 38px;
+
+  font-size: 30px;
   font-weight: 900;
-  color: #fff;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
-  animation: pulsar 2.5s infinite;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.06);
 }
 
 .x {
   color: #ef4444;
-  text-shadow: 0 0 16px rgba(239,68,68,.8);
 }
 
 .o {
   color: #38bdf8;
-  text-shadow: 0 0 16px rgba(56,189,248,.8);
 }
 
-/* LINHA VITÓRIA */
-.vitoria {
-  position: absolute;
-  width: 240px;
-  height: 5px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    #facc15,
-    transparent
-  );
-  transform: rotate(45deg);
-  animation: linha 2s infinite;
+/* FOOTER */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-/* ANIMAÇÕES */
-@keyframes flutuar {
-  0%,100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.tag {
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  color: #cbd5f5;
 }
 
-@keyframes brilho {
-  0% { opacity: 0; }
-  50% { opacity: .7; }
-  100% { opacity: 0; }
-}
-
-@keyframes pulsar {
-  0%,100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
-}
-
-@keyframes linha {
-  0% { opacity: 0; }
-  40% { opacity: 1; }
-  100% { opacity: 0; }
+.play {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e50914;
 }
 </style>
 </head>
@@ -164,8 +120,8 @@ html, body {
   <div class="card">
 
     <div class="titulo">
-      <span>JOGO DA</span>
-      <span>VELHA</span>
+      <small>JOGO CLÁSSICO</small>
+      <h1>Jogo da Velha</h1>
     </div>
 
     <div class="tabuleiro">
@@ -180,7 +136,10 @@ html, body {
       <div class="casa"></div>
     </div>
 
-    <div class="vitoria"></div>
+    <div class="footer">
+      <div class="tag">1 vs 1</div>
+      <div class="play">▶ Jogar</div>
+    </div>
 
   </div>
 </div>
