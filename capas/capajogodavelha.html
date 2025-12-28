@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Capa • Jogo da Velha</title>
+
+<style>
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent; /* 🔥 SEM FUNDO */
+  overflow: hidden;
+  font-family: Inter, Arial, sans-serif;
+}
+
+/* CONTAINER PRINCIPAL */
+.capa {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* CARTÃO */
+.card {
+  width: 100%;
+  height: 100%;
+  max-width: 360px;
+  max-height: 360px;
+  border-radius: 22px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+
+  background: radial-gradient(
+    circle at top,
+    #1e40af,
+    #020617 70%
+  );
+
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.06),
+    0 25px 80px rgba(0,0,0,.9);
+
+  animation: flutuar 3.5s ease-in-out infinite;
+}
+
+/* BRILHO */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255,255,255,.18),
+    transparent 70%
+  );
+  animation: brilho 4s linear infinite;
+}
+
+/* TÍTULO */
+.titulo {
+  font-weight: 900;
+  text-align: center;
+  line-height: 1;
+}
+
+.titulo span:nth-child(1) {
+  display: block;
+  font-size: 22px;
+  color: #facc15;
+  text-shadow: 0 0 18px rgba(250,204,21,.6);
+}
+
+.titulo span:nth-child(2) {
+  display: block;
+  font-size: 38px;
+  color: #38bdf8;
+  text-shadow: 0 0 24px rgba(56,189,248,.9);
+}
+
+/* TABULEIRO */
+.tabuleiro {
+  display: grid;
+  grid-template-columns: repeat(3, 70px);
+  grid-template-rows: repeat(3, 70px);
+  gap: 10px;
+}
+
+.casa {
+  border-radius: 14px;
+  background: rgba(255,255,255,.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+  font-weight: 900;
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+  animation: pulsar 2.5s infinite;
+}
+
+.x {
+  color: #ef4444;
+  text-shadow: 0 0 16px rgba(239,68,68,.8);
+}
+
+.o {
+  color: #38bdf8;
+  text-shadow: 0 0 16px rgba(56,189,248,.8);
+}
+
+/* LINHA VITÓRIA */
+.vitoria {
+  position: absolute;
+  width: 240px;
+  height: 5px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #facc15,
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: linha 2s infinite;
+}
+
+/* ANIMAÇÕES */
+@keyframes flutuar {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes brilho {
+  0% { opacity: 0; }
+  50% { opacity: .7; }
+  100% { opacity: 0; }
+}
+
+@keyframes pulsar {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+@keyframes linha {
+  0% { opacity: 0; }
+  40% { opacity: 1; }
+  100% { opacity: 0; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="capa">
+  <div class="card">
+
+    <div class="titulo">
+      <span>JOGO DA</span>
+      <span>VELHA</span>
+    </div>
+
+    <div class="tabuleiro">
+      <div class="casa x">X</div>
+      <div class="casa o">O</div>
+      <div class="casa x">X</div>
+      <div class="casa o">O</div>
+      <div class="casa x">X</div>
+      <div class="casa o">O</div>
+      <div class="casa x">X</div>
+      <div class="casa"></div>
+      <div class="casa"></div>
+    </div>
+
+    <div class="vitoria"></div>
+
+  </div>
+</div>
+
+</body>
+</html>
