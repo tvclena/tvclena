@@ -2365,13 +2365,16 @@ function fecharApexInfo(){
 }
 
 async function carregarApex(){
-  if(!perfilUserId) return;
+  const { data: authData } = await sb.auth.getUser();
+  if (!authData?.user) return;
+
+  const authUserId = authData.user.id;
 
   const { data, error } = await sb
     .from("carteiras")
     .select("saldo")
-    .eq("user_id", perfilUserId)
-    .single();
+    .eq("user_id", authUserId)
+    .maybeSingle();
 
   if (error || !data) {
     document.getElementById("apexQtd").textContent = "0";
@@ -2380,13 +2383,11 @@ async function carregarApex(){
 
   const saldoReais = Number(data.saldo) || 0;
 
-  // 🔁 Conversão: 1 real = 15 Apex
+  // 🔁 1 real = 15 Apex
   const apex = saldoReais * 15;
 
   document.getElementById("apexQtd").textContent =
-    apex % 1 === 0
-      ? apex.toFixed(0)
-      : apex.toFixed(2);
+    apex % 1 === 0 ? apex.toFixed(0) : apex.toFixed(2);
 }
 
 
