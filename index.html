@@ -1137,6 +1137,68 @@ body.modal-open{
   height:100vh;
   touch-action:none;
 }
+/* ================= BOTÃO RECARREGAR CARTEIRA (NEO) ================= */
+.btn-neo-apex{
+  position: relative;
+  width:100%;
+  margin-top:14px;
+  padding:12px 18px;
+
+  background:#0f0f10;
+  border:none;
+  border-radius:999px;
+
+  color:#fff;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  overflow:hidden;
+}
+
+/* texto */
+.btn-neo-apex span{
+  position:relative;
+  z-index:2;
+}
+
+/* borda animada circulando */
+.btn-neo-apex::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:999px;
+  padding:1.5px;
+
+  background:conic-gradient(
+    from 0deg,
+    #e50914,
+    #3ea6ff,
+    #e50914
+  );
+
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+          mask-composite:exclude;
+
+  animation:neo-giro 3s linear infinite;
+}
+
+/* fundo interno */
+.btn-neo-apex::after{
+  content:"";
+  position:absolute;
+  inset:1.5px;
+  background:#0f0f10;
+  border-radius:999px;
+  z-index:1;
+}
+
+/* animação */
+@keyframes neo-giro{
+  to{ transform:rotate(360deg); }
+}
 
   
 </style>
@@ -1299,6 +1361,9 @@ body.modal-open{
         <div><strong>Valor:</strong> <span id="perfilValorNovo"></span></div>
         <div><strong>Vencimento:</strong> <span id="perfilVencimentoNovo"></span></div>
       </div>
+<button class="btn-neo-apex" onclick="abrirApexInfo()">
+  <span>Recarregar carteira</span>
+</button>
 
       <div class="perfil-apex">
   <div class="apex-valor">
