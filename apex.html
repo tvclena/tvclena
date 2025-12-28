@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Apex • Moeda Digital</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Inter,Arial,sans-serif;
+}
+
+body{
+  background:linear-gradient(180deg,#0f0f10,#09090b);
+  color:#fff;
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.container{
+  width:100%;
+  max-width:420px;
+  padding:32px 26px;
+  text-align:center;
+  animation:fadeUp .6s ease;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(14px)}
+  to{opacity:1;transform:none}
+}
+
+/* ===== APEX LOGO ===== */
+.apex-logo{
+  font-size:42px;
+  font-weight:900;
+  margin-bottom:12px;
+}
+
+.apex-a{
+  color:#e50914;
+  animation:pulseRed 1.4s ease infinite;
+}
+
+.apex-pex{
+  color:#3ea6ff;
+  animation:pulseBlue 1.4s ease infinite;
+}
+
+@keyframes pulseRed{
+  0%,100%{text-shadow:0 0 0 rgba(229,9,20,0)}
+  50%{text-shadow:0 0 18px rgba(229,9,20,.9)}
+}
+@keyframes pulseBlue{
+  0%,100%{text-shadow:0 0 0 rgba(62,166,255,0)}
+  50%{text-shadow:0 0 18px rgba(62,166,255,.9)}
+}
+
+/* ===== TEXTO ===== */
+.desc{
+  font-size:15px;
+  color:#cfcfcf;
+  line-height:1.6;
+  margin-bottom:22px;
+}
+
+/* ===== LISTA ===== */
+.usos{
+  background:#111;
+  border:1px solid #2a2a2a;
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:24px;
+  text-align:left;
+}
+
+.usos li{
+  list-style:none;
+  margin-bottom:10px;
+  font-size:14px;
+}
+
+.usos li::before{
+  content:"⚡";
+  margin-right:8px;
+}
+
+/* ===== RECARGA ===== */
+.recarga-box{
+  background:#111;
+  border:1px solid #2a2a2a;
+  border-radius:16px;
+  padding:20px;
+}
+
+.recarga-box label{
+  display:block;
+  font-size:12px;
+  color:#aaa;
+  margin-bottom:6px;
+}
+
+.recarga-box input{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #333;
+  background:#0f0f10;
+  color:#fff;
+  font-size:16px;
+  margin-bottom:10px;
+}
+
+.conversao{
+  font-size:14px;
+  margin-bottom:14px;
+  color:#3ea6ff;
+}
+
+.btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  background:#e50914;
+  color:#fff;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.btn:hover{
+  filter:brightness(1.1);
+}
+
+/* ===== FOOTER ===== */
+.footer{
+  margin-top:18px;
+  font-size:11px;
+  color:#777;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- 🔥 LOGO ANIMADO -->
+  <div class="apex-logo">
+    <span class="apex-a">A</span><span class="apex-pex">pex</span>
+  </div>
+
+  <!-- 📖 EXPLICAÇÃO -->
+  <div class="desc">
+    Apex é a moeda digital da <strong>Clena TV</strong>.<br>
+    Com ela você desbloqueia experiências, interage
+    com outros usuários e aproveita o conteúdo ao máximo.
+  </div>
+
+  <!-- ⚡ USOS -->
+  <ul class="usos">
+    <li>Baixar filmes e conteúdos exclusivos</li>
+    <li>Acessar jogos e experiências interativas</li>
+    <li>Enviar presentes para outros usuários</li>
+    <li>Participar de chats e interações ao vivo</li>
+  </ul>
+
+  <!-- 💳 RECARGA -->
+  <div class="recarga-box">
+    <label>Valor da recarga (R$)</label>
+    <input
+      type="number"
+      id="valorRecarga"
+      min="0.10"
+      step="0.10"
+      placeholder="Ex: 5.00"
+      oninput="calcularApex()"
+    >
+
+    <div class="conversao" id="conversao">
+      0 Apex
+    </div>
+
+    <button class="btn" onclick="recarregar()">
+      Recarregar carteira
+    </button>
+  </div>
+
+  <div class="footer">
+    1 real = 15 Apex
+  </div>
+
+</div>
+
+<script>
+function calcularApex(){
+  const v = Number(
+    document.getElementById("valorRecarga").value
+  ) || 0;
+
+  const apex = v * 15;
+
+  document.getElementById("conversao").textContent =
+    apex > 0
+      ? `${apex % 1 === 0 ? apex : apex.toFixed(2)} Apex`
+      : "0 Apex";
+}
+
+async function recarregar(){
+  const valor = Number(
+    document.getElementById("valorRecarga").value
+  );
+
+  if(!valor || valor < 0.1){
+    alert("Informe um valor válido");
+    return;
+  }
+
+  const email = localStorage.getItem("usuario_email");
+
+  if(!email){
+    alert("Faça login para continuar");
+    return;
+  }
+
+  try{
+    const res = await fetch("/api/create-payment",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        tipo:"recarga",
+        valor: valor,
+        email: email
+      })
+    });
+
+    const data = await res.json();
+
+    if(data.url){
+      window.location.href = data.url;
+    }else{
+      alert("Erro ao gerar pagamento");
+      console.error(data);
+    }
+
+  }catch(err){
+    alert("Erro de conexão");
+    console.error(err);
+  }
+}
+</script>
+
+</body>
+</html>
