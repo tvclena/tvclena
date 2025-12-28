@@ -2542,26 +2542,23 @@ function fecharApexInfo(){
 async function carregarApex(){
   if(!perfilUserId) return;
 
-  const { data, error } = await sb
-    .from("carteiras")
-    .select("saldo")
-    .eq("user_id", perfilUserId)
-    .single();
+  const { data, error } = await sb.rpc("get_saldo_usuario", {
+    p_user_id: perfilUserId
+  });
 
-  if (error || !data) {
+  if (error || data == null) {
+    console.error("Erro Apex:", error);
     document.getElementById("apexQtd").textContent = "0";
     return;
   }
 
-  const saldoReais = Number(data.saldo) || 0;
+  const saldoReais = Number(data) || 0;
 
   // 🔁 Conversão: 1 real = 15 Apex
   const apex = saldoReais * 15;
 
   document.getElementById("apexQtd").textContent =
-    apex % 1 === 0
-      ? apex.toFixed(0)
-      : apex.toFixed(2);
+    apex % 1 === 0 ? apex.toFixed(0) : apex.toFixed(2);
 }
 
 
