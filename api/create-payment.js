@@ -12,7 +12,7 @@ const sb = createClient(
 export default async function handler(req, res) {
   try {
 
-    //  LISTAR APEX
+    // LISTAR APEX
     if (req.method === "POST" && req.body?.action === "list_apex") {
       const { data, error } = await sb
         .from("planos")
