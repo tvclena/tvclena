@@ -51,18 +51,18 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "MP_ACCESS_TOKEN ausente" });
     }
 
-const { data: planoDB, error: planoError } = await sb
+    const { data: planoDB } = await sb
   .from("planos")
   .select("*")
   .eq("nome", plano)
   .eq("ativo", true)
-  .eq("dias", 0) // ✅ APEX
+  .gt("dias", 0) // 🔒 GARANTE QUE É ASSINATURA
   .single();
 
-if (planoError || !planoDB) {
-  return res.status(400).json({ error: "Plano Apex inválido" });
-}
 
+    if (!planoDB) {
+      return res.status(400).json({ error: "Plano inválido" });
+    }
 
     // 🔎 Busca usuário
     const { data: user } = await sb
