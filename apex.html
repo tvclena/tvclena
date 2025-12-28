@@ -255,23 +255,18 @@ html, body{
 </div>
 
 <script>
-let planoSelecionado = null;
 let valorSelecionado = 0;
 
-// 🔹 Carrega planos Apex da tabela
+// 🔹 Carrega planos Apex
 async function carregarPlanosApex(){
   try{
-const res = await fetch("/api/create-payment", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    action: "list_apex"
-  })
-});
-    const planos = await res.json();
+    const res = await fetch("/api/create-payment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "list_apex" })
+    });
 
+    const planos = await res.json();
     const grid = document.getElementById("recargaGrid");
     grid.innerHTML = "";
 
@@ -285,10 +280,7 @@ const res = await fetch("/api/create-payment", {
         <span>${apex} Apex</span>
       `;
 
-     card.onclick = () =>
-  selecionarPlano(plano.valor, card);
-
-
+      card.onclick = () => selecionarPlano(plano.valor, card);
       grid.appendChild(card);
     });
 
@@ -310,12 +302,11 @@ function selecionarPlano(valor, el){
     `${valor * 15} Apex`;
 }
 
-
 async function continuarPagamento(){
   if(!valorSelecionado){
-  alert("Selecione um valor para continuar");
-  return;
-}
+    alert("Selecione um valor para continuar");
+    return;
+  }
 
   const email = localStorage.getItem("usuario_email");
   if(!email){
@@ -326,16 +317,12 @@ async function continuarPagamento(){
   try{
     const res = await fetch("/api/create-payment",{
       method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-body: JSON.stringify({
-  action: "apex_payment",
-  valor: valorSelecionado, // 🔥 ISSO RESOLVE
-  email: email
-})
-
-
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        action: "apex_payment",
+        valor: valorSelecionado,
+        email
+      })
     });
 
     const data = await res.json();
@@ -353,10 +340,9 @@ body: JSON.stringify({
   }
 }
 
-// 🚀 inicia ao abrir
+// 🚀 inicia
 carregarPlanosApex();
 </script>
-
 
 
 </body>
