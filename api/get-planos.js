@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     .from("planos")
     .select("nome, valor, dias")
     .eq("ativo", true)
-     .gt("dias", 0);
+    .gt("dias", 0) // ✅ ASSINATURAS
     .order("valor", { ascending: true });
 
   if (error) {
