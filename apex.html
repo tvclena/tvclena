@@ -22,15 +22,20 @@ body{
   justify-content:center;
 }
 
-/* agora sim */
 .container{
   width:100%;
   height:100%;
-  overflow-y:auto;       /* rolagem interna */
+  max-height:100vh;      /* 🔥 ESSENCIAL */
+  overflow-y:auto;
   padding:32px 26px;
 
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width:none;
+  -webkit-overflow-scrolling: touch; /* iOS */
+  scrollbar-width:none;              /* Firefox */
+}
+
+/* Chrome / Safari */
+.container::-webkit-scrollbar{
+  display:none;
 }
 
 
