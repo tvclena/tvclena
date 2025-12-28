@@ -210,7 +210,7 @@ function voltar(){
   location.href = "index.html";
 }
 
-/* CARREGA PLANOS DA API */
+/* CARREGA PLANOS DA API (compatível com get-planos atual) */
 async function carregarPlanos(){
   try{
     const res = await fetch("/api/get-planos");
@@ -219,6 +219,11 @@ async function carregarPlanos(){
     const container = document.querySelector(".planos");
     container.innerHTML = "";
 
+    if(!Array.isArray(planos) || !planos.length){
+      container.innerHTML = "<p style='color:#777'>Nenhum plano disponível</p>";
+      return;
+    }
+
     planos.forEach((plano, index) => {
       const card = document.createElement("div");
       card.className = "plano";
@@ -226,11 +231,14 @@ async function carregarPlanos(){
       card.innerHTML = `
         ${index === 1 ? `<div class="popular">MAIS VENDIDO</div>` : ""}
         <h2>${plano.nome}</h2>
+
         <div class="preco">
           R$ ${Number(plano.valor).toFixed(2).replace(".", ",")}
           <span>/ mês</span>
         </div>
-        <div class="duracao">${plano.dias} dias de acesso</div>
+
+        <!-- 🔧 API NÃO TEM dias -->
+        <div class="duracao">Acesso mensal</div>
 
         <ul class="beneficios">
           <li>Acesso completo</li>
@@ -245,20 +253,21 @@ async function carregarPlanos(){
 
       container.appendChild(card);
     });
+
   }catch(e){
     alert("Erro ao carregar planos");
+    console.error(e);
   }
 }
 
-/* INICIAR PAGAMENTO */
+/* INICIAR PAGAMENTO (compatível com create-payment atual) */
 async function assinar(plano){
   const email = localStorage.getItem("usuario_email");
-const token = localStorage.getItem("session_token");
 
-  if(!email || !token){
+  if(!email){
     localStorage.setItem("redirect_after_login", "planos.html");
     alert("Faça login para continuar");
-    location.href = "plogin.html";
+    location.href = "login.html";
     return;
   }
 
@@ -266,36 +275,34 @@ const token = localStorage.getItem("session_token");
     const res = await fetch("/api/create-payment",{
       method:"POST",
       headers:{
-        "Content-Type":"application/json",
-        "Authorization":"Bearer " + token
+        "Content-Type":"application/json"
       },
-      body: JSON.stringify({ plano })
+      body: JSON.stringify({
+        plano: plano,
+        email: email
+      })
     });
-
-    if(res.status === 401){
-      alert("Sessão expirada. Faça login novamente.");
-      localStorage.clear();
-      location.href = "plogin.html";
-      return;
-    }
 
     const data = await res.json();
 
-    if(data.url){
+    if(data?.url){
       window.location.href = data.url;
-    }else{
-      alert("Erro ao iniciar pagamento");
+      return;
     }
+
+    alert("Erro ao iniciar pagamento");
+    console.error(data);
 
   }catch(e){
     alert("Falha de conexão");
+    console.error(e);
   }
 }
-
 
 /* INIT */
 carregarPlanos();
 </script>
+
 
 </body>
 </html>
