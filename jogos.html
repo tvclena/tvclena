@@ -14,6 +14,8 @@
   --muted:#aaa;
 }
 
+*{box-sizing:border-box}
+
 body{
   margin:0;
   background:var(--bg);
@@ -21,12 +23,16 @@ body{
   font-family:Inter,Arial,sans-serif;
 }
 
+/* HEADER */
 header{
   height:64px;
   display:flex;
   align-items:center;
   padding:0 24px;
   background:rgba(0,0,0,.85);
+  position:sticky;
+  top:0;
+  z-index:10;
 }
 
 .logo{
@@ -40,34 +46,42 @@ main{
 }
 
 h1{
-  margin-bottom:20px;
+  margin-bottom:22px;
 }
 
+/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
   gap:18px;
 }
 
+/* CARD */
 .jogo-card{
   background:var(--card);
-  border-radius:14px;
+  border-radius:16px;
   overflow:hidden;
   cursor:pointer;
   transition:.25s;
+  position:relative;
 }
 
 .jogo-card:hover{
   transform:scale(1.05);
-  box-shadow:0 20px 40px rgba(0,0,0,.6);
+  box-shadow:0 25px 50px rgba(0,0,0,.6);
 }
 
-.jogo-card img{
+/* CAPA HTML */
+.jogo-capa{
   width:100%;
   height:200px;
-  object-fit:cover;
+  border:none;
+  display:block;
+  pointer-events:none;
+  background:#000;
 }
 
+/* INFO */
 .jogo-info{
   padding:12px;
 }
@@ -87,10 +101,10 @@ h1{
   width:100%;
   padding:10px;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   background:var(--accent);
   color:#fff;
-  font-weight:700;
+  font-weight:800;
   cursor:pointer;
 }
 
@@ -98,6 +112,7 @@ h1{
   filter:brightness(1.1);
 }
 
+/* MOBILE */
 @media(max-width:768px){
   main{padding:20px 14px}
   .grid{grid-template-columns:repeat(2,1fr)}
@@ -117,44 +132,34 @@ h1{
 </main>
 
 <script>
-// 🔥 LISTA DE JOGOS (FRONT)
 const jogos = [
   {
     nome: "Jogo da Velha",
     arquivo: "jogodavelha.html",
-    capa: "jogodavelha.jpg",
+    capa: "capajogodavelha.html",
     categoria: "Clássico"
-  },
-  {
-    nome: "Jogo da Memória",
-    arquivo: "memoria.html",
-    capa: "memoria.jpg",
-    categoria: "Raciocínio"
-  },
-  {
-    nome: "Forca",
-    arquivo: "forca.html",
-    capa: "forca.jpg",
-    categoria: "Palavras"
   }
 ];
 
 const grid = document.getElementById("jogosGrid");
 
-if(!jogos.length){
-  grid.innerHTML = "<p style='color:#777'>Nenhum jogo disponível</p>";
-}else{
-  grid.innerHTML = jogos.map(j => `
-    <div class="jogo-card" onclick="abrirJogo('${j.arquivo}')">
-      <img src="jogos/${j.capa}" onerror="this.src='https://via.placeholder.com/400x600?text=Jogo'">
-      <div class="jogo-info">
-        <h3>${j.nome}</h3>
-        <span>${j.categoria}</span>
-        <button class="jogar-btn">Jogar</button>
-      </div>
+grid.innerHTML = jogos.map(j => `
+  <div class="jogo-card" onclick="abrirJogo('${j.arquivo}')">
+
+    <iframe
+      class="jogo-capa"
+      src="capas/${j.capa}"
+      loading="lazy">
+    </iframe>
+
+    <div class="jogo-info">
+      <h3>${j.nome}</h3>
+      <span>${j.categoria}</span>
+      <button class="jogar-btn">Jogar</button>
     </div>
-  `).join("");
-}
+
+  </div>
+`).join("");
 
 function abrirJogo(arquivo){
   window.location.href = `jogos/${arquivo}`;
