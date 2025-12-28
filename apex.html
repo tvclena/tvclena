@@ -258,7 +258,15 @@ let valorSelecionado = 0;
 // 🔹 Carrega planos Apex da tabela
 async function carregarPlanosApex(){
   try{
-    const res = await fetch("/api/get-planos-apex");
+const res = await fetch("/api/create-payment", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    action: "list_apex"
+  })
+});
     const planos = await res.json();
 
     const grid = document.getElementById("recargaGrid");
