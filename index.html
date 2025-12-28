@@ -12,14 +12,17 @@
   gtag('config', 'G-T97MS35TJ6');
 </script>
 
+
+  
 <title>Clena TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f0f10">
 
-<!- iOS ->
+<!-- iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Clena TV">
@@ -43,6 +46,7 @@ body{
   background:var(--bg);
   color:var(--text);
 }
+
 /* ================= HEADER ================= */
 header{
   position:fixed;
@@ -64,6 +68,7 @@ header{
     rgba(0,0,0,0)
   );
 }
+
 
 /* PERFIL */
 #perfilBtn{
@@ -1195,187 +1200,7 @@ body.modal-open{
   to{ transform:rotate(360deg); }
 }
 
-
-
-
   
-/* ================= PERFIL MOBILE — MODELO LIMPO AJUSTADO ================= */
-@media (max-width: 520px){
-
-  /* Overlay */
-  #perfilOverlayNovo{
-    align-items:flex-end;
-  }
-
-  /* Popup */
-  #perfilPopupNovo{
-    width:100%;
-    max-width:100%;
-    max-height:94vh;
-
-    padding:18px 16px 140px;
-    border-radius:20px 20px 0 0;
-
-    background:#0f0f10;
-
-    display:flex;
-    flex-direction:column;
-    gap:18px;
-
-    overflow-y:auto;
-    animation:perfilIn .32s ease;
-  }
-
-  @keyframes perfilIn{
-    from{transform:translateY(36px);opacity:0}
-    to{transform:none;opacity:1}
-  }
-
-  /* ================= TOPO PERFIL ================= */
-  .avatar-col{
-    display:grid;
-    grid-template-columns:76px 1fr;
-    column-gap:14px;
-    align-items:start;
-  }
-
-  .avatar-col img{
-    width:76px;
-    height:76px;
-    border-radius:50%;
-    object-fit:cover;
-    grid-row:1 / span 2;
-  }
-
-  /* botão editar foto (embaixo da foto) */
-  .avatar-upload-novo{
-    grid-column:1;
-    grid-row:3;
-    font-size:12px;
-    color:#3ea6ff;
-    cursor:pointer;
-    margin-top:6px;
-  }
-
-  /* bloco nome + user */
-  .dados-col{
-    grid-column:2;
-    grid-row:1 / span 2;
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-  }
-
-  .dados-col h3{
-    margin:0;
-    font-size:18px;
-    font-weight:800;
-    line-height:1.2;
-  }
-
-  .username-box-novo{
-    max-width:180px;
-  }
-
-  .username-box-novo input{
-    font-size:14px;
-  }
-
-  #perfilUsernameStatus{
-    font-size:12px;
-    margin-top:2px;
-  }
-
-  /* ================= SEPARADOR ================= */
-  .avatar-col::after{
-    content:"";
-    grid-column:1 / -1;
-    height:1px;
-    background:#222;
-    margin-top:14px;
-  }
-
-  /* ================= FORM ================= */
-  .dados-col label{
-    font-size:11px;
-    color:#aaa;
-    margin-top:14px;
-  }
-
-  .dados-col input{
-    margin-top:6px;
-    padding:14px;
-    font-size:16px;
-    border-radius:12px;
-    border:1px solid #333;
-    background:#111;
-    color:#fff;
-  }
-
-  .perfil-info-novo{
-    margin-top:14px;
-    background:#111;
-    border:1px solid #262626;
-    border-radius:14px;
-    padding:14px;
-    font-size:13px;
-    line-height:1.5;
-  }
-
-  /* ================= APEX ================= */
-  .btn-neo-apex{
-    margin-top:14px;
-  }
-
-  .perfil-apex{
-    margin-top:12px;
-    border-radius:14px;
-  }
-
-  /* ================= AÇÕES FIXAS ================= */
-  .perfil-acoes{
-    position:fixed;
-    left:0;
-    right:0;
-    bottom:18px;
-
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-
-    padding:14px 16px;
-
-    background:linear-gradient(
-      to top,
-      rgba(15,15,16,.98),
-      rgba(15,15,16,.9),
-      rgba(15,15,16,0)
-    );
-    backdrop-filter:blur(8px);
-  }
-
-  .perfil-acoes button{
-    padding:14px;
-    font-size:15px;
-    border-radius:14px;
-  }
-
-  /* ordem correta */
-  .perfil-acoes .btn-sair{
-    background:#222;
-    order:1;
-  }
-
-  .perfil-acoes .btn-salvar{
-    background:#e50914;
-    order:2;
-  }
-
-  .perfil-acoes .btn-fechar{
-    display:none;
-  }
-}
-
 </style>
 </head>
 
@@ -1502,7 +1327,7 @@ body.modal-open{
 <div id="apexOverlay" style="display:none">
   <div class="apexPopup">
     <button class="apexFechar" onclick="fecharApexInfo()">✕</button>
-    <iframe src="apex.html"></iframe>
+    <iframe src="infoapex.html"></iframe>
   </div>
 </div>
 
@@ -2542,23 +2367,26 @@ function fecharApexInfo(){
 async function carregarApex(){
   if(!perfilUserId) return;
 
-  const { data, error } = await sb.rpc("get_saldo_usuario", {
-    p_user_id: perfilUserId
-  });
+  const { data, error } = await sb
+    .from("carteiras")
+    .select("saldo")
+    .eq("user_id", perfilUserId)
+    .single();
 
-  if (error || data == null) {
-    console.error("Erro Apex:", error);
+  if (error || !data) {
     document.getElementById("apexQtd").textContent = "0";
     return;
   }
 
-  const saldoReais = Number(data) || 0;
+  const saldoReais = Number(data.saldo) || 0;
 
   // 🔁 Conversão: 1 real = 15 Apex
   const apex = saldoReais * 15;
 
   document.getElementById("apexQtd").textContent =
-    apex % 1 === 0 ? apex.toFixed(0) : apex.toFixed(2);
+    apex % 1 === 0
+      ? apex.toFixed(0)
+      : apex.toFixed(2);
 }
 
 
