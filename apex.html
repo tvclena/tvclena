@@ -330,6 +330,64 @@ async function recarregar(){
     console.error(err);
   }
 }
+let planoSelecionado = null;
+let valorSelecionado = 0;
+
+function selecionarPlano(plano, valor){
+  planoSelecionado = plano;
+  valorSelecionado = valor;
+
+  document
+    .querySelectorAll(".recarga-card")
+    .forEach(c => c.classList.remove("ativo"));
+
+  event.currentTarget.classList.add("ativo");
+
+  const apex = valor * 15;
+
+  document.getElementById("conversao").textContent =
+    `${apex} Apex`;
+}
+
+async function continuarPagamento(){
+  if(!planoSelecionado){
+    alert("Selecione um valor para continuar");
+    return;
+  }
+
+  const email = localStorage.getItem("usuario_email");
+  if(!email){
+    alert("Faça login para continuar");
+    return;
+  }
+
+  try{
+    const res = await fetch("/api/create-payment",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        plano: planoSelecionado,
+        email: email
+      })
+    });
+
+    const data = await res.json();
+
+    if(data.url){
+      window.location.href = data.url;
+    }else{
+      alert("Erro ao gerar pagamento");
+      console.error(data);
+    }
+
+  }catch(err){
+    alert("Erro de conexão");
+    console.error(err);
+  }
+}
+
 </script>
 
 
