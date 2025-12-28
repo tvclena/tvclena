@@ -312,10 +312,10 @@ function selecionarPlano(valor, el){
 
 
 async function continuarPagamento(){
-  if(!planoSelecionado){
-    alert("Selecione um valor para continuar");
-    return;
-  }
+  if(!valorSelecionado){
+  alert("Selecione um valor para continuar");
+  return;
+}
 
   const email = localStorage.getItem("usuario_email");
   if(!email){
