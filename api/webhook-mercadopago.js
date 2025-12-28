@@ -7,19 +7,16 @@ const sb = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
-
 export default async function handler(req, res) {
   try {
     // Mercado Pago SEMPRE espera 200
     if (req.method !== "POST") {
       return res.status(200).json({ ok: true });
     }
-
     const paymentId = req.body?.data?.id;
     if (!paymentId) {
       return res.status(200).json({ ignored: true });
     }
-
     // 🔎 Consulta pagamento no Mercado Pago
     const mpRes = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
@@ -51,7 +48,6 @@ export default async function handler(req, res) {
     if (payment.status !== "approved") {
       return res.status(200).json({ status: payment.status });
     }
-
     // 🔎 Busca pagamento + plano
     const { data: pag, error } = await sb
       .from("pagamentos")
@@ -67,15 +63,13 @@ export default async function handler(req, res) {
     if (error || !pag) {
       return res.status(200).json({ ignored: true });
     }
-
     //🔒 IDempotência (bloqueia duplicado)
     if (pag.processado === true) {
       return res.status(200).json({ duplicated: true });
     }
-
-    // =====================
+    // ===================
     // 🔐 ASSINATURA
-    // =====================
+    // ===================
     if (pag.planos.dias > 0) {
       const vencimento = new Date(
         Date.now() + pag.planos.dias * 86400000
