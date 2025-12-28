@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Clena TV • Jogo da Velha</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f0f10">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:Inter,Arial,sans-serif;
+  background:#0f0f10;
+  color:#fff;
+}
+
+/* ================= HEADER ================= */
+header{
+  height:64px;
+  display:flex;
+  align-items:center;
+  padding:0 32px;
+  background:#0f0f10;
+  border-bottom:1px solid #222;
+}
+.logo{
+  font-size:20px;
+  font-weight:900;
+}
+.logo span:last-child{color:#e50914}
+.perfil{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.perfil img{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  object-fit:cover;
+}
+.perfil-info{
+  text-align:right;
+  font-size:13px;
+}
+.perfil-info span{
+  display:block;
+  color:#aaa;
+  font-size:12px;
+}
+
+/* ================= LAYOUT ================= */
+.container{
+  display:grid;
+  grid-template-columns:320px 1fr;
+  min-height:calc(100vh - 64px);
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar{
+  border-right:1px solid #222;
+  padding:24px;
+}
+.card{
+  background:#1b1b1e;
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:18px;
+}
+.card h3{
+  margin-bottom:12px;
+  font-size:16px;
+}
+
+/* APEX */
+.apex-box{
+  text-align:center;
+}
+.apex-qtd{
+  font-size:26px;
+  font-weight:900;
+}
+.btn-apex{
+  margin-top:12px;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:999px;
+  background:#111;
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  border:1px solid #333;
+}
+.btn-apex:hover{border-color:#e50914}
+
+/* ================= CONVIDAR ================= */
+.buscar{
+  display:flex;
+  gap:10px;
+}
+.buscar input{
+  flex:1;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #333;
+  background:#111;
+  color:#fff;
+}
+.buscar button{
+  padding:12px 18px;
+  border:none;
+  border-radius:10px;
+  background:#e50914;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+.resultado-user{
+  margin-top:12px;
+  display:none;
+  align-items:center;
+  gap:10px;
+  background:#111;
+  border:1px solid #333;
+  border-radius:12px;
+  padding:10px;
+}
+.resultado-user img{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+}
+
+/* ================= GAME ================= */
+.game{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+}
+.status{
+  font-size:16px;
+  color:#aaa;
+}
+.tabuleiro{
+  display:grid;
+  grid-template-columns:repeat(3,110px);
+  gap:10px;
+}
+.casa{
+  width:110px;
+  height:110px;
+  background:#1b1b1e;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+  font-weight:900;
+  cursor:pointer;
+}
+.casa:hover{background:#232326}
+.x{color:#e50914}
+.o{color:#3ea6ff}
+
+/* ================= NOTIFICAÇÃO ================= */
+.notificacao{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  background:#1b1b1e;
+  border-radius:14px;
+  padding:16px;
+  width:280px;
+  box-shadow:0 20px 40px rgba(0,0,0,.6);
+  display:none;
+}
+.notificacao img{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+}
+.notificacao button{
+  width:100%;
+  margin-top:10px;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:#e50914;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">CLENA <span>TV</span></div>
+
+  <div class="perfil">
+    <div class="perfil-info">
+      <strong id="perfilUser">@usuario</strong>
+      <span>Jogador</span>
+    </div>
+    <img id="perfilAvatar" src="">
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="card apex-box">
+      <div>Saldo</div>
+      <div class="apex-qtd"><span id="apexQtd">0</span> Apex</div>
+      <button class="btn-apex" onclick="abrirApex()">Recarregar carteira</button>
+    </div>
+
+    <div class="card">
+      <h3>Desafiar jogador</h3>
+      <div class="buscar">
+        <input id="buscarUser" placeholder="@usuario">
+        <button onclick="buscarUsuario()">Buscar</button>
+      </div>
+
+      <div class="resultado-user" id="resultadoUser">
+        <img id="userFoto">
+        <div>
+          <strong id="userNome"></strong><br>
+          <span id="userUsername"></span>
+        </div>
+        <button onclick="desafiar()">Desafiar</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- GAME -->
+  <main class="game">
+    <div class="status" id="status">
+      Aguardando desafio…
+    </div>
+
+    <div class="tabuleiro" id="tabuleiro">
+      <div class="casa" data-i="0"></div>
+      <div class="casa" data-i="1"></div>
+      <div class="casa" data-i="2"></div>
+      <div class="casa" data-i="3"></div>
+      <div class="casa" data-i="4"></div>
+      <div class="casa" data-i="5"></div>
+      <div class="casa" data-i="6"></div>
+      <div class="casa" data-i="7"></div>
+      <div class="casa" data-i="8"></div>
+    </div>
+  </main>
+
+</div>
+
+<!-- NOTIFICAÇÃO -->
+<div class="notificacao" id="notificacao">
+  <div style="display:flex;gap:12px;align-items:center">
+    <img id="notifAvatar">
+    <div>
+      <strong id="notifUser"></strong><br>
+      <span>Desafiou você no Jogo da Velha</span>
+    </div>
+  </div>
+  <button onclick="aceitarConvite()">Aceitar desafio</button>
+</div>
+
+<script src="env.js"></script>
+<script>
+const sb = supabase.createClient(
+  ENV.SUPABASE_URL,
+  ENV.SUPABASE_ANON_KEY
+);
+
+let usuario = null;
+let saldoApex = 0;
+
+/* ================= LOGIN ================= */
+(async ()=>{
+  const email = localStorage.getItem("usuario_email");
+  if(!email) location.replace("login.html");
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("id,nome_usuario,username,avatar_url")
+    .eq("email",email)
+    .single();
+
+  if(!data.username){
+    alert("Cadastre um @ antes de jogar");
+    location.replace("index.html");
+    return;
+  }
+
+  usuario = data;
+  document.getElementById("perfilUser").textContent="@"+data.username;
+  document.getElementById("perfilAvatar").src =
+    data.avatar_url ||
+    `https://ui-avatars.com/api/?name=${data.nome_usuario[0]}&background=e50914&color=fff`;
+
+  carregarApex();
+})();
+
+/* ================= APEX ================= */
+async function carregarApex(){
+  const { data } = await sb
+    .from("carteiras")
+    .select("saldo")
+    .eq("user_id",usuario.id)
+    .single();
+
+  saldoApex = (data?.saldo||0)*15;
+  document.getElementById("apexQtd").textContent = saldoApex.toFixed(0);
+}
+
+function abrirApex(){
+  location.href="apex.html";
+}
+
+/* ================= BUSCAR JOGADOR ================= */
+async function buscarUsuario(){
+  const u = document.getElementById("buscarUser").value.replace("@","");
+  if(!u) return;
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("id,nome_usuario,username,avatar_url")
+    .eq("username",u)
+    .single();
+
+  if(!data){ alert("Usuário não encontrado"); return;}
+
+  document.getElementById("resultadoUser").style.display="flex";
+  document.getElementById("userFoto").src=data.avatar_url;
+  document.getElementById("userNome").textContent=data.nome_usuario;
+  document.getElementById("userUsername").textContent="@"+data.username;
+}
+
+/* ================= DESAFIO ================= */
+function desafiar(){
+  alert("🔔 Convite enviado (backend/realtime)");
+  // Aqui entra insert na tabela desafios + realtime
+}
+
+/* ================= NOTIFICAÇÃO ================= */
+function aceitarConvite(){
+  document.getElementById("notificacao").style.display="none";
+  document.getElementById("status").textContent="Partida iniciada!";
+}
+
+/* ================= TABULEIRO ================= */
+document.querySelectorAll(".casa").forEach(c=>{
+  c.onclick=()=>{
+    if(c.textContent) return;
+    c.textContent="X";
+    c.classList.add("x");
+  };
+});
+</script>
+
+</body>
+</html>
