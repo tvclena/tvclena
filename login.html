@@ -342,25 +342,33 @@ localStorage.setItem("usuario_email", data.email);
 localStorage.setItem("session_token", sessionToken);
 
 
-// 🔒 BLOQUEADO + ASSINATURA VENCIDA → PAGAMENTO (PRIORIDADE MÁXIMA)
+// 🔒 BLOQUEADO → comportamento controlado por vencimento
 if (data.status === "bloqueado") {
-  const hoje = new Date();
+  const agora = new Date();
 
-  let vencimento = null;
-
-  if (data.vencimento_assinatura) {
-    vencimento = new Date(data.vencimento_assinatura);
-
-    // 🔥 FAZ VALER ATÉ O FIM DO DIA (23:59:59)
-    vencimento.setHours(23, 59, 59, 999);
-  }
-
-  if (!vencimento || vencimento < hoje) {
+  // sem data = considera vencido
+  if (!data.vencimento_assinatura) {
     localStorage.setItem("redirect_after_login", "planos.html");
     location.replace("planos.html");
     return;
   }
+
+  const vencimento = new Date(data.vencimento_assinatura);
+  vencimento.setHours(23, 59, 59, 999); // válido até o fim do dia
+
+  // ❌ ASSINATURA VENCIDA → PAGAMENTO
+  if (agora > vencimento) {
+    localStorage.setItem("redirect_after_login", "planos.html");
+    location.replace("planos.html");
+    return;
+  }
+
+  // 🚫 BLOQUEADO, MAS AINDA DENTRO DO PERÍODO
+  msg.textContent = "🚫 Acesso bloqueado. Entre em contato com o suporte.";
+  msg.className = "msg error";
+  return;
 }
+
 
 
 
