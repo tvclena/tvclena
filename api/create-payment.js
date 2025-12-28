@@ -9,11 +9,10 @@ const sb = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
-
 export default async function handler(req, res) {
   try {
 
-    // 🔹 LISTAR APEX
+    // 🔹 LISTAR A-PEX
     if (req.method === "POST" && req.body?.action === "list_apex") {
       const { data, error } = await sb
         .from("planos")
