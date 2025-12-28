@@ -16,21 +16,17 @@ export default async function handler(req, res) {
     // =====================================
     // 🔹 LISTAR PLANOS APEX
     // =====================================
-    if (req.method === "POST" && req.body?.action === "list_apex") {
-      const { data, error } = await sb
-        .from("planos")
-        .select("valor")
-        .eq("ativo", true)
-        .eq("dias", 0)
-        .order("valor");
+if (req.method === "POST" && req.body?.action === "list_apex") {
+  const { data, error } = await sb
+    .from("planos")
+    .select("id, valor")
+    .eq("ativo", true)
+    .eq("dias", 0)
+    .order("valor");
 
-      if (error) {
-        console.error("Erro list_apex:", error);
-        return res.status(500).json([]);
-      }
-
-      return res.status(200).json(data || []);
-    }
+  if (error) return res.status(500).json([]);
+  return res.status(200).json(data || []);
+}
 
     // =====================================
     // 🔻 PAGAMENTO
