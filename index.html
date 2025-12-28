@@ -1086,7 +1086,11 @@ body.search-open {
   align-items:center;
   justify-content:center;
   z-index:99999;
+
+  overscroll-behavior: contain;
+  touch-action: none;
 }
+
 
 .apexPopup{
   width:420px;
@@ -1117,6 +1121,11 @@ body.search-open {
   height:32px;
   cursor:pointer;
   font-size:16px;
+}
+body.modal-open{
+  overflow:hidden;
+  height:100vh;
+  touch-action:none;
 }
 
   
@@ -2265,12 +2274,15 @@ function sessaoSair(){
   }
 }
 function abrirApexInfo(){
+  document.body.classList.add("modal-open");
   document.getElementById("apexOverlay").style.display = "flex";
 }
 
 function fecharApexInfo(){
+  document.body.classList.remove("modal-open");
   document.getElementById("apexOverlay").style.display = "none";
 }
+
 async function carregarApex(){
   if(!perfilUserId) return;
 
