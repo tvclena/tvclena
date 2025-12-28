@@ -2239,9 +2239,14 @@ async function carregarPlanosBloqueio() {
 
   const box = document.getElementById("planosContainer");
 
+  // 🔥 REMOVE APEX DA TELA DE BLOQUEIO
+  const planosAssinatura = planos.filter(p =>
+    !p.nome.toLowerCase().includes("apex")
+  );
+
   box.innerHTML = `
     <div class="planos-bloqueio">
-      ${planos.map((plano, i) => `
+      ${planosAssinatura.map((plano, i) => `
         <div class="plano-card ${i === 1 ? "destaque" : ""}">
           <h3>${plano.nome}</h3>
 
@@ -2266,6 +2271,7 @@ async function carregarPlanosBloqueio() {
     </div>
   `;
 }
+
 function mostrarSessaoEncerrada(userAgent){
   document.getElementById("sessaoDevice").textContent =
     userAgent || "Outro dispositivo";
