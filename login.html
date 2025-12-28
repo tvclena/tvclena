@@ -353,12 +353,13 @@ function liberarBotao(btn){
 
   
 btnLogin.onclick = async () => {
-bloquearBotao(btnLogin); // 🔒 BLOQUEIA O BOTÃO
+  bloquearBotao(btnLogin); // 🔒 BLOQUEIA O BOTÃO
+
+  try {
 
   msg.textContent = "";
   msg.className = "msg";
 
-const redirect = localStorage.getItem("redirect_after_login");
 
 // permite cadastro livre
 // mas mantém regra de acesso depois
@@ -370,7 +371,6 @@ const redirect = localStorage.getItem("redirect_after_login");
 if (!emailInput || !senhaInput) {
   msg.textContent = "Preencha email e senha";
   msg.className = "msg error";
-  liberarBotao(btnLogin);
   return;
 }
 
@@ -391,7 +391,6 @@ if (!emailInput || !senhaInput) {
 if (error || !data) {
   msg.textContent = "Usuário não encontrado";
   msg.className = "msg error";
-  liberarBotao(btnLogin);
   return;
 }
 
@@ -400,7 +399,6 @@ if (error || !data) {
 if (data.senha !== senhaInput) {
   msg.textContent = "Senha incorreta";
   msg.className = "msg error";
-  liberarBotao(btnLogin);
   return;
 }
 
@@ -412,7 +410,6 @@ if (data.senha !== senhaInput) {
 if (agora > expira && data.status !== "aprovado") {
   msg.textContent = "Período de teste expirado";
   msg.className = "msg error";
-  liberarBotao(btnLogin);
   return;
 }
 
@@ -444,13 +441,11 @@ localStorage.setItem("session_token", sessionToken);
 
 // 🔒 BLOQUEADO → comportamento controlado por vencimento
 if (data.status === "bloqueado") {
-  const agora = new Date();
 
   // sem data = considera vencido
   if (!data.vencimento_assinatura) {
     localStorage.setItem("redirect_after_login", "planos.html");
     location.replace("planos.html");
-    liberarBotao(btnLogin);
 return;
   }
 
@@ -483,19 +478,24 @@ return;
 
 // ✅ ACESSO NORMAL
 location.replace("index.html");
+return;
+
+} finally {
+  liberarBotao(btnLogin); // 🔥 GARANTE QUE SEMPRE DESBLOQUEIA
+}
 };
 
 btnCadastro.onclick = async ()=>{
-  bloquearBotao(btnCadastro); // 🔒 BLOQUEIA
+  bloquearBotao(btnCadastro);
   msgCadastro.textContent="";
 
- 
+  try {
+
 
 
 if(c_senha.value!==c_confirma.value){
   msgCadastro.textContent="As senhas não conferem";
   msgCadastro.className="msg error";
-  liberarBotao(btnCadastro);
   return;
 }
 
@@ -516,7 +516,6 @@ if(c_senha.value!==c_confirma.value){
 if(error){
   msgCadastro.textContent="Erro ao cadastrar";
   msgCadastro.className="msg error";
-  liberarBotao(btnCadastro);
   return;
 }
 
@@ -537,7 +536,12 @@ if(error){
     msg.textContent="Conta criada! Clique em Entrar 🚀";
     msg.className="msg success";
   },2200);
+
+} finally {
+  liberarBotao(btnCadastro); // 🔥 SEMPRE DESBLOQUEIA
+}
 };
+
 
 function abrirPoliticas(){
   document.getElementById("modalPoliticas").style.display = "flex";
