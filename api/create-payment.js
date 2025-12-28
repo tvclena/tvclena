@@ -12,13 +12,10 @@ const sb = createClient(
 
 export default async function handler(req, res) {
   try {
-    // =====================================
+    // ==================================================
     // 🔹 LISTAR PLANOS APEX (SEM PAGAMENTO)
-    // =====================================
-    if (
-      req.method === "POST" &&
-      req.body?.action === "list_apex"
-    ) {
+    // ==================================================
+    if (req.method === "POST" && req.body?.action === "list_apex") {
       const { data, error } = await sb
         .from("planos")
         .select("nome, valor")
@@ -34,14 +31,14 @@ export default async function handler(req, res) {
       return res.status(200).json(data || []);
     }
 
-    // =====================================
-    // 🔻 DAQUI PRA BAIXO: PAGAMENTO NORMAL
-    // =====================================
+    // ==================================================
+    // 🔻 PAGAMENTOS (APEX OU ASSINATURA)
+    // ==================================================
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Método inválido" });
     }
 
-    const { plano, email } = req.body;
+    const { plano, email, action } = req.body;
 
     if (!email || !plano) {
       return res.status(400).json({ error: "Dados inválidos" });
@@ -51,30 +48,53 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "MP_ACCESS_TOKEN ausente" });
     }
 
-    const { data: planoDB } = await sb
-  .from("planos")
-  .select("*")
-  .eq("nome", plano)
-  .eq("ativo", true)
-  .gt("dias", 0) // 🔒 GARANTE QUE É ASSINATURA
-  .single();
+    // ==================================================
+    // 🔀 IDENTIFICA O TIPO
+    // ==================================================
+    const isApex = action === "apex_payment";
 
+    // ==================================================
+    // 🔎 BUSCA PLANO CORRETO
+    // ==================================================
+    let planoQuery = sb
+      .from("planos")
+      .select("*")
+      .eq("nome", plano)
+      .eq("ativo", true);
 
-    if (!planoDB) {
-      return res.status(400).json({ error: "Plano inválido" });
+    if (isApex) {
+      planoQuery = planoQuery.eq("dias", 0);     // 🔥 APEX
+    } else {
+      planoQuery = planoQuery.gt("dias", 0);     // 🔒 ASSINATURA
     }
 
-    // 🔎 Busca usuário
-    const { data: user } = await sb
+    const { data: planoDB, error: planoError } =
+      await planoQuery.single();
+
+    if (planoError || !planoDB) {
+      return res.status(400).json({
+        error: isApex
+          ? "Plano Apex inválido"
+          : "Plano de assinatura inválido",
+      });
+    }
+
+    // ==================================================
+    // 🔎 BUSCA USUÁRIO
+    // ==================================================
+    const { data: user, error: userError } = await sb
       .from("usuarios")
       .select("id, email")
       .eq("email", email)
       .single();
 
-    if (!user) {
+    if (userError || !user) {
       return res.status(400).json({ error: "Usuário não encontrado" });
     }
 
+    // ==================================================
+    // 🧾 REGISTRA PAGAMENTO
+    // ==================================================
     const referencia = crypto.randomUUID();
 
     const { error: insertError } = await sb
@@ -83,6 +103,7 @@ export default async function handler(req, res) {
         referencia,
         user_id: user.id,
         plano_id: planoDB.id,
+        tipo: isApex ? "apex" : "assinatura",
         status: "pending",
         valor: planoDB.valor,
         processado: false,
@@ -98,7 +119,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // 💳 Preference Mercado Pago
+    // ==================================================
+    // 💳 MERCADO PAGO
+    // ==================================================
     const preference = {
       items: [
         {
@@ -115,7 +138,8 @@ export default async function handler(req, res) {
         failure: "https://www.clena.com.br/erro.html",
       },
       auto_return: "approved",
-      notification_url: "https://www.clena.com.br/api/webhook-mercadopago",
+      notification_url:
+        "https://www.clena.com.br/api/webhook-mercadopago",
     };
 
     const mpRes = await fetch(
@@ -133,11 +157,14 @@ export default async function handler(req, res) {
     const mpData = await mpRes.json();
 
     if (!mpRes.ok) {
-      console.error("Erro MP:", mpData);
+      console.error("❌ ERRO MP:", mpData);
       return res.status(500).json(mpData);
     }
 
-    return res.json({
+    // ==================================================
+    // ✅ RETORNO
+    // ==================================================
+    return res.status(200).json({
       url: mpData.init_point,
     });
 
