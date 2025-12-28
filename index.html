@@ -1199,7 +1199,12 @@ body.modal-open{
 @keyframes neo-giro{
   to{ transform:rotate(360deg); }
 }
-/* ================= PERFIL MOBILE — MODELO NOVO LIMPO ================= */
+
+
+
+
+  
+/* ================= PERFIL MOBILE — MODELO LIMPO AJUSTADO ================= */
 @media (max-width: 520px){
 
   /* Overlay */
@@ -1233,10 +1238,10 @@ body.modal-open{
 
   /* ================= TOPO PERFIL ================= */
   .avatar-col{
-    display:flex;
-    flex-direction:column;
-    align-items:flex-start;
-    gap:8px;
+    display:grid;
+    grid-template-columns:76px 1fr;
+    column-gap:14px;
+    align-items:start;
   }
 
   .avatar-col img{
@@ -1244,27 +1249,33 @@ body.modal-open{
     height:76px;
     border-radius:50%;
     object-fit:cover;
+    grid-row:1 / span 2;
   }
 
   /* botão editar foto (embaixo da foto) */
   .avatar-upload-novo{
-    display:inline-block;
+    grid-column:1;
+    grid-row:3;
     font-size:12px;
     color:#3ea6ff;
     cursor:pointer;
+    margin-top:6px;
   }
 
   /* bloco nome + user */
   .dados-col{
+    grid-column:2;
+    grid-row:1 / span 2;
     display:flex;
     flex-direction:column;
-    gap:2px;
+    gap:4px;
   }
 
   .dados-col h3{
     margin:0;
     font-size:18px;
     font-weight:800;
+    line-height:1.2;
   }
 
   .username-box-novo{
@@ -1281,19 +1292,19 @@ body.modal-open{
   }
 
   /* ================= SEPARADOR ================= */
-  .dados-col::after{
+  .avatar-col::after{
     content:"";
-    display:block;
+    grid-column:1 / -1;
     height:1px;
     background:#222;
-    margin:14px 0 6px;
+    margin-top:14px;
   }
 
-  /* ================= FORM EM CARDS ================= */
+  /* ================= FORM ================= */
   .dados-col label{
     font-size:11px;
     color:#aaa;
-    margin-top:12px;
+    margin-top:14px;
   }
 
   .dados-col input{
