@@ -255,6 +255,7 @@ html, body{
 </div>
 
 <script>
+let planoIdSelecionado = null;
 let valorSelecionado = 0;
 
 // 🔹 Carrega planos Apex
@@ -280,7 +281,7 @@ async function carregarPlanosApex(){
         <span>${apex} Apex</span>
       `;
 
-      card.onclick = () => selecionarPlano(plano.valor, card);
+card.onclick = () => selecionarPlano(plano.id, plano.valor, card);
       grid.appendChild(card);
     });
 
@@ -289,7 +290,8 @@ async function carregarPlanosApex(){
   }
 }
 
-function selecionarPlano(valor, el){
+function selecionarPlano(id, valor, el){
+  planoIdSelecionado = id;
   valorSelecionado = valor;
 
   document
@@ -302,11 +304,13 @@ function selecionarPlano(valor, el){
     `${valor * 15} Apex`;
 }
 
+
 async function continuarPagamento(){
-  if(!valorSelecionado){
-    alert("Selecione um valor para continuar");
-    return;
-  }
+  if(!planoIdSelecionado){
+  alert("Selecione um valor para continuar");
+  return;
+}
+
 
   const email = localStorage.getItem("usuario_email");
   if(!email){
@@ -318,11 +322,12 @@ async function continuarPagamento(){
     const res = await fetch("/api/create-payment",{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        action: "apex_payment",
-        valor: valorSelecionado,
-        email
-      })
+     body: JSON.stringify({
+  action: "apex_payment",
+  plano_id: planoIdSelecionado,
+  email
+})
+
     });
 
     const data = await res.json();
