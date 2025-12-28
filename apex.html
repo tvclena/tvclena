@@ -328,10 +328,12 @@ async function continuarPagamento(){
       headers:{
         "Content-Type":"application/json"
       },
-      body: JSON.stringify({
-        plano: planoSelecionado,
-        email: email
-      })
+body: JSON.stringify({
+  action: "apex_payment", // 🔥 ISSO ATIVA O FLUXO APEX
+  plano: planoSelecionado,
+  email: email
+})
+
     });
 
     const data = await res.json();
