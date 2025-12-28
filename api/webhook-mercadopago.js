@@ -68,7 +68,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ignored: true });
     }
 
-    // 🔒 IDempotência (bloqueia duplicado)
+    //🔒 IDempotência (bloqueia duplicado)
     if (pag.processado === true) {
       return res.status(200).json({ duplicated: true });
     }
