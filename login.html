@@ -175,6 +175,43 @@ input:focus{outline:none;border-color:var(--accent)}
 .whatsapp-float:hover{
   transform:scale(1.08);
 }
+.btn{
+  position:relative;
+  overflow:hidden;
+}
+
+/* overlay */
+.btn.loading{
+  pointer-events:none;
+  opacity:.85;
+}
+
+.btn.loading::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* spinner */
+.btn.loading::before{
+  content:"";
+  position:absolute;
+  width:22px;
+  height:22px;
+  border:3px solid rgba(255,255,255,.4);
+  border-top:3px solid #fff;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  z-index:2;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
 
 </style>
 </head>
@@ -305,8 +342,19 @@ c_whats.oninput = e=>{
     .slice(0,15);
 };
 
-/* LOGIN */
+function bloquearBotao(btn){
+  btn.classList.add("loading");
+}
+
+function liberarBotao(btn){
+  btn.classList.remove("loading");
+}
+
+
+  
 btnLogin.onclick = async () => {
+bloquearBotao(btnLogin); // 🔒 BLOQUEIA O BOTÃO
+
   msg.textContent = "";
   msg.className = "msg";
 
@@ -319,11 +367,12 @@ const redirect = localStorage.getItem("redirect_after_login");
   const emailInput = email.value.trim();
   const senhaInput = senha.value;
 
-  if (!emailInput || !senhaInput) {
-    msg.textContent = "Preencha email e senha";
-    msg.className = "msg error";
-    return;
-  }
+if (!emailInput || !senhaInput) {
+  msg.textContent = "Preencha email e senha";
+  msg.className = "msg error";
+  liberarBotao(btnLogin);
+  return;
+}
 
   const { data, error } = await sb
     .from("usuarios")
@@ -339,29 +388,34 @@ const redirect = localStorage.getItem("redirect_after_login");
     .eq("email", emailInput)
     .maybeSingle();
 
-  if (error || !data) {
-    msg.textContent = "Usuário não encontrado";
-    msg.className = "msg error";
-    return;
-  }
+if (error || !data) {
+  msg.textContent = "Usuário não encontrado";
+  msg.className = "msg error";
+  liberarBotao(btnLogin);
+  return;
+}
 
 
-  // 🔐 SENHA
-  if (data.senha !== senhaInput) {
-    msg.textContent = "Senha incorreta";
-    msg.className = "msg error";
-    return;
-  }
+
+if (data.senha !== senhaInput) {
+  msg.textContent = "Senha incorreta";
+  msg.className = "msg error";
+  liberarBotao(btnLogin);
+  return;
+}
+
 
   // ⏳ TRIAL
   const agora = new Date();
   const expira = new Date(data.trial_expires_at);
 
-  if (agora > expira && data.status !== "aprovado") {
-    msg.textContent = "Período de teste expirado";
-    msg.className = "msg error";
-    return;
-  }
+if (agora > expira && data.status !== "aprovado") {
+  msg.textContent = "Período de teste expirado";
+  msg.className = "msg error";
+  liberarBotao(btnLogin);
+  return;
+}
+
 
   // 🔑 GERA TOKEN DE SESSÃO
   const sessionToken = crypto.randomUUID();
@@ -396,7 +450,8 @@ if (data.status === "bloqueado") {
   if (!data.vencimento_assinatura) {
     localStorage.setItem("redirect_after_login", "planos.html");
     location.replace("planos.html");
-    return;
+    liberarBotao(btnLogin);
+return;
   }
 
   const vencimento = new Date(data.vencimento_assinatura);
@@ -431,16 +486,19 @@ location.replace("index.html");
 };
 
 btnCadastro.onclick = async ()=>{
+  bloquearBotao(btnCadastro); // 🔒 BLOQUEIA
   msgCadastro.textContent="";
 
  
 
 
-  if(c_senha.value!==c_confirma.value){
-    msgCadastro.textContent="As senhas não conferem";
-    msgCadastro.className="msg error";
-    return;
-  }
+if(c_senha.value!==c_confirma.value){
+  msgCadastro.textContent="As senhas não conferem";
+  msgCadastro.className="msg error";
+  liberarBotao(btnCadastro);
+  return;
+}
+
 
   const trial=new Date(Date.now()+10*24*60*60*1000);
   const emailNovo=c_email.value.trim();
@@ -455,11 +513,13 @@ btnCadastro.onclick = async ()=>{
     trial_expires_at: trial.toISOString()
   });
 
-  if(error){
-    msgCadastro.textContent="Erro ao cadastrar";
-    msgCadastro.className="msg error";
-    return;
-  }
+if(error){
+  msgCadastro.textContent="Erro ao cadastrar";
+  msgCadastro.className="msg error";
+  liberarBotao(btnCadastro);
+  return;
+}
+
 
   msgCadastro.innerHTML=`
     <div class="success-anim">
