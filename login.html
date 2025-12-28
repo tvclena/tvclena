@@ -281,7 +281,15 @@ const redirect = localStorage.getItem("redirect_after_login");
 
   const { data, error } = await sb
     .from("usuarios")
-    .select("id, email, senha, status, trial_expires_at, controle_sessao")
+.select(`
+  id,
+  email,
+  senha,
+  status,
+  trial_expires_at,
+  controle_sessao,
+  vencimento_assinatura
+`)
     .eq("email", emailInput)
     .maybeSingle();
 
@@ -334,19 +342,27 @@ localStorage.setItem("usuario_email", data.email);
 localStorage.setItem("session_token", sessionToken);
 
 
-// 🔁 SE VEIO PARA PAGAMENTO → VOLTA PARA PLANOS
-if (redirect === "planos.html") {
-  localStorage.removeItem("redirect_after_login");
-  location.replace("planos.html");
-  return;
+// 🔒 BLOQUEADO + ASSINATURA VENCIDA → PAGAMENTO (PRIORIDADE MÁXIMA)
+if (data.status === "bloqueado") {
+  const hoje = new Date();
+
+  let vencimento = null;
+
+  if (data.vencimento_assinatura) {
+    vencimento = new Date(data.vencimento_assinatura);
+
+    // 🔥 FAZ VALER ATÉ O FIM DO DIA (23:59:59)
+    vencimento.setHours(23, 59, 59, 999);
+  }
+
+  if (!vencimento || vencimento < hoje) {
+    localStorage.setItem("redirect_after_login", "planos.html");
+    location.replace("planos.html");
+    return;
+  }
 }
 
-// 🚫 BLOQUEIA SOMENTE SE ESTIVER BLOQUEADO
-if (data.status === "bloqueado") {
-  msg.textContent = "Seu acesso foi bloqueado.";
-  msg.className = "msg error";
-  return;
-}
+
 
 
 // ✅ ACESSO NORMAL
