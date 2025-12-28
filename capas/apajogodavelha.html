@@ -18,22 +18,18 @@ body{
   font-family:Inter,Arial,sans-serif;
 }
 
-/* CONTAINER */
+/* CARD */
 .capa{
   width:92%;
   height:92%;
-  background:linear-gradient(
-    to bottom,
-    rgba(20,20,20,.95),
-    rgba(10,10,10,.95)
-  );
+  background:linear-gradient(to bottom,#151515,#0b0b0b);
   border-radius:18px;
   padding:16px;
   display:flex;
   flex-direction:column;
   justify-content:space-between;
   box-shadow:
-    0 0 0 1px rgba(255,255,255,.06),
+    inset 0 0 0 1px rgba(255,255,255,.06),
     0 20px 40px rgba(0,0,0,.8);
 }
 
@@ -45,15 +41,14 @@ body{
   letter-spacing:1px;
   color:#fff;
 }
-.titulo span{
-  color:#e50914;
-}
+.titulo span{color:#e50914}
 
-/* TABULEIRO */
+/* TABULEIRO REAL */
 .tabuleiro{
   position:relative;
   display:grid;
   grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(3,1fr);
   gap:10px;
   margin:6px 0;
 }
@@ -61,7 +56,7 @@ body{
 .celula{
   height:46px;
   border-radius:10px;
-  background:rgba(255,255,255,.05);
+  background:rgba(255,255,255,.06);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -69,9 +64,7 @@ body{
   font-weight:900;
   opacity:0;
   transform:scale(.85);
-  transition:
-    opacity .25s ease,
-    transform .25s ease;
+  transition:.25s ease;
 }
 
 .celula.show{
@@ -82,23 +75,23 @@ body{
 .x{color:#e50914}
 .o{color:#ffffff}
 
-/* LINHA DE VITÓRIA */
+/* LINHA DE VITÓRIA (HORIZONTAL TOPO) */
 .linha{
   position:absolute;
+  top:23%;
   left:5%;
-  right:5%;
-  top:50%;
+  width:90%;
   height:2px;
   background:#e50914;
   opacity:0;
-  transform:translateY(-50%) scaleX(0);
+  transform:scaleX(0);
   transform-origin:left;
-  transition:transform .4s ease, opacity .2s ease;
+  transition:.4s ease;
 }
 
 .linha.show{
   opacity:1;
-  transform:translateY(-50%) scaleX(1);
+  transform:scaleX(1);
 }
 
 /* FOOTER */
@@ -135,23 +128,29 @@ body{
 </div>
 
 <script>
-const cells = document.querySelectorAll(".celula");
+const c = document.querySelectorAll(".celula");
 const linha = document.getElementById("linha");
 
+/*
+ PARTIDA REAL:
+ X | X | X  ← vitória
+ O | O |
+   |   |
+*/
 const jogadas = [
   {i:0, v:"x"},
-  {i:1, v:"o"},
-  {i:4, v:"x"},
-  {i:2, v:"o"},
-  {i:8, v:"x"} // vitória diagonal
+  {i:3, v:"o"},
+  {i:1, v:"x"},
+  {i:4, v:"o"},
+  {i:2, v:"x"} // vitória correta
 ];
 
 let passo = 0;
 
 function resetar(){
-  cells.forEach(c=>{
-    c.textContent="";
-    c.className="celula";
+  c.forEach(e=>{
+    e.textContent="";
+    e.className="celula";
   });
   linha.classList.remove("show");
   passo = 0;
@@ -160,9 +159,8 @@ function resetar(){
 function animar(){
   if(passo < jogadas.length){
     const {i,v} = jogadas[passo];
-    const cell = cells[i];
-    cell.textContent = v.toUpperCase();
-    cell.classList.add("show", v);
+    c[i].textContent = v.toUpperCase();
+    c[i].classList.add("show", v);
     passo++;
   }else{
     linha.classList.add("show");
