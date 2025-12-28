@@ -1380,59 +1380,6 @@ body.modal-open{
     display:none;
   }
 }
-/* ================= TOPO 100% ESCURO + HERO CORRIGIDO (MOBILE) ================= */
-@media (max-width: 768px){
-
-  /* header sempre sólido */
-  header{
-    background:#0f0f10 !important;
-    backdrop-filter:none !important;
-  }
-
-  /* faixa escura cobrindo status bar + header */
-  body::before{
-    content:"";
-    position:fixed;
-    top:0;
-    left:0;
-    right:0;
-    height:96px;               /* status + header */
-    background:#0f0f10;
-    z-index:999;
-    pointer-events:none;
-  }
-
-  header{
-    z-index:1000;
-  }
-
-  /* HERO NÃO SOBE MAIS */
-  .hero{
-    margin-top:56px;           /* altura do header */
-    height:60vh;
-    padding:0 16px 40px;
-  }
-
-  /* 🔥 trava o vídeo DENTRO do hero */
-  #heroVideo{
-    top:0 !important;
-    height:100% !important;
-    object-position:center center;
-  }
-
-  /* gradiente MAIS FORTE no topo */
-  .hero::before{
-    background:
-      linear-gradient(
-        to bottom,
-        rgba(15,15,16,1) 0%,
-        rgba(15,15,16,.98) 25%,
-        rgba(15,15,16,.9) 45%,
-        rgba(15,15,16,.6) 65%,
-        rgba(15,15,16,0) 100%
-      );
-  }
-}
 
 </style>
 </head>
