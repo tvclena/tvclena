@@ -15,12 +15,14 @@ export default async function handler(req, res){
       .order("valor", { ascending: true });
 
     if(error){
+      console.error(error);
       return res.status(500).json([]);
     }
 
-    return res.json(data || []);
+    return res.status(200).json(data || []);
 
   }catch(err){
+    console.error(err);
     return res.status(500).json([]);
   }
 }
