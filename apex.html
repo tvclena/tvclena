@@ -185,25 +185,40 @@ html, body{
   </ul>
 
   <!-- 💳 RECARGA -->
-  <div class="recarga-box">
-    <label>Valor da recarga (R$)</label>
-    <input
-      type="number"
-      id="valorRecarga"
-      min="0.10"
-      step="0.10"
-      placeholder="Ex: 5.00"
-      oninput="calcularApex()"
-    >
+<div class="recarga-box">
 
-    <div class="conversao" id="conversao">
-      0 Apex
+  <div class="recarga-grid">
+    <div class="recarga-card" onclick="selecionarPlano('APEX 5', 5)">
+      <strong>R$ 5</strong>
+      <span>75 Apex</span>
     </div>
 
-    <button class="btn" onclick="recarregar()">
-      Recarregar carteira
-    </button>
+    <div class="recarga-card" onclick="selecionarPlano('APEX 10', 10)">
+      <strong>R$ 10</strong>
+      <span>150 Apex</span>
+    </div>
+
+    <div class="recarga-card" onclick="selecionarPlano('APEX 20', 20)">
+      <strong>R$ 20</strong>
+      <span>300 Apex</span>
+    </div>
+
+    <div class="recarga-card" onclick="selecionarPlano('APEX 50', 50)">
+      <strong>R$ 50</strong>
+      <span>750 Apex</span>
+    </div>
   </div>
+
+  <div class="conversao" id="conversao">
+    Selecione um valor
+  </div>
+
+  <button class="btn" onclick="continuarPagamento()">
+    Continuar
+  </button>
+
+</div>
+
 
   <div class="footer">
     1 real = 15 Apex
@@ -225,51 +240,61 @@ function calcularApex(){
       : "0 Apex";
 }
 
+function obterPlanoRecarga(valor){
+  if (valor <= 5)  return "APEX 5";
+  if (valor <= 10) return "APEX 10";
+  if (valor <= 20) return "APEX 20";
+  return "APEX 50";
+}
+
 async function recarregar(){
   const valor = Number(
     document.getElementById("valorRecarga").value
   );
 
-  if(!valor || valor < 0.1){
+  if (!valor || valor < 1) {
     alert("Informe um valor válido");
     return;
   }
 
   const email = localStorage.getItem("usuario_email");
-
-  if(!email){
+  if (!email) {
     alert("Faça login para continuar");
     return;
   }
 
-  try{
-    const res = await fetch("/api/create-payment",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
+  // 🔁 transforma valor em plano APEX existente
+  const plano = obterPlanoRecarga(valor);
+
+  try {
+    const res = await fetch("/api/create-payment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
       },
-      body:JSON.stringify({
-        tipo:"recarga",
-        valor: valor,
+      body: JSON.stringify({
+        plano: plano,
         email: email
       })
     });
 
     const data = await res.json();
 
-    if(data.url){
+    if (data.url) {
+      // 🔥 redireciona para o Mercado Pago
       window.location.href = data.url;
-    }else{
+    } else {
       alert("Erro ao gerar pagamento");
       console.error(data);
     }
 
-  }catch(err){
+  } catch (err) {
     alert("Erro de conexão");
     console.error(err);
   }
 }
 </script>
+
 
 </body>
 </html>
