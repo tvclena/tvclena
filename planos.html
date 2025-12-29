@@ -218,14 +218,14 @@ async function carregarPlanos(){
       { cache: "no-store" }
     );
 
-    const json = await res.json();
-    const planos = json.planos || [];
+    const planos = await res.json();
 
     const container = document.querySelector(".planos");
     container.innerHTML = "";
 
-    if(!Array.isArray(planos) || !planos.length){
-      container.innerHTML = "<p style='color:#777'>Nenhum plano disponível</p>";
+    if(!Array.isArray(planos) || planos.length === 0){
+      container.innerHTML =
+        "<p style='color:#777'>Nenhum plano disponível</p>";
       return;
     }
 
