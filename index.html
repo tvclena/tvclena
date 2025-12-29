@@ -2569,30 +2569,43 @@ function fecharApexInfo(){
 }
 
 async function carregarApex(){
-  const { data: authData } = await sb.auth.getUser();
-  if (!authData?.user) return;
+  const email = localStorage.getItem("usuario_email");
+  if (!email) return;
 
-  const authUserId = authData.user.id;
-
-  const { data, error } = await sb
-    .from("carteiras")
-    .select("saldo")
-    .eq("user_id", authUserId)
+  // 1️⃣ Buscar o ID do usuário pela sua tabela usuarios
+  const { data: user, error: userError } = await sb
+    .from("usuarios")
+    .select("id")
+    .eq("email", email)
     .maybeSingle();
 
-  if (error || !data) {
+  if (userError || !user) {
+    console.warn("Usuário não encontrado");
     document.getElementById("apexQtd").textContent = "0";
     return;
   }
 
-  const saldoReais = Number(data.saldo) || 0;
+  // 2️⃣ Buscar carteira pelo user_id correto
+  const { data: carteira, error } = await sb
+    .from("carteiras")
+    .select("saldo")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  // 🔁 1 real = 15 Apex
+  if (error || !carteira) {
+    document.getElementById("apexQtd").textContent = "0";
+    return;
+  }
+
+  const saldoReais = Number(carteira.saldo) || 0;
+
+  // 🔁 Conversão: 1 real = 15 Apex
   const apex = saldoReais * 15;
 
   document.getElementById("apexQtd").textContent =
-    apex % 1 === 0 ? apex.toFixed(0) : apex.toFixed(2);
+    Number.isInteger(apex) ? apex : apex.toFixed(2);
 }
+
 
 
 
