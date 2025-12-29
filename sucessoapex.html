@@ -13,134 +13,137 @@
   font-family:Inter,Arial,sans-serif;
 }
 
-:root{
-  --bg:#06080d;
-  --blue:#3ea6ff;
-  --blue-soft:#1e3a8a;
-  --text:#ffffff;
-  --muted:#9ca3af;
-}
-
 body{
   min-height:100vh;
-  background:
-    radial-gradient(60% 40% at 50% 30%, rgba(62,166,255,.35), transparent 70%),
-    radial-gradient(90% 60% at 50% 80%, rgba(30,58,138,.25), transparent 70%),
-    var(--bg);
+  background:#000;
+  color:#fff;
+  overflow:hidden;
   display:flex;
   align-items:center;
   justify-content:center;
-  overflow:hidden;
 }
 
-/* EXPLOSÃO AZUL */
-.explosao{
-  position:absolute;
-  inset:-20%;
-  background:
-    radial-gradient(circle at center,
-      rgba(62,166,255,.45),
-      rgba(62,166,255,.15),
-      transparent 60%);
-  filter: blur(80px);
-  animation:pulse 3s ease-in-out infinite;
+/* ===== FUNDO ESTRELAS ===== */
+canvas{
+  position:fixed;
+  inset:0;
   z-index:0;
 }
 
-@keyframes pulse{
-  0%{opacity:.6;transform:scale(1)}
-  50%{opacity:1;transform:scale(1.05)}
-  100%{opacity:.6;transform:scale(1)}
+/* ===== GLOW GLOBAL ===== */
+.glow{
+  position:fixed;
+  inset:-30%;
+  background:
+    radial-gradient(circle at center,
+      rgba(0,140,255,.35),
+      rgba(0,80,200,.15),
+      transparent 65%);
+  filter: blur(120px);
+  animation:pulse 4s ease-in-out infinite;
+  z-index:1;
 }
 
-/* CARD */
+@keyframes pulse{
+  0%{opacity:.6}
+  50%{opacity:1}
+  100%{opacity:.6}
+}
+
+/* ===== CARD ===== */
 .card{
   position:relative;
-  z-index:2;
-  width:420px;
-  max-width:92%;
-  background:linear-gradient(180deg,#0b1220,#06080d);
-  border-radius:22px;
-  padding:46px 36px;
+  z-index:5;
+  width:92%;
+  max-width:420px;
+  background:linear-gradient(180deg,#020409,#000);
+  border-radius:26px;
+  padding:44px 26px 36px;
   text-align:center;
-  box-shadow:0 40px 120px rgba(0,0,0,.9);
-  animation:entrar .6s ease;
+  box-shadow:
+    0 0 60px rgba(0,140,255,.35),
+    0 0 120px rgba(0,140,255,.15);
 }
 
-@keyframes entrar{
-  from{opacity:0;transform:translateY(20px) scale(.96)}
-  to{opacity:1;transform:none}
-}
-
-/* LOGO */
+/* ===== LOGO ===== */
 .logo{
-  width:120px;
-  margin:0 auto 22px;
-  animation:logoGlow 2.5s ease-in-out infinite;
+  width:88%;
+  max-width:340px;
+  margin:0 auto 26px;
+  display:block;
+  filter:
+    drop-shadow(0 0 25px rgba(0,140,255,.6))
+    drop-shadow(0 0 60px rgba(0,140,255,.4));
+  animation:logoPulse 3s ease-in-out infinite;
 }
 
-@keyframes logoGlow{
-  0%,100%{filter:drop-shadow(0 0 12px rgba(62,166,255,.4))}
-  50%{filter:drop-shadow(0 0 28px rgba(62,166,255,.8))}
+@keyframes logoPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.05)}
 }
 
-/* TEXTO */
+/* ===== TEXTO ===== */
 h1{
   font-size:26px;
-  margin-bottom:10px;
+  font-weight:900;
+  margin-bottom:12px;
+  letter-spacing:.2px;
 }
 
 .sub{
-  color:var(--muted);
   font-size:15px;
+  color:#cbd5e1;
+  margin-bottom:22px;
   line-height:1.6;
-  margin-bottom:26px;
 }
 
 .info{
-  font-size:14px;
-  color:#c7d2fe;
-  background:rgba(62,166,255,.08);
-  border:1px solid rgba(62,166,255,.25);
-  padding:12px;
-  border-radius:12px;
-  margin-bottom:30px;
+  font-size:15px;
+  background:rgba(0,140,255,.12);
+  border:1px solid rgba(0,140,255,.35);
+  padding:14px;
+  border-radius:14px;
+  margin-bottom:28px;
+  color:#e0f2fe;
 }
 
-/* BOTÃO */
+/* ===== BOTÃO ===== */
 .btn{
   width:100%;
-  padding:15px;
+  padding:16px;
   border:none;
-  border-radius:14px;
-  background:linear-gradient(135deg,#3ea6ff,#2563eb);
+  border-radius:16px;
+  background:linear-gradient(135deg,#0ea5ff,#2563eb);
   color:#fff;
-  font-size:15px;
-  font-weight:800;
+  font-size:16px;
+  font-weight:900;
   cursor:pointer;
-  box-shadow:0 10px 30px rgba(62,166,255,.45);
+  box-shadow:
+    0 0 25px rgba(14,165,255,.8),
+    0 0 60px rgba(14,165,255,.6);
   transition:.25s;
 }
 
 .btn:hover{
   transform:translateY(-1px);
-  filter:brightness(1.1);
+  filter:brightness(1.15);
 }
 
-/* MOBILE */
+/* MOBILE EXTRA */
 @media(max-width:480px){
-  .card{padding:36px 26px}
-  h1{font-size:22px}
+  h1{font-size:24px}
+  .logo{width:92%}
 }
 </style>
 </head>
 
 <body>
 
-<div class="explosao"></div>
+<canvas id="stars"></canvas>
+<div class="glow"></div>
 
 <div class="card">
-  <img src="img_apex.png" alt="Apex" class="logo">
+  <img src="img_apex.png" class="logo" alt="Apex">
 
   <h1>Recarga realizada com sucesso ⚡</h1>
 
@@ -158,6 +161,49 @@ h1{
 </div>
 
 <script>
+/* ===== ESTRELAS AZUIS ===== */
+const canvas = document.getElementById("stars");
+const ctx = canvas.getContext("2d");
+
+let w,h,stars=[];
+function resize(){
+  w = canvas.width = window.innerWidth;
+  h = canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+for(let i=0;i<160;i++){
+  stars.push({
+    x:Math.random()*w,
+    y:Math.random()*h,
+    r:Math.random()*1.8,
+    s:Math.random()*0.5+0.2
+  });
+}
+
+function draw(){
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle="#6ecbff";
+
+  stars.forEach(star=>{
+    ctx.globalAlpha = Math.random();
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, star.r, 0, Math.PI*2);
+    ctx.fill();
+
+    star.y += star.s;
+    if(star.y > h){
+      star.y = 0;
+      star.x = Math.random()*w;
+    }
+  });
+
+  requestAnimationFrame(draw);
+}
+draw();
+
+/* ===== CONTINUAR ===== */
 function continuar(){
   location.href = "/?abrirPerfil=1";
 }
