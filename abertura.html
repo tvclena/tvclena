@@ -6,119 +6,213 @@
 <title>Clena TV</title>
 
 <style>
-html, body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: Inter, Arial, sans-serif;
-  overflow: hidden;
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:Inter,Arial,sans-serif;
+  overflow:hidden;
 }
 
-/* ===== CONTAINER ===== */
-#wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+/* ===== FUNDO SUTIL ===== */
+.bg{
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at center, rgba(229,9,20,.12), transparent 60%);
 }
 
 /* ===== LOGO ===== */
-#logo {
-  width: 340px;
-  max-width: 80vw;
-  filter:
-    drop-shadow(0 0 20px rgba(229,9,20,.9))
-    drop-shadow(0 0 60px rgba(229,9,20,.6));
-  animation: logoIn 1.8s ease forwards;
+.logo{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  transform:skewX(-12deg);
+  z-index:2;
 }
 
-@keyframes logoIn {
-  from {
-    opacity: 0;
-    transform: scale(.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+/* CLENA */
+.clena{
+  position:relative;
+  font-size:88px;
+  font-weight:900;
+  letter-spacing:3px;
+  color:#e50914;
+
+  text-shadow:
+    0 0 6px rgba(229,9,20,.9),
+    0 0 18px rgba(229,9,20,.9),
+    0 0 40px rgba(229,9,20,.7),
+    0 0 80px rgba(229,9,20,.45);
 }
 
-/* ===== LOADER (BOLINHAS) ===== */
-.loader {
-  margin-top: 28px;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  border: 4px solid rgba(255,255,255,.15);
-  border-top-color: #fff;
-  animation: spin 1s linear infinite;
+/* brilho animado */
+.clena::after{
+  content:"";
+  position:absolute;
+  inset:-14px;
+  background:linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255,255,255,.95) 50%,
+    transparent 70%
+  );
+  transform:translateX(-180%);
+  animation:shine 2.6s ease forwards;
+  mix-blend-mode:screen;
+  pointer-events:none;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* TV */
+.tv{
+  position:relative;
+  display:flex;
+  align-items:center;
+  padding:18px 30px 18px 60px;
+  border-radius:26px;
+  font-size:42px;
+  font-weight:900;
+  color:#fff;
+
+  background:linear-gradient(180deg,#ff2a2a,#b60000);
+
+  box-shadow:
+    inset 0 -4px 6px rgba(0,0,0,.45),
+    0 0 18px rgba(229,9,20,.9),
+    0 0 50px rgba(229,9,20,.6);
 }
+
+/* play */
+.tv::before{
+  content:"▶";
+  position:absolute;
+  left:20px;
+  font-size:28px;
+  color:#fff;
+  text-shadow:
+    0 0 10px rgba(255,255,255,1),
+    0 0 22px rgba(255,255,255,.8);
+}
+
+/* swoosh energia */
+.swoosh{
+  position:absolute;
+  left:-10%;
+  bottom:-18px;
+  width:120%;
+  height:10px;
+  background:linear-gradient(
+    to right,
+    transparent,
+    rgba(229,9,20,.95),
+    rgba(229,9,20,.45),
+    transparent
+  );
+  filter:blur(2px);
+  box-shadow:0 0 22px rgba(229,9,20,.9);
+  transform:skewX(12deg);
+}
+
+/* ===== LOADER ===== */
+.loader{
+  margin-top:46px;
+  display:flex;
+  gap:10px;
+  justify-content:center;
+}
+
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#e50914;
+  opacity:.3;
+  animation:dot 1.4s infinite;
+}
+
+.dot:nth-child(2){ animation-delay:.2s }
+.dot:nth-child(3){ animation-delay:.4s }
 
 /* ===== OFFLINE ===== */
-#offline {
-  display: none;
-  margin-top: 26px;
-  text-align: center;
-  color: #ff6b6b;
+.offline{
+  display:none;
+  margin-top:40px;
+  text-align:center;
+  color:#ff6b6b;
 }
 
-#offline button {
-  margin-top: 14px;
-  padding: 12px 28px;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  font-weight: 700;
-  color: #fff;
-  background: linear-gradient(180deg,#ff2a2a,#b60000);
+.offline button{
+  margin-top:18px;
+  padding:12px 28px;
+  border-radius:999px;
+  border:none;
+  background:#e50914;
+  color:#fff;
+  font-weight:700;
+  font-size:14px;
+  cursor:pointer;
   box-shadow:
-    0 0 18px rgba(255,28,28,.9),
-    0 0 40px rgba(255,28,28,.6);
+    0 0 14px rgba(229,9,20,.9);
+}
+
+/* ===== ANIMAÇÕES ===== */
+@keyframes shine{
+  to{ transform:translateX(180%); }
+}
+
+@keyframes dot{
+  0%{ opacity:.3; transform:scale(.8) }
+  50%{ opacity:1; transform:scale(1.2) }
+  100%{ opacity:.3; transform:scale(.8) }
 }
 </style>
 </head>
 
 <body>
 
-<div id="wrap">
-  <!-- LOGO REAL -->
-  <img id="logo" src="logo1.png" alt="Clena TV">
+<div class="bg"></div>
 
-  <!-- LOADER -->
-  <div class="loader" id="loader"></div>
+<div class="container">
+  <div class="logo">
+    <div class="clena">CLENA</div>
+    <div class="tv">TV</div>
+    <div class="swoosh"></div>
+  </div>
 
-  <!-- OFFLINE -->
-  <div id="offline">
-    Sem conexão com a internet<br>
+  <div class="loader" id="loader">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+
+  <div class="offline" id="offline">
+    Sem conexão com a internet
+    <br>
     <button onclick="location.reload()">Recarregar</button>
   </div>
 </div>
 
 <script>
-/* ===== INTERNET ===== */
-function online() {
+function online(){
   return navigator.onLine;
 }
 
-function iniciar() {
-  if (!online()) {
-    document.getElementById("loader").style.display = "none";
-    document.getElementById("offline").style.display = "block";
+function iniciar(){
+  if(!online()){
+    document.getElementById("loader").style.display="none";
+    document.getElementById("offline").style.display="block";
     return;
   }
 
-  // tempo da abertura
+  // tempo elegante da abertura
   setTimeout(() => {
-    parent.postMessage("ABERTURA_OK", "*");
-  }, 2500);
+    parent.postMessage("ABERTURA_OK","*");
+  }, 3000);
 }
 
 window.addEventListener("online", iniciar);
