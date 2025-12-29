@@ -1764,6 +1764,14 @@ dados = (data || []).map(d => {
   dadosCarregados = true;
 montarFiltrosCategorias(); // 👈 ADICIONE AQUI
 
+// 🔥 aplica filtros avançados automaticamente (se existirem)
+const filtrosSalvos = localStorage.getItem("clena_filtros");
+if (filtrosSalvos) {
+  aplicarFiltrosAvancados();
+}
+
+  
+
   if (!dados.length) {
     console.warn("⚠️ Nenhum filme ativo encontrado");
     return;
