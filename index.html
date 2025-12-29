@@ -2526,23 +2526,28 @@ return false;
 async function abrirLinkPlano(nomePlano) {
   const email = localStorage.getItem("usuario_email");
 
-  if (!email) {
-    alert("Faça login para continuar");
-    location.href = "login.html";
-    return;
-  }
+  const res = await fetch("/api/create-payment", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      action: "criar_pagamento",
+      plano: nomePlano,
+      email: email
+    })
+  });
 
-  try {
-    const res = await fetch("/api/create-payment", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        plano: nomePlano,
-        email: email
-      })
-    });
+  const data = await res.json();
+
+  if (data.url) {
+    window.location.href = data.url;
+  } else {
+    console.error(data);
+    alert("Erro ao gerar link de pagamento");
+  }
+}
+
 
     const data = await res.json();
 
