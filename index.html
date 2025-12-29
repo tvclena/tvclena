@@ -2618,14 +2618,33 @@ window.addEventListener("message", (event) => {
 })();
 
 function abrirFiltrosAvancados(){
-  localStorage.setItem("clena_dados", JSON.stringify(dados));
+  const overlay = document.getElementById("filtrosOverlay");
+  const iframe = document.getElementById("iframeFiltros");
 
-  // 🔥 AUTORIZA RESTAURAÇÃO SOMENTE NESTA ABERTURA
   sessionStorage.setItem("clena_filtros_aberto", "1");
 
   document.body.classList.add("modal-open");
-  document.getElementById("filtrosOverlay").style.display = "flex";
+  overlay.style.display = "flex";
+
+  // 🔥 garante que o iframe receba os dados
+  iframe.onload = () => {
+    iframe.contentWindow.postMessage({
+      type: "INIT_FILTROS",
+      dados: dados,
+      filtros: JSON.parse(localStorage.getItem("clena_filtros") || "{}")
+    }, "*");
+  };
+
+  // se já carregou antes (cache)
+  if (iframe.contentWindow) {
+    iframe.contentWindow.postMessage({
+      type: "INIT_FILTROS",
+      dados: dados,
+      filtros: JSON.parse(localStorage.getItem("clena_filtros") || "{}")
+    }, "*");
+  }
 }
+
 function fecharFiltros(){
   sessionStorage.removeItem("clena_filtros_aberto");
   document.body.classList.remove("modal-open");
@@ -2815,7 +2834,7 @@ async function carregarApex(){
 <div id="filtrosOverlay" style="display:none">
   <div class="filtrosPopup">
     <button class="filtrosFechar" onclick="fecharFiltros()">✕</button>
-    <iframe src="filtros.html"></iframe>
+<iframe id="iframeFiltros" src="filtros.html"></iframe>
   </div>
 </div>
 
