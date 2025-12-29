@@ -2570,22 +2570,19 @@ function fecharApexInfo(){
 
 async function carregarApex(){
   const email = localStorage.getItem("usuario_email");
-  if (!email) {
-    document.getElementById("apexQtd").textContent = "0";
-    return;
-  }
+  if (!email) return;
 
   try {
     const res = await fetch(`/api/carteira?email=${encodeURIComponent(email)}`);
     const data = await res.json();
 
-    const apex = Number(data.apex || 0);
-
     document.getElementById("apexQtd").textContent =
-      Number.isInteger(apex) ? apex : apex.toFixed(2);
+      Number.isInteger(data.apex)
+        ? data.apex
+        : Number(data.apex).toFixed(2);
 
-  } catch (e) {
-    console.error("Erro ao carregar Apex:", e);
+  } catch (err) {
+    console.error("Erro ao carregar Apex:", err);
     document.getElementById("apexQtd").textContent = "0";
   }
 }
