@@ -167,45 +167,71 @@ export default async function handler(req, res) {
       .eq("id", pag.id);
 
     /* =====================================================
-       📊 GOOGLE ANALYTICS 4 (SERVER SIDE)
-    ===================================================== */
-    try {
-      await fetch(
-        `https://www.google-analytics.com/mp/collect?measurement_id=${process.env.GA_MEASUREMENT_ID}&api_secret=${process.env.GA_API_SECRET}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            client_id: crypto.randomUUID(),
-            user_id: String(pag.user_id),
-            events: [
-              {
-                name: "purchase",
-                params: {
-                  transaction_id: referencia,
-                  value: pag.valor,
-                  currency: "BRL",
-                  items: [
-                    {
-                      item_name: pag.planos?.nome || "Apex",
-                      price: pag.valor,
-                      quantity: 1,
-                    },
-                  ],
-                },
-              },
-            ],
-          }),
-        }
-      );
-    } catch (gaErr) {
-      console.error("⚠️ Erro GA4:", gaErr);
+   📊 GOOGLE ANALYTICS 4 (SERVER SIDE)
+===================================================== */
+try {
+  const isAssinatura = pag.planos?.dias > 0;
+
+  const gaPayload = {
+    client_id: crypto
+      .createHash("sha256")
+      .update(String(pag.user_id))
+      .digest("hex"),
+
+    user_id: String(pag.user_id),
+
+    events: [
+      {
+        name: "purchase",
+        params: {
+          transaction_id: referencia,
+          value: pag.valor,
+          currency: "BRL",
+
+          // 🔖 diferencia APEX x ASSINATURA
+          tipo_produto: isAssinatura ? "assinatura" : "apex",
+          plano: isAssinatura ? pag.planos?.nome : null,
+
+          engagement_time_msec: 100,
+
+          items: [
+            {
+              item_name: isAssinatura ? pag.planos?.nome : "Apex",
+              item_category: isAssinatura ? "Assinatura" : "Recarga",
+              price: pag.valor,
+              quantity: 1,
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const gaRes = await fetch(
+    `https://www.google-analytics.com/mp/collect?measurement_id=${process.env.GA_MEASUREMENT_ID}&api_secret=${process.env.GA_API_SECRET}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(gaPayload),
     }
+  );
 
-    return ok(res, { success: true });
-
-  } catch (err) {
-    console.error("❌ WEBHOOK ERRO CRÍTICO:", err);
-    return ok(res, { recovered: true });
+  if (!gaRes.ok) {
+    console.error(
+      "❌ GA4 rejeitou evento:",
+      gaRes.status,
+      await gaRes.text()
+    );
   }
+} catch (gaErr) {
+  console.error("⚠️ Erro GA4:", gaErr);
 }
+
+return ok(res, { success: true });
+
+} catch (err) {
+console.error("❌ WEBHOOK ERRO CRÍTICO:", err);
+return ok(res, { recovered: true });
+}
+}
+
