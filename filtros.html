@@ -2,8 +2,15 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+
+<!-- 🚫 BLOQUEIA QUALQUER ZOOM -->
+<meta name="viewport"
+  content="width=device-width,
+           initial-scale=1.0,
+           maximum-scale=1.0,
+           user-scalable=no">
+
 <title>Filtros • Clena TV</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 :root{
@@ -15,23 +22,32 @@
   --muted:#9ca3af;
 }
 
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color: transparent;
+}
 
-body{
+html, body{
   margin:0;
-  font-family:Inter,Arial,sans-serif;
+  padding:0;
   background:var(--bg);
   color:var(--text);
+  font-family:Inter,Arial,sans-serif;
+
+  /* 🚫 ZOOM TOTAL */
+  touch-action: manipulation;
+  -webkit-text-size-adjust:100%;
+  overscroll-behavior:contain;
 }
 
 .box{
   max-width:900px;
   margin:0 auto;
-  padding:28px;
+  padding:26px;
 }
 
 h2{
-  margin:0 0 24px;
+  margin:0 0 22px;
   font-size:24px;
   font-weight:900;
 }
@@ -53,7 +69,7 @@ h2{
   font-weight:600;
 }
 
-/* ===== BUSCA ===== */
+/* ===== INPUT TEXTO ===== */
 input[type="text"]{
   width:100%;
   padding:14px;
@@ -61,7 +77,8 @@ input[type="text"]{
   border:1px solid var(--border);
   background:#111;
   color:#fff;
-  font-size:15px;
+  font-size:16px; /* 👈 evita zoom no iOS */
+  outline:none;
 }
 
 /* ===== RANGE ===== */
@@ -70,13 +87,14 @@ input[type="text"]{
   align-items:center;
   gap:14px;
 }
+
 input[type="range"]{
   flex:1;
 }
+
 .range-value{
   font-size:13px;
-  font-weight:700;
-  color:#fff;
+  font-weight:800;
   min-width:110px;
   text-align:right;
 }
@@ -87,35 +105,36 @@ input[type="range"]{
   gap:10px;
   overflow-x:auto;
   padding-bottom:4px;
+  scrollbar-width:none;
 }
 .horizontal::-webkit-scrollbar{display:none}
 
 .horizontal label{
   display:flex;
   align-items:center;
-  gap:8px;
   background:#111;
   border:1px solid var(--border);
-  padding:10px 16px;
   border-radius:999px;
   cursor:pointer;
   white-space:nowrap;
-  transition:.2s;
 }
 
-.horizontal input{display:none}
+.horizontal input{
+  display:none;
+}
+
+.horizontal span{
+  padding:10px 16px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:700;
+  transition:.2s;
+}
 
 .horizontal input:checked + span{
   background:var(--accent);
   color:#fff;
   border-color:var(--accent);
-}
-
-.horizontal span{
-  padding:6px 12px;
-  border-radius:999px;
-  font-size:13px;
-  font-weight:600;
 }
 
 /* ===== BOTÕES ===== */
@@ -131,7 +150,7 @@ button{
   border:none;
   border-radius:14px;
   font-size:15px;
-  font-weight:800;
+  font-weight:900;
   cursor:pointer;
 }
 
@@ -166,7 +185,7 @@ button{
     </div>
   </div>
 
-  <!-- 📆 ANO -->
+  <!-- 📆 ANOS -->
   <div class="filtro">
     <label>Ano de lançamento</label>
     <div class="horizontal" id="anos"></div>
@@ -194,36 +213,46 @@ button{
 </div>
 
 <script>
+/* ===== DADOS DO INDEX ===== */
 const dados = JSON.parse(localStorage.getItem("clena_dados") || "[]");
 const filtrosSalvos = JSON.parse(localStorage.getItem("clena_filtros") || "{}");
 
-/* ===== POPULA ANOS E GÊNEROS ===== */
-const anosUnicos = [...new Set(dados.map(d => d.ano_lancamento).filter(Boolean))].sort();
-const generosUnicos = [...new Set(
-  dados.flatMap(d => (d.categoria || "").split(",").map(g => g.trim()))
-)].filter(Boolean);
+/* ===== POPULA ANOS ===== */
+const anosUnicos = [...new Set(
+  dados.map(d => d.ano_lancamento).filter(Boolean)
+)].sort((a,b)=>b-a);
 
 document.getElementById("anos").innerHTML =
   anosUnicos.map(a =>
-    `<label><input type="checkbox" value="${a}">
-      <span>${a}</span></label>`
+    `<label>
+      <input type="checkbox" value="${a}">
+      <span>${a}</span>
+    </label>`
   ).join("");
+
+/* ===== POPULA GÊNEROS ===== */
+const generosUnicos = [...new Set(
+  dados.flatMap(d =>
+    (d.categoria || "")
+      .split(",")
+      .map(g => g.trim())
+  )
+)].filter(Boolean);
 
 document.getElementById("generos").innerHTML =
   generosUnicos.map(g =>
-    `<label><input type="checkbox" value="${g}">
-      <span>${g}</span></label>`
+    `<label>
+      <input type="checkbox" value="${g}">
+      <span>${g}</span>
+    </label>`
   ).join("");
 
 /* ===== RESTAURA FILTROS ===== */
-if(filtrosSalvos.busca)
-  busca.value = filtrosSalvos.busca;
+busca.value = filtrosSalvos.busca || "";
 
 const range = document.getElementById("classificacao");
 range.value = filtrosSalvos.classificacao ?? 18;
-
-document.getElementById("classValue").textContent =
-  `Até ${range.value} anos`;
+classValue.textContent = `Até ${range.value} anos`;
 
 range.oninput = () =>
   classValue.textContent = `Até ${range.value} anos`;
@@ -251,12 +280,12 @@ function aplicar(){
   };
 
   localStorage.setItem("clena_filtros", JSON.stringify(filtros));
-  window.parent.postMessage("filtros_aplicados", "*");
+  window.parent.postMessage("filtros_aplicados","*");
 }
 
 function limpar(){
   localStorage.removeItem("clena_filtros");
-  window.parent.postMessage("filtros_aplicados", "*");
+  window.parent.postMessage("filtros_aplicados","*");
 }
 </script>
 
