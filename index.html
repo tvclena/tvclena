@@ -2067,8 +2067,13 @@ function aplicarFiltrosAvancados(){
     localStorage.getItem("clena_filtros") || "{}"
   );
 
+  paginaAtual = 0;
+  carregando = false;
+  observer.observe(sentinela);
+
   prepararLista(filtros, busca?.value?.toLowerCase() || "");
 }
+
 
 
 
@@ -2608,11 +2613,12 @@ setTimeout(() => {
 
 window.addEventListener("message", (event) => {
   if (event.data === "filtros_aplicados") {
+    sessionStorage.removeItem("clena_filtros_aberto"); // 🔥 ADICIONE
     aplicarFiltrosAvancados();
-        atualizarBotaoFiltros(); // 👈 ESSENCIAL
-
+    atualizarBotaoFiltros();
   }
 });
+
 
   
 })();
@@ -2626,24 +2632,24 @@ function abrirFiltrosAvancados(){
   document.body.classList.add("modal-open");
   overlay.style.display = "flex";
 
-  // 🔥 garante que o iframe receba os dados
-  iframe.onload = () => {
-    iframe.contentWindow.postMessage({
-      type: "INIT_FILTROS",
-      dados: dados,
-      filtros: JSON.parse(localStorage.getItem("clena_filtros") || "{}")
-    }, "*");
+  const payload = {
+    type: "INIT_FILTROS",
+    dados: dados,
+    filtros: JSON.parse(localStorage.getItem("clena_filtros") || "{}")
   };
 
-  // se já carregou antes (cache)
-  if (iframe.contentWindow) {
-    iframe.contentWindow.postMessage({
-      type: "INIT_FILTROS",
-      dados: dados,
-      filtros: JSON.parse(localStorage.getItem("clena_filtros") || "{}")
-    }, "*");
+  // envia sempre
+  iframe.contentWindow?.postMessage(payload, "*");
+
+  // garante envio quando o iframe carregar pela 1ª vez
+  if (!iframe.dataset.iniciado) {
+    iframe.addEventListener("load", () => {
+      iframe.contentWindow.postMessage(payload, "*");
+      iframe.dataset.iniciado = "1";
+    });
   }
 }
+
 
 function fecharFiltros(){
   sessionStorage.removeItem("clena_filtros_aberto");
