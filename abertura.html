@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clena TV</title>
+
+<style>
+body{
+  margin:0;
+  background:#0f0f10;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100vh;
+  font-family:Inter,Arial;
+  color:#fff;
+}
+
+.container{
+  text-align:center;
+}
+
+svg{
+  width:220px;
+}
+
+/* animação “pintando” */
+path{
+  fill:none;
+  stroke:#e50914;
+  stroke-width:4;
+  stroke-dasharray:1000;
+  stroke-dashoffset:1000;
+  animation: draw 2.4s ease forwards;
+}
+
+@keyframes draw{
+  to{ stroke-dashoffset:0; }
+}
+
+.status{
+  margin-top:24px;
+  font-size:14px;
+  color:#aaa;
+}
+
+.offline{
+  color:#ff5555;
+  margin-top:20px;
+}
+
+button{
+  margin-top:18px;
+  padding:12px 22px;
+  border-radius:999px;
+  border:none;
+  background:#e50914;
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <!-- ✨ LOGO DESENHANDO -->
+  <svg viewBox="0 0 400 120">
+    <!-- substitua pelo SVG REAL da sua logo -->
+    <path d="M20 60 L380 60"/>
+  </svg>
+
+  <div class="status" id="status">
+    Carregando…
+  </div>
+
+  <div class="offline" id="offline" style="display:none">
+    Sem conexão com a internet
+    <br>
+    <button onclick="location.reload()">Recarregar</button>
+  </div>
+
+</div>
+
+<script>
+function online(){
+  return navigator.onLine;
+}
+
+function iniciar(){
+  if(!online()){
+    document.getElementById("status").style.display="none";
+    document.getElementById("offline").style.display="block";
+    return;
+  }
+
+  // simula preload bonito
+  setTimeout(() => {
+    parent.postMessage("ABERTURA_OK", "*");
+  }, 2600);
+}
+
+window.addEventListener("online", iniciar);
+window.addEventListener("offline", iniciar);
+
+iniciar();
+</script>
+</body>
+</html>
