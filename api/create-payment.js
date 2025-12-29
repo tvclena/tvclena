@@ -1,22 +1,51 @@
-import { createClient } from "@supabase/supabase-js";
+export const config = {
+  runtime: "nodejs",
+};
 
+import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
+
+/* =====================================================
+   🔐 SUPABASE (SERVICE ROLE)
+===================================================== */
 const sb = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+/* =====================================================
+   🧠 HELPERS
+===================================================== */
+function ok(res, payload = {}) {
+  return res.status(200).json({ ok: true, ...payload });
+}
+
+function now() {
+  return new Date();
+}
+
+function diasParaMs(dias) {
+  return dias * 86400000;
+}
+
+/* =====================================================
+   🚀 WEBHOOK HANDLER
+===================================================== */
 export default async function handler(req, res) {
   try {
-    const { type, data } = req.body;
-
-    // só pagamento
-    if (type !== "payment") {
-      return res.status(200).json({ ok: true });
+    // Mercado Pago SEMPRE exige 200
+    if (req.method !== "POST") {
+      return ok(res);
     }
 
-    const paymentId = data.id;
+    const paymentId = req.body?.data?.id;
+    if (!paymentId) {
+      return ok(res, { ignored: true });
+    }
 
-    // 🔎 consulta pagamento no MP
+    /* =====================================================
+       🔎 CONSULTA PAGAMENTO NO MERCADO PAGO
+    ===================================================== */
     const mpRes = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
@@ -26,62 +55,148 @@ export default async function handler(req, res) {
       }
     );
 
+    if (!mpRes.ok) {
+      console.error("❌ Erro ao consultar MP");
+      return ok(res);
+    }
+
     const payment = await mpRes.json();
 
-    if (payment.status !== "approved") {
-      return res.status(200).json({ status: payment.status });
+    if (!payment.external_reference) {
+      return ok(res, { ignored: true });
     }
 
     const referencia = payment.external_reference;
 
-    // 🔎 busca pagamento interno
-    const { data: pagamento } = await sb
+    /* =====================================================
+       🔄 SINCRONIZA STATUS DO PAGAMENTO
+    ===================================================== */
+    await sb
       .from("pagamentos")
-      .select("*")
+      .update({
+        payment_id: payment.id,
+        status: payment.status,
+        valor: payment.transaction_amount,
+        updated_at: now(),
+      })
+      .eq("referencia", referencia);
+
+    // Só processa se aprovado
+    if (payment.status !== "approved") {
+      return ok(res, { status: payment.status });
+    }
+
+    /* =====================================================
+       🔎 BUSCA PAGAMENTO INTERNO + PLANO
+    ===================================================== */
+    const { data: pag, error } = await sb
+      .from("pagamentos")
+      .select(`
+        id,
+        user_id,
+        valor,
+        processado,
+        tipo,
+        planos ( nome, dias )
+      `)
       .eq("referencia", referencia)
       .single();
 
-    if (!pagamento || pagamento.processado) {
-      return res.status(200).json({ ok: true });
+    if (error || !pag) {
+      console.error("❌ Pagamento interno não encontrado");
+      return ok(res);
     }
 
-    // 🟢 MARCA COMO APROVADO
-    await sb.from("pagamentos").update({
-      status: "approved",
-      processado: true,
-      updated_at: new Date(),
-    }).eq("id", pagamento.id);
-
-    // 🪙 APEX
-    if (pagamento.tipo === "apex") {
-      const apex = pagamento.valor * 15;
-
-      const { data: carteira } = await sb
-        .from("carteiras")
-        .select("saldo")
-        .eq("user_id", pagamento.user_id)
-        .single();
-
-      const novoSaldo =
-        Number(carteira?.saldo || 0) + Number(pagamento.valor);
-
-      await sb.from("carteiras").update({
-        saldo: novoSaldo,
-      }).eq("user_id", pagamento.user_id);
+    // 🔒 IDEMPOTÊNCIA (anti duplicação)
+    if (pag.processado === true) {
+      return ok(res, { duplicated: true });
     }
 
+    /* =====================================================
+       🧩 PROCESSAMENTO
+    ===================================================== */
+
+    // =====================
     // 📦 ASSINATURA
-    if (pagamento.tipo === "assinatura") {
-      await sb.from("usuarios").update({
-        tipo_assinatura: pagamento.plano_id,
-        status: "ativo",
-      }).eq("id", pagamento.user_id);
+    // =====================
+    if (pag.planos?.dias > 0) {
+      const vencimento = new Date(
+        Date.now() + diasParaMs(pag.planos.dias)
+      );
+
+      await sb
+        .from("usuarios")
+        .update({
+          status: "ativo",
+          tipo_assinatura: pag.planos.nome,
+          valor_assinatura: pag.valor,
+          vencimento_assinatura: vencimento,
+        })
+        .eq("id", pag.user_id);
     }
 
-    return res.status(200).json({ ok: true });
+    // =====================
+    // 💰 RECARGA APEX
+    // =====================
+    else {
+      // saldo sempre em R$
+      await sb.rpc("somar_saldo_carteira", {
+        p_user_id: pag.user_id,
+        p_valor: pag.valor,
+      });
+    }
+
+    /* =====================================================
+       ✅ FINALIZA PAGAMENTO
+    ===================================================== */
+    await sb
+      .from("pagamentos")
+      .update({
+        processado: true,
+        updated_at: now(),
+      })
+      .eq("id", pag.id);
+
+    /* =====================================================
+       📊 GOOGLE ANALYTICS 4 (SERVER SIDE)
+    ===================================================== */
+    try {
+      await fetch(
+        `https://www.google-analytics.com/mp/collect?measurement_id=${process.env.GA_MEASUREMENT_ID}&api_secret=${process.env.GA_API_SECRET}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: crypto.randomUUID(),
+            user_id: String(pag.user_id),
+            events: [
+              {
+                name: "purchase",
+                params: {
+                  transaction_id: referencia,
+                  value: pag.valor,
+                  currency: "BRL",
+                  items: [
+                    {
+                      item_name: pag.planos?.nome || "Apex",
+                      price: pag.valor,
+                      quantity: 1,
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+        }
+      );
+    } catch (gaErr) {
+      console.error("⚠️ Erro GA4:", gaErr);
+    }
+
+    return ok(res, { success: true });
 
   } catch (err) {
-    console.error("Webhook erro:", err);
-    return res.status(500).json({ error: "Erro webhook" });
+    console.error("❌ WEBHOOK ERRO CRÍTICO:", err);
+    return ok(res, { recovered: true });
   }
 }
