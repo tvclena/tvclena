@@ -1,7 +1,6 @@
 export const config = {
   runtime: "nodejs",
 };
-
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 const sb = createClient(
