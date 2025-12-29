@@ -1,23 +1,55 @@
-export const config = { runtime: "nodejs" };
+export const config = {
+  runtime: "nodejs",
+};
 
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
+/* =====================================================
+   🔐 SUPABASE (SERVICE ROLE)
+===================================================== */
 const sb = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
+/* =====================================================
+   🧠 HELPERS
+===================================================== */
+
+// Sempre retornar 200 (Mercado Pago exige)
+function ok(res, payload = {}) {
+  return res.status(200).json({ ok: true, ...payload });
+}
+
+// Datas
+function now() {
+  return new Date();
+}
+
+// Dias → ms
+function diasParaMs(dias) {
+  return dias * 86400000;
+}
+
+/* =====================================================
+   🚀 WEBHOOK HANDLER
+===================================================== */
 export default async function handler(req, res) {
   try {
-    //  Mercado Pago SEMPRE espera 200
+    // 🔥 MP SEMPRE espera 200
     if (req.method !== "POST") {
-      return res.status(200).json({ ok: true });
+      return ok(res);
     }
+
     const paymentId = req.body?.data?.id;
     if (!paymentId) {
-      return res.status(200).json({ ignored: true });
+      return ok(res, { ignored: true });
     }
-    // 🔎 Consulta pagamento no Mercado Pago
+
+    /* =====================================================
+       🔎 CONSULTA PAGAMENTO NO MERCADO PAGO
+    ===================================================== */
     const mpRes = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
@@ -28,121 +60,153 @@ export default async function handler(req, res) {
     );
 
     if (!mpRes.ok) {
-      return res.status(200).json({ ignored: true });
+      console.error("❌ MP fetch erro");
+      return ok(res, { ignored: true });
     }
 
     const payment = await mpRes.json();
 
-    // 🔄 Atualiza status do pagamento
+    // 🔐 valida referência
+    if (!payment.external_reference) {
+      return ok(res, { ignored: true });
+    }
+
+    const referencia = payment.external_reference;
+
+    /* =====================================================
+       🔄 ATUALIZA STATUS (sempre sincroniza)
+    ===================================================== */
     await sb
       .from("pagamentos")
       .update({
         payment_id: payment.id,
         status: payment.status,
         valor: payment.transaction_amount,
-        updated_at: new Date(),
+        updated_at: now(),
       })
-      .eq("referencia", payment.external_reference);
+      .eq("referencia", referencia);
 
-    // ❌ Só processa se aprovado
+    // ❌ só continua se aprovado
     if (payment.status !== "approved") {
-      return res.status(200).json({ status: payment.status });
+      return ok(res, { status: payment.status });
     }
-    // 🔎 Busca pagamento + plano
+
+    /* =====================================================
+       🔎 BUSCA PAGAMENTO INTERNO + PLANO
+    ===================================================== */
     const { data: pag, error } = await sb
       .from("pagamentos")
       .select(`
+        id,
         user_id,
         valor,
         processado,
+        tipo,
         planos ( nome, dias )
       `)
-      .eq("referencia", payment.external_reference)
+      .eq("referencia", referencia)
       .single();
 
     if (error || !pag) {
-      return res.status(200).json({ ignored: true });
+      console.error("❌ Pagamento interno não encontrado");
+      return ok(res, { ignored: true });
     }
-    //🔒 IDempotência (bloqueia duplicado)
+
+    // 🔒 IDEMPOTÊNCIA (anti crédito duplo)
     if (pag.processado === true) {
-      return res.status(200).json({ duplicated: true });
+      return ok(res, { duplicated: true });
     }
-    // ===================
+
+    /* =====================================================
+       🧩 PROCESSAMENTO
+    ===================================================== */
+
+    // =====================
     // 🔐 ASSINATURA
-    // ===================
-    if (pag.planos.dias > 0) {
+    // =====================
+    if (pag.planos?.dias > 0) {
       const vencimento = new Date(
-        Date.now() + pag.planos.dias * 86400000
+        Date.now() + diasParaMs(pag.planos.dias)
       );
 
       await sb
         .from("usuarios")
         .update({
-          status: "aprovado",
-          valor_assinatura: pag.valor,
+          status: "ativo",
           tipo_assinatura: pag.planos.nome,
+          valor_assinatura: pag.valor,
           vencimento_assinatura: vencimento,
         })
         .eq("id", pag.user_id);
+    }
 
-    } else {
-      // =====================
-      // 💰 RECARGA APEX
-      // =====================
-
+    // =====================
+    // 💰 RECARGA APEX
+    // =====================
+    else {
+      // saldo SEMPRE em REAIS (conversão é só visual)
       await sb.rpc("somar_saldo_carteira", {
         p_user_id: pag.user_id,
         p_valor: pag.valor,
       });
     }
 
-    // ✅ Marca como processado
+    /* =====================================================
+       ✅ MARCA COMO PROCESSADO (FINAL)
+    ===================================================== */
     await sb
       .from("pagamentos")
-      .update({ processado: true })
-      .eq("referencia", payment.external_reference);
+      .update({
+        processado: true,
+        updated_at: now(),
+      })
+      .eq("id", pag.id);
 
-    // =====================
-    // 📊 GOOGLE ANALYTICS 4
-    // =====================
-    const gaRes = await fetch(
-      `https://www.google-analytics.com/mp/collect?measurement_id=${process.env.GA_MEASUREMENT_ID}&api_secret=${process.env.GA_API_SECRET}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          client_id: crypto.randomUUID(),
-          user_id: String(pag.user_id),
-          events: [
-            {
-              name: "purchase",
-              params: {
-                transaction_id: payment.external_reference,
-                value: pag.valor,
-                currency: "BRL",
-                items: [
-                  {
-                    item_name: pag.planos.nome,
-                    price: pag.valor,
-                    quantity: 1,
-                  },
-                ],
+    /* =====================================================
+       📊 GOOGLE ANALYTICS 4 (SERVER SIDE)
+    ===================================================== */
+    try {
+      await fetch(
+        `https://www.google-analytics.com/mp/collect?measurement_id=${process.env.GA_MEASUREMENT_ID}&api_secret=${process.env.GA_API_SECRET}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: crypto.randomUUID(),
+            user_id: String(pag.user_id),
+            events: [
+              {
+                name: "purchase",
+                params: {
+                  transaction_id: referencia,
+                  value: pag.valor,
+                  currency: "BRL",
+                  items: [
+                    {
+                      item_name: pag.planos?.nome || "Apex",
+                      price: pag.valor,
+                      quantity: 1,
+                    },
+                  ],
+                },
               },
-            },
-          ],
-        }),
-      }
-    );
-
-    if (!gaRes.ok) {
-      console.error("❌ GA4 erro:", await gaRes.text());
+            ],
+          }),
+        }
+      );
+    } catch (gaErr) {
+      console.error("⚠️ GA4 erro:", gaErr);
     }
 
-    return res.status(200).json({ success: true });
+    /* =====================================================
+       🟢 FINAL OK
+    ===================================================== */
+    return ok(res, { success: true });
 
   } catch (err) {
-    console.error("❌ Webhook erro:", err);
-    // SEMPRE 200 para MP não reenviar em loop
-    return res.status(200).json({ recovered: true });
+    console.error("❌ WEBHOOK ERRO CRÍTICO:", err);
+
+    // ⚠️ SEMPRE 200 (MP não pode reenviar em loop)
+    return ok(res, { recovered: true });
   }
 }
