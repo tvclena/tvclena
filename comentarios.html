@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Comentários</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+  margin:0;
+  background:#0b0b0b;
+  color:#fff;
+  font-family:Inter,Arial;
+}
+
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 14px;
+  border-bottom:1px solid #222;
+}
+
+.eye{
+  cursor:pointer;
+  font-size:18px;
+}
+
+.hint{
+  font-size:12px;
+  opacity:.6;
+}
+
+.container{
+  padding:14px;
+  transition:.3s;
+}
+
+.container.faded{
+  opacity:.25;
+  pointer-events:none;
+}
+
+textarea{
+  width:100%;
+  background:#111;
+  color:#fff;
+  border:1px solid #333;
+  border-radius:12px;
+  padding:12px;
+  resize:none;
+}
+
+button{
+  margin-top:10px;
+  padding:10px 14px;
+  border-radius:10px;
+  border:0;
+  background:#e50914;
+  color:#fff;
+  cursor:pointer;
+}
+
+.comment{
+  margin-top:14px;
+  padding:12px;
+  background:#111;
+  border-radius:12px;
+}
+
+.comment a{
+  color:#4da3ff;
+  text-decoration:none;
+}
+
+.actions{
+  margin-top:6px;
+}
+
+.actions button{
+  background:#222;
+  font-size:12px;
+}
+
+.autocomplete{
+  position:absolute;
+  background:#111;
+  border:1px solid #333;
+  border-radius:10px;
+  margin-top:4px;
+  max-height:160px;
+  overflow:auto;
+  z-index:99;
+}
+
+.autocomplete div{
+  padding:8px;
+  cursor:pointer;
+}
+
+.autocomplete div:hover{
+  background:#222;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="eye" onclick="toggle()">👁️‍🗨️</div>
+  <div class="hint">Toque para ver os comentários</div>
+</div>
+
+<div id="container" class="container faded">
+  <textarea id="txt" placeholder="Escreva um comentário... Use / para marcar filmes"></textarea>
+  <div id="auto" class="autocomplete" style="display:none"></div>
+  <button onclick="enviar()">Enviar</button>
+  <div id="lista"></div>
+</div>
+
+<script>
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+const email = localStorage.getItem("usuario_email");
+const params = new URLSearchParams(location.search);
+const filme_id = params.get("filme_id");
+
+let aberto = false;
+let arroba = null;
+let filmesCache = [];
+
+function toggle(){
+  aberto = !aberto;
+  document.getElementById("container")
+    .classList.toggle("faded", !aberto);
+}
+
+async function init(){
+  const { data:user } = await sb
+    .from("usuarios")
+    .select("arroba")
+    .eq("email", email)
+    .single();
+
+  if(!user?.arroba){
+    document.body.innerHTML = `
+      <div style="padding:20px;text-align:center">
+        Cadastre seu @ no perfil para comentar.<br><br>
+        <a href="perfil.html" target="_top" style="color:#e50914">Ir para o perfil</a>
+      </div>
+    `;
+    return;
+  }
+
+  arroba = user.arroba;
+  carregar();
+}
+
+async function carregar(){
+  const { data } = await sb
+    .from("comentarios")
+    .select("*")
+    .eq("filme_id", filme_id)
+    .order("created_at",{ascending:false});
+
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  data?.forEach(c=>{
+    lista.innerHTML += `
+      <div class="comment">
+        <b>@${c.arroba}</b>
+        <div>${parseTexto(c.comentario)}</div>
+        ${c.email === email ? `
+          <div class="actions">
+            <button onclick="apagar('${c.id}')">Apagar</button>
+          </div>` : ""}
+      </div>
+    `;
+  });
+}
+
+function parseTexto(texto){
+  return texto.replace(/\/([a-zA-Z0-9\s]+)/g, (m,nome)=>{
+    const filme = filmesCache.find(f =>
+      f.titulo?.toLowerCase() === nome.toLowerCase()
+    );
+    if(!filme) return m;
+    return `<a href="player.html?item=${encodeURIComponent(JSON.stringify(filme))}" target="_top">/${nome}</a>`;
+  });
+}
+
+async function enviar(){
+  const txt = document.getElementById("txt").value.trim();
+  if(!txt) return;
+
+  await sb.from("comentarios").insert({
+    filme_id,
+    email,
+    arroba,
+    comentario: txt
+  });
+
+  document.getElementById("txt").value="";
+  carregar();
+}
+
+async function apagar(id){
+  await sb.from("comentarios")
+    .delete()
+    .eq("id", id)
+    .eq("email", email);
+  carregar();
+}
+
+/* AUTOCOMPLETE /FILME */
+document.getElementById("txt").addEventListener("input", async e=>{
+  const v = e.target.value;
+  const idx = v.lastIndexOf("/");
+  if(idx < 0) return auto.style.display="none";
+
+  const termo = v.slice(idx+1).toLowerCase();
+  if(!termo) return;
+
+  const { data } = await sb
+    .from("filmes")
+    .select("id,titulo,video_url,tipo")
+    .ilike("titulo", `%${termo}%`)
+    .limit(5);
+
+  filmesCache = data || [];
+  auto.innerHTML = filmesCache.map(f =>
+    `<div onclick="selecionar('${f.titulo}')">${f.titulo}</div>`
+  ).join("");
+  auto.style.display = "block";
+});
+
+function selecionar(t){
+  const txt = document.getElementById("txt");
+  txt.value = txt.value.replace(/\/[^\/]*$/, "/"+t+" ");
+  auto.style.display="none";
+}
+
+init();
+</script>
+
+</body>
+</html>
