@@ -261,36 +261,26 @@ let valorSelecionado = 0;
 // 🔹 Carrega planos Apex
 async function carregarPlanosApex(){
   try{
-    const res = await fetch("/api/create-payment", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "list_apex" })
-    });
+    const res = await fetch("/api/list-apex");
+    const response = await res.json();
 
-const response = await res.json();
+    if (!response || !Array.isArray(response.planos)) {
+      console.error("Resposta inválida da API Apex:", response);
+      return;
+    }
 
-if (!response || !Array.isArray(response.planos)) {
-  console.error("Resposta inválida da API Apex:", response);
-  return;
-}
+    const planos = response.planos;
 
-const planos = response.planos;
-if (planos.length === 0) {
-  document.getElementById("recargaGrid").innerHTML =
-    "<p style='opacity:.6;font-size:14px'>Nenhum plano disponível</p>";
-  return;
-}
+    if (planos.length === 0) {
+      document.getElementById("recargaGrid").innerHTML =
+        "<p style='opacity:.6;font-size:14px'>Nenhum plano disponível</p>";
+      return;
+    }
 
+    const grid = document.getElementById("recargaGrid");
+    grid.innerHTML = "";
 
-
-    
-const grid = document.getElementById("recargaGrid");
-grid.innerHTML = "";
-
-planos.forEach(plano => {
-
-
-      
+    planos.forEach(plano => {
       const apex = plano.valor * 15;
 
       const card = document.createElement("div");
@@ -300,7 +290,9 @@ planos.forEach(plano => {
         <span>${apex} Apex</span>
       `;
 
-card.onclick = () => selecionarPlano(plano.id, plano.valor, card);
+      card.onclick = () =>
+        selecionarPlano(plano.id, plano.valor, card);
+
       grid.appendChild(card);
     });
 
@@ -308,7 +300,6 @@ card.onclick = () => selecionarPlano(plano.id, plano.valor, card);
     console.error("Erro ao carregar planos Apex", err);
   }
 }
-
 function selecionarPlano(id, valor, el){
   planoIdSelecionado = id;
   valorSelecionado = valor;
