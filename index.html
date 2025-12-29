@@ -2032,6 +2032,7 @@ function render(buscaTxt = "") {
     );
   }
 
+  // 🎬 FILMES
   if (filtro === "todos" || filtro === "filme") {
     lista
       .filter(d => d.tipo === "filme")
@@ -2039,6 +2040,7 @@ function render(buscaTxt = "") {
       .forEach(f => html += card(f));
   }
 
+  // 📺 SÉRIES
   if (filtro === "todos" || filtro === "serie") {
     const series = [...new Map(
       lista.filter(d => d.tipo === "serie")
@@ -2050,8 +2052,17 @@ function render(buscaTxt = "") {
       .forEach(s => html += card(s));
   }
 
+  // 🎥 DOCUMENTÁRIOS ✅
+  if (filtro === "documentarios") {
+    lista
+      .filter(d => d.tipo === "documentario")
+      .filter(d => d._search.includes(buscaTxt))
+      .forEach(d => html += card(d));
+  }
+
   grid.innerHTML = html;
 }
+
 
 
 
