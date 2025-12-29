@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Filtros • Clena TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Inter,Arial;
+  background:#0f0f10;
+  color:#fff;
+}
+.box{
+  max-width:900px;
+  margin:0 auto;
+  padding:24px;
+}
+h2{margin-bottom:20px}
+
+.filtro{
+  margin-bottom:20px;
+}
+.filtro label{
+  display:block;
+  font-size:14px;
+  margin-bottom:6px;
+  color:#ccc;
+}
+
+.horizontal{
+  display:flex;
+  gap:12px;
+  overflow-x:auto;
+}
+.horizontal label{
+  background:#1f1f1f;
+  padding:10px 14px;
+  border-radius:999px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.horizontal input{display:none}
+.horizontal input:checked + span{
+  background:#e50914;
+}
+
+input[type="range"]{
+  width:100%;
+}
+
+.actions{
+  display:flex;
+  gap:12px;
+  margin-top:30px;
+}
+button{
+  flex:1;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+}
+.aplicar{background:#e50914;color:#fff}
+.limpar{background:#333;color:#fff}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Filtros avançados</h2>
+
+  <!-- 🔍 PESQUISA -->
+  <div class="filtro">
+    <label>Buscar</label>
+    <input id="busca" placeholder="Nome do filme ou série">
+  </div>
+
+  <!-- 🎚 CLASSIFICAÇÃO -->
+  <div class="filtro">
+    <label>Classificação máxima</label>
+    <input id="classificacao" type="range" min="0" max="18" value="18">
+    <span id="classValue">Até 18 anos</span>
+  </div>
+
+  <!-- 📆 ANOS -->
+  <div class="filtro">
+    <label>Ano de lançamento</label>
+    <div class="horizontal" id="anos"></div>
+  </div>
+
+  <!-- 🎭 GÊNEROS -->
+  <div class="filtro">
+    <label>Gêneros</label>
+    <div class="horizontal" id="generos"></div>
+  </div>
+
+  <!-- 🎬 TIPO -->
+  <div class="filtro">
+    <label>Tipo</label>
+    <div class="horizontal">
+      <label><input type="checkbox" value="filme"><span>Filme</span></label>
+      <label><input type="checkbox" value="serie"><span>Série</span></label>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="limpar" onclick="limpar()">Limpar filtros</button>
+    <button class="aplicar" onclick="aplicar()">Aplicar filtros</button>
+  </div>
+</div>
+
+<script>
+const dados = JSON.parse(localStorage.getItem("clena_dados") || "[]");
+
+/* popula anos e gêneros dinamicamente */
+const anos = [...new Set(dados.map(d => d.ano_lancamento).filter(Boolean))].sort();
+const generos = [...new Set(
+  dados.flatMap(d => (d.categoria||"").split(",").map(g=>g.trim()))
+)].filter(Boolean);
+
+document.getElementById("anos").innerHTML =
+  anos.map(a=>`<label><input type="checkbox" value="${a}"><span>${a}</span></label>`).join("");
+
+document.getElementById("generos").innerHTML =
+  generos.map(g=>`<label><input type="checkbox" value="${g}"><span>${g}</span></label>`).join("");
+
+const range = document.getElementById("classificacao");
+const classValue = document.getElementById("classValue");
+range.oninput = () => classValue.textContent = `Até ${range.value} anos`;
+
+function aplicar(){
+  const filtros = {
+    busca: busca.value.toLowerCase(),
+    classificacao: Number(range.value),
+    anos: [...document.querySelectorAll("#anos input:checked")].map(i=>i.value),
+    generos: [...document.querySelectorAll("#generos input:checked")].map(i=>i.value),
+    tipos: [...document.querySelectorAll("input[value='filme'],input[value='serie']")]
+      .filter(i=>i.checked).map(i=>i.value)
+  };
+
+  localStorage.setItem("clena_filtros", JSON.stringify(filtros));
+  window.opener?.postMessage("filtros_aplicados","*");
+  window.close();
+}
+
+function limpar(){
+  localStorage.removeItem("clena_filtros");
+  window.opener?.postMessage("filtros_aplicados","*");
+  window.close();
+}
+</script>
+
+</body>
+</html>
