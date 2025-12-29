@@ -2692,20 +2692,31 @@ window.addEventListener("message", (event) => {
 });
 
 </script>
+
 <script>
   // 🔥 FAILSAFE ABSOLUTO DA ABERTURA
-setTimeout(() => {
-  const frame = document.getElementById("aberturaFrame");
-  if (frame) {
-    sessionStorage.setItem("clena_abertura_ok", "1");
-    frame.remove();
-    document.body.style.overflow = "";
-  }
-}, 3500);
-
+  setTimeout(() => {
+    const frame = document.getElementById("aberturaFrame");
+    if (frame) {
+      sessionStorage.setItem("clena_abertura_ok", "1");
+      frame.remove();
+      document.body.style.overflow = "";
+    }
+  }, 3500);
 </script>
 
+<script>
+  // 🔥 ABRIR PERFIL AUTOMATICAMENTE VIA URL
+  const urlParams = new URLSearchParams(location.search);
 
-  
+  if (urlParams.get("abrirPerfil") === "1") {
+    setTimeout(() => {
+      if (typeof perfilAbrir === "function") {
+        perfilAbrir();
+      }
+    }, 600);
+  }
+</script>
+
 </body>
 </html>
