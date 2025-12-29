@@ -124,15 +124,20 @@ async function carregar() {
 
   const { data, error } = await sb
     .from("assistindo_agora")
-    .select(`
-      item_id,
-      titulo,
-      tipo,
-      usuario_email,
-      filmes:filmes (
-        capa_url
-      )
-    `)
+.select(`
+  item_id,
+  titulo,
+  tipo,
+  usuario_email,
+  filmes:filmes (
+    id,
+    titulo,
+    tipo,
+    capa_url,
+    video_url
+  )
+`)
+
     .eq("status", "assistindo");
 
   if (error) {
@@ -151,19 +156,27 @@ async function carregar() {
 
   data.forEach(r => {
     if (!map[r.item_id]) {
-      map[r.item_id] = {
-        titulo: r.titulo,
-        tipo: r.tipo,
-        capa: r.filmes?.capa_url || "",
-        emails: new Set()
-      };
+map[r.item_id] = {
+  filme: r.filmes,        // 🔥 objeto completo
+  titulo: r.titulo,
+  tipo: r.tipo,
+  capa: r.filmes?.capa_url || "",
+  emails: new Set()
+};
+
     }
     map[r.item_id].emails.add(r.usuario_email);
   });
 
   Object.values(map).forEach(i => {
     grid.innerHTML += `
-      <div class="card">
+<a
+  class="card"
+  href="player.html?item=${encodeURIComponent(
+    JSON.stringify(i.filme)
+  )}&filme_id=${i.filme.id}"
+  target="_top"
+>
         <img src="${i.capa}">
         <div class="overlay"></div>
         <div class="info">
@@ -171,9 +184,9 @@ async function carregar() {
           <div class="badges">
             <span class="badge red">${i.tipo}</span>
             <span class="badge green">👀 ${i.emails.size}</span>
-          </div>
-        </div>
-      </div>
+          /div>
+  </div>
+</a> ✅ FECHAMENTO CERTO
     `;
   });
 }
