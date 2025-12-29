@@ -1460,7 +1460,21 @@ const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
 );
+// ================= APEX CONVERSÃO =================
+const APEX_POR_REAL = 15;
 
+function reaisParaApex(reais){
+  return Math.floor(Number(reais) * APEX_POR_REAL);
+}
+
+function apexParaReais(apex){
+  return (Number(apex) / APEX_POR_REAL).toFixed(2);
+}
+
+
+
+
+  
 let redirecionando = false;
 
 /* ================= PERFIL NOVO ISOLADO ================= */
