@@ -329,27 +329,24 @@ async function continuarPagamento(){
   }
 
   try{
-    const res = await fetch("/api/create-payment",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-     body: JSON.stringify({
-if (action === "apex" || action === "apex_payment") {
-  plano_id: planoIdSelecionado,
-  email
-})
+const res = await fetch("/api/create-payment", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "apex",              // 🔥 action correta
+    plano_id: planoIdSelecionado,
+    email
+  })
+});
 
-    });
-
-    const data = await res.json();
+const data = await res.json();
 
 if (data.url) {
   window.location.href = data.url;
+} else {
+  console.error("Erro ao criar pagamento Apex:", data);
+  alert("Erro ao iniciar pagamento");
 }
-
-    else{
-      alert("Erro ao gerar pagamento");
-      console.error(data);
-    }
 
   }catch(err){
     alert("Erro de conexão");
