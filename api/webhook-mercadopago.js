@@ -6,16 +6,16 @@ import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
 /* =====================================================
-   🔐 SUPABASE(SERVICE ROLE)
+   🔐 SUPABASE (SERVICE ROLE)
 ===================================================== */
 const sb = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-/* ====================================================
+/* =====================================================
    🧠 HELPERS
-==================================================== */
+===================================================== */
 function ok(res, payload = {}) {
   return res.status(200).json({ ok: true, ...payload });
 }
@@ -38,6 +38,11 @@ export default async function handler(req, res) {
       return ok(res);
     }
 
+    // Aceita apenas eventos de pagamento
+    if (req.body?.type !== "payment") {
+      return ok(res, { ignored: true });
+    }
+
     const paymentId = req.body?.data?.id;
     if (!paymentId) {
       return ok(res, { ignored: true });
@@ -56,7 +61,7 @@ export default async function handler(req, res) {
     );
 
     if (!mpRes.ok) {
-      console.error("❌ Erro ao consultar MP");
+      console.error("❌ Erro ao consultar Mercado Pago");
       return ok(res);
     }
 
@@ -69,14 +74,17 @@ export default async function handler(req, res) {
     const referencia = payment.external_reference;
 
     /* =====================================================
-       🔄 SINCRONIZA STATUS DO PAGAMENTO
+       🔄 ATUALIZA DADOS DO PAGAMENTO
     ===================================================== */
     await sb
       .from("pagamentos")
       .update({
-        payment_id: payment.id,
+        mp_payment_id: String(payment.id),
         status: payment.status,
+        status_detail: payment.status_detail || null,
+        metodo: payment.payment_method_id || "mercadopago",
         valor: payment.transaction_amount,
+        mp_raw: payment,
         updated_at: now(),
       })
       .eq("referencia", referencia);
@@ -107,13 +115,15 @@ export default async function handler(req, res) {
       return ok(res);
     }
 
-    // 🔒 IDEMPOTÊNCIA (anti duplicação)
+    /* =====================================================
+       🔒 IDEMPOTÊNCIA (ANTI DUPLICAÇÃO)
+    ===================================================== */
     if (pag.processado === true) {
       return ok(res, { duplicated: true });
     }
 
     /* =====================================================
-       🧩 PROCESSAMENTO
+       🧩 PROCESSAMENTO DO PAGAMENTO
     ===================================================== */
 
     // =====================
@@ -139,7 +149,6 @@ export default async function handler(req, res) {
     // 💰 RECARGA APEX
     // =====================
     else {
-      // saldo sempre em R$
       await sb.rpc("somar_saldo_carteira", {
         p_user_id: pag.user_id,
         p_valor: pag.valor,
