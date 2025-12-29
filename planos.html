@@ -213,7 +213,10 @@ function voltar(){
 /* CARREGA PLANOS DA API (compatível com get-planos atual) */
 async function carregarPlanos(){
   try{
-    const res = await fetch("/api/get-planos");
+const res = await fetch(
+  "https://www.clena.com.br/api/get-planos",
+  { cache: "no-store" }
+);
     const planos = await res.json();
 
     const container = document.querySelector(".planos");
@@ -272,18 +275,20 @@ async function assinar(plano){
   }
 
   try{
-    const res = await fetch(
-      "https://www.clena.com.br/api/create-payment",
-      {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({
-          action: "assinatura_payment",
-          plano: plano,
-          email: email
-        })
-      }
-    );
+   const res = await fetch(
+  "https://www.clena.com.br/api/create-payment",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",              // 🔥 ISSO BLOQUEIA O SW
+    credentials: "same-origin",
+    body: JSON.stringify({
+      action: "assinatura_payment",
+      plano: plano,
+      email: email
+    })
+  }
+);
 
     const data = await res.json();
     console.log("RETORNO CREATE PAYMENT:", data);
