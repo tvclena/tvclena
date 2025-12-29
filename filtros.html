@@ -215,90 +215,105 @@ button{
 </div>
 
 <script>
-/* ===== DADOS DO INDEX ===== */
-const dados = JSON.parse(localStorage.getItem("clena_dados") || "[]");
-const filtrosSalvos =
-  sessionStorage.getItem("clena_filtros_aberto") === "1"
-    ? JSON.parse(localStorage.getItem("clena_filtros") || "{}")
-    : {};
+/* ===== ESTADO RECEBIDO DO INDEX ===== */
+let dados = [];
+let filtrosSalvos = {};
 
-
-/* ===== POPULA ANOS ===== */
-const anosUnicos = [...new Set(
-  dados.map(d => d.ano_lancamento).filter(Boolean)
-)].sort((a,b)=>b-a);
-
-document.getElementById("anos").innerHTML =
-  anosUnicos.map(a =>
-    `<label>
-      <input type="checkbox" value="${a}">
-      <span>${a}</span>
-    </label>`
-  ).join("");
-
-/* ===== POPULA GÊNEROS ===== */
-const generosUnicos = [...new Set(
-  dados.flatMap(d =>
-    (d.categoria || "")
-      .split(",")
-      .map(g => g.trim())
-  )
-)].filter(Boolean);
-
-document.getElementById("generos").innerHTML =
-  generosUnicos.map(g =>
-    `<label>
-      <input type="checkbox" value="${g}">
-      <span>${g}</span>
-    </label>`
-  ).join("");
-
-/* ===== RESTAURA FILTROS ===== */
-busca.value = filtrosSalvos.busca || "";
-
+/* ===== ELEMENTOS DOM ===== */
+const busca = document.getElementById("busca");
 const range = document.getElementById("classificacao");
+const classValue = document.getElementById("classValue");
+window.addEventListener("message", (event) => {
+  if (!event.data || event.data.type !== "INIT_FILTROS") return;
+
+  dados = event.data.dados || [];
+  filtrosSalvos = event.data.filtros || {};
+
+  inicializarFiltros();
+});
+
+
+
+
+  
+function inicializarFiltros(){
+  // ANOS
+  const anosUnicos = [...new Set(
+    dados.map(d => d.ano_lancamento).filter(Boolean)
+  )].sort((a,b)=>b-a);
+
+  document.getElementById("anos").innerHTML =
+    anosUnicos.map(a => `
+      <label>
+        <input type="checkbox" value="${a}">
+        <span>${a}</span>
+      </label>
+    `).join("");
+
+  // GÊNEROS
+  const generosUnicos = [...new Set(
+    dados.flatMap(d =>
+      (d.categoria || "")
+        .split(",")
+        .map(g => g.trim())
+    )
+  )].filter(Boolean);
+
+  document.getElementById("generos").innerHTML =
+    generosUnicos.map(g => `
+      <label>
+        <input type="checkbox" value="${g}">
+        <span>${g}</span>
+      </label>
+    `).join("");
+
+  // RESTAURA
+  busca.value = filtrosSalvos.busca || "";
+
 range.value = filtrosSalvos.classificacao ?? 18;
 classValue.textContent = `Até ${range.value} anos`;
 
-range.oninput = () =>
+range.oninput = () => {
   classValue.textContent = `Até ${range.value} anos`;
+};
 
-document.querySelectorAll("#anos input").forEach(i=>{
-  if(filtrosSalvos.anos?.includes(i.value)) i.checked=true;
-});
-document.querySelectorAll("#generos input").forEach(i=>{
-  if(filtrosSalvos.generos?.includes(i.value)) i.checked=true;
-});
-document.querySelectorAll("input[value='filme'],input[value='serie']")
-  .forEach(i=>{
-    if(filtrosSalvos.tipos?.includes(i.value)) i.checked=true;
+
+  document.querySelectorAll("#anos input").forEach(i=>{
+    if (filtrosSalvos.anos?.includes(i.value)) i.checked = true;
   });
 
+  document.querySelectorAll("#generos input").forEach(i=>{
+    if (filtrosSalvos.generos?.includes(i.value)) i.checked = true;
+  });
+
+  document
+    .querySelectorAll("input[value='filme'], input[value='serie']")
+    .forEach(i=>{
+      if (filtrosSalvos.tipos?.includes(i.value)) i.checked = true;
+    });
+}
 /* ===== AÇÕES ===== */
 function aplicar(){
   const filtros = {
     busca: busca.value.trim().toLowerCase(),
     classificacao: Number(range.value),
-    anos: [...document.querySelectorAll("#anos input:checked")].map(i=>i.value),
-    generos: [...document.querySelectorAll("#generos input:checked")].map(i=>i.value),
-    tipos: [...document.querySelectorAll("input[value='filme'],input[value='serie']")]
-      .filter(i=>i.checked)
-      .map(i=>i.value)
+    anos: [...document.querySelectorAll("#anos input:checked")].map(i => i.value),
+    generos: [...document.querySelectorAll("#generos input:checked")].map(i => i.value),
+    tipos: [...document.querySelectorAll("input[value='filme'], input[value='serie']")]
+      .filter(i => i.checked)
+      .map(i => i.value)
   };
 
   // salva filtros
   localStorage.setItem("clena_filtros", JSON.stringify(filtros));
 
-  // aplica filtros no index
+  // avisa o index
   window.parent.postMessage("filtros_aplicados", "*");
 
-  // 🔥 FECHA O POPUP DE FILTROS
+  // fecha popup
   if (window.parent) {
     window.parent.document.body.classList.remove("modal-open");
-
-    const overlay =
-      window.parent.document.getElementById("filtrosOverlay");
-
+    const overlay = window.parent.document.getElementById("filtrosOverlay");
     if (overlay) overlay.style.display = "none";
   }
 }
@@ -306,7 +321,7 @@ function aplicar(){
 function limpar(){
   localStorage.removeItem("clena_filtros");
 
-  // limpa inputs visuais
+  // limpa UI
   busca.value = "";
   range.value = 18;
   classValue.textContent = "Até 18 anos";
@@ -315,7 +330,7 @@ function limpar(){
     .querySelectorAll("input[type='checkbox']")
     .forEach(i => i.checked = false);
 
-  window.parent.postMessage("filtros_aplicados","*");
+  window.parent.postMessage("filtros_aplicados", "*");
 }
 
 </script>
