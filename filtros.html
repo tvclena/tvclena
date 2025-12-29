@@ -215,7 +215,9 @@ button{
 <script>
 /* ===== DADOS DO INDEX ===== */
 const dados = JSON.parse(localStorage.getItem("clena_dados") || "[]");
-const filtrosSalvos = JSON.parse(localStorage.getItem("clena_filtros") || "{}");
+const filtrosSalvos = sessionStorage.getItem("clena_session")
+  ? JSON.parse(localStorage.getItem("clena_filtros") || "{}")
+  : {};
 
 /* ===== POPULA ANOS ===== */
 const anosUnicos = [...new Set(
@@ -299,8 +301,19 @@ function aplicar(){
 
 function limpar(){
   localStorage.removeItem("clena_filtros");
+
+  // limpa inputs visuais
+  busca.value = "";
+  range.value = 18;
+  classValue.textContent = "Até 18 anos";
+
+  document
+    .querySelectorAll("input[type='checkbox']")
+    .forEach(i => i.checked = false);
+
   window.parent.postMessage("filtros_aplicados","*");
 }
+
 </script>
 
 </body>
