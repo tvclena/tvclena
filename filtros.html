@@ -276,11 +276,25 @@ function aplicar(){
     anos: [...document.querySelectorAll("#anos input:checked")].map(i=>i.value),
     generos: [...document.querySelectorAll("#generos input:checked")].map(i=>i.value),
     tipos: [...document.querySelectorAll("input[value='filme'],input[value='serie']")]
-      .filter(i=>i.checked).map(i=>i.value)
+      .filter(i=>i.checked)
+      .map(i=>i.value)
   };
 
+  // salva filtros
   localStorage.setItem("clena_filtros", JSON.stringify(filtros));
-  window.parent.postMessage("filtros_aplicados","*");
+
+  // aplica filtros no index
+  window.parent.postMessage("filtros_aplicados", "*");
+
+  // 🔥 FECHA O POPUP DE FILTROS
+  if (window.parent) {
+    window.parent.document.body.classList.remove("modal-open");
+
+    const overlay =
+      window.parent.document.getElementById("filtrosOverlay");
+
+    if (overlay) overlay.style.display = "none";
+  }
 }
 
 function limpar(){
