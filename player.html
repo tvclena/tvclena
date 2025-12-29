@@ -188,6 +188,46 @@ select{
   background:#111;
   color:#cfcfcf;
 }
+@media (max-width: 900px) {
+
+  body {
+    overflow: hidden;
+  }
+
+  #layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* PLAYER FICA MENOR */
+  #playerArea {
+    padding: 10px;
+  }
+
+  .playerWrapper {
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+
+  /* SIDE GANHA MAIS ALTURA */
+  #side {
+    flex: 1;
+    max-height: none;
+    padding: 16px;
+  }
+
+  /* COMENTÁRIOS GANHAM PRIORIDADE */
+  #comentariosBox {
+    flex: 1;
+    margin-top: 14px;
+  }
+
+  #comentariosIframe {
+    height: 100%;
+    min-height: 260px; /* 🔥 espaço garantido */
+  }
+}
 
 </style>
 </head>
