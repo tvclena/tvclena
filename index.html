@@ -1199,6 +1199,51 @@ body.modal-open{
 @keyframes neo-giro{
   to{ transform:rotate(360deg); }
 }
+#filtrosOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+
+  overscroll-behavior: contain;
+}
+
+.filtrosPopup{
+  width:900px;
+  max-width:95%;
+  height:650px;
+  max-height:85vh;
+
+  background:#0f0f10;
+  border-radius:18px;
+  overflow:hidden;
+  position:relative;
+
+  box-shadow:0 30px 80px rgba(0,0,0,.8);
+}
+
+.filtrosPopup iframe{
+  width:100%;
+  height:100%;
+  border:none;
+}
+
+.filtrosFechar{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:#222;
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:32px;
+  height:32px;
+  cursor:pointer;
+  font-size:16px;
+}
 
   
 </style>
@@ -2338,15 +2383,15 @@ window.addEventListener("message", (event) => {
 })();
 
 function abrirFiltrosAvancados(){
-  // envia os dados atuais para o popup
   localStorage.setItem("clena_dados", JSON.stringify(dados));
-
-  window.open(
-    "filtros.html",
-    "filtros",
-    "width=900,height=700"
-  );
+  document.body.classList.add("modal-open");
+  document.getElementById("filtrosOverlay").style.display = "flex";
 }
+function fecharFiltros(){
+  document.body.classList.remove("modal-open");
+  document.getElementById("filtrosOverlay").style.display = "none";
+}
+
 
   
 function montarFiltrosCategorias(){
@@ -2506,6 +2551,16 @@ async function carregarApex(){
 
   </div>
 </div>
+<!-- 🎛️ POPUP FILTROS AVANÇADOS -->
+<div id="filtrosOverlay" style="display:none">
+  <div class="filtrosPopup">
+    <button class="filtrosFechar" onclick="fecharFiltros()">✕</button>
+    <iframe src="filtros.html"></iframe>
+  </div>
+</div>
 
+
+
+  
 </body>
 </html>
