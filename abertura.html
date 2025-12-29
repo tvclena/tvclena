@@ -15,16 +15,16 @@ html,body{
   font-family:Inter,Arial,sans-serif;
 }
 
-/* ================= FUNDO ================= */
+/* ===== FUNDO CINEMÁTICO ===== */
 #bg{
   position:fixed;
   inset:0;
   background:
-    radial-gradient(circle at center, rgba(229,9,20,.25), transparent 60%),
-    #000;
+    radial-gradient(circle at center, rgba(229,9,20,.22), transparent 55%),
+    linear-gradient(135deg, #000 0%, #050505 40%, #000 100%);
 }
 
-/* ================= CONTAINER ================= */
+/* ===== CONTAINER ===== */
 #wrap{
   position:relative;
   z-index:2;
@@ -35,75 +35,73 @@ html,body{
   justify-content:center;
 }
 
-/* ================= LOGO ================= */
+/* ===== LOGO ===== */
 .logo{
   display:flex;
   align-items:center;
-  gap:14px;
-  transform:scale(.88);
+  gap:18px;
   opacity:0;
-  animation:logoIn 2.6s cubic-bezier(.2,.8,.2,1) forwards;
+  transform:translateY(14px) scale(.96);
+  animation:logoEnter 2.4s cubic-bezier(.2,.8,.2,1) forwards;
 }
 
 /* CLENA */
-.logo-text{
-  font-size:86px;
+.logo-clena{
+  font-size:88px;
   font-weight:900;
-  letter-spacing:2px;
-  color:#e50914;
+  letter-spacing:3px;
+  color:#ff1c1c;
   position:relative;
   text-shadow:
-    0 0 12px rgba(229,9,20,.6),
-    0 0 32px rgba(229,9,20,.4);
+    0 0 12px rgba(255,28,28,.55),
+    0 0 38px rgba(255,28,28,.45);
 }
 
 /* brilho passando */
-.logo-text::after{
+.logo-clena::after{
   content:"";
   position:absolute;
-  inset:0;
+  inset:-6px;
   background:linear-gradient(
     120deg,
-    transparent 0%,
-    rgba(255,255,255,.85) 50%,
-    transparent 100%
+    transparent 20%,
+    rgba(255,255,255,.9) 50%,
+    transparent 80%
   );
-  transform:translateX(-120%);
-  animation:shine 2.4s ease forwards 1.2s;
+  transform:translateX(-140%);
+  animation:shine 2.2s ease forwards 1.1s;
   mix-blend-mode:overlay;
 }
 
-@keyframes shine{
-  to{ transform:translateX(120%); }
-}
-
-/* TV CAPSULA */
-.tv-box{
+/* TV */
+.logo-tv{
   position:relative;
-  padding:18px 28px 18px 58px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:18px 26px 18px 56px;
   border-radius:22px;
-  background:linear-gradient(180deg,#ff1c1c,#b80000);
+  background:linear-gradient(180deg,#ff2a2a,#c30000);
   box-shadow:
-    0 0 18px rgba(229,9,20,.8),
-    0 0 48px rgba(229,9,20,.5);
-  font-size:42px;
+    inset 0 -2px 4px rgba(0,0,0,.35),
+    0 0 18px rgba(255,28,28,.7),
+    0 0 46px rgba(255,28,28,.45);
+  font-size:40px;
   font-weight:900;
   color:#fff;
 }
 
 /* PLAY */
-.tv-box::before{
+.logo-tv::before{
   content:"▶";
   position:absolute;
   left:20px;
-  top:50%;
-  transform:translateY(-50%);
   font-size:26px;
   color:#fff;
-  text-shadow:0 0 10px rgba(255,255,255,.9);
+  text-shadow:0 0 12px rgba(255,255,255,.9);
 }
 
-/* ================= STATUS ================= */
+/* ===== TEXTO ===== */
 #status{
   margin-top:26px;
   font-size:14px;
@@ -111,7 +109,7 @@ html,body{
   letter-spacing:.4px;
 }
 
-/* OFFLINE */
+/* ===== OFFLINE ===== */
 #offline{
   display:none;
   margin-top:22px;
@@ -129,22 +127,17 @@ html,body{
   cursor:pointer;
 }
 
-/* ================= ANIMAÇÕES ================= */
-@keyframes logoIn{
-  0%{
-    opacity:0;
-    transform:scale(.85) translateY(20px);
-  }
-  60%{
-    opacity:1;
-  }
-  100%{
-    opacity:1;
-    transform:scale(1) translateY(0);
-  }
+/* ===== ANIMAÇÕES ===== */
+@keyframes logoEnter{
+  0%{ opacity:0; transform:translateY(18px) scale(.94); }
+  60%{ opacity:1; }
+  100%{ opacity:1; transform:none; }
+}
+@keyframes shine{
+  to{ transform:translateX(140%); }
 }
 
-/* ================= PARTICULAS ================= */
+/* ===== PARTÍCULAS SUAVES ===== */
 canvas{
   position:fixed;
   inset:0;
@@ -160,8 +153,8 @@ canvas{
 
 <div id="wrap">
   <div class="logo">
-    <div class="logo-text">CLENA</div>
-    <div class="tv-box">TV</div>
+    <div class="logo-clena">CLENA</div>
+    <div class="logo-tv">TV</div>
   </div>
 
   <div id="status">Carregando…</div>
@@ -173,61 +166,47 @@ canvas{
 </div>
 
 <script>
-/* ================= INTERNET ================= */
-function online(){
-  return navigator.onLine;
-}
+/* ===== INTERNET ===== */
+function online(){ return navigator.onLine; }
 
-/* ================= PARTICULAS ================= */
-const canvas = document.getElementById("fx");
-const ctx = canvas.getContext("2d");
-let w,h,parts=[];
+/* ===== PARTÍCULAS MINIMAL ===== */
+const c = document.getElementById("fx");
+const ctx = c.getContext("2d");
+let w,h,ps=[];
 
 function resize(){
-  w = canvas.width = innerWidth;
-  h = canvas.height = innerHeight;
+  w=c.width=innerWidth;
+  h=c.height=innerHeight;
 }
-addEventListener("resize", resize);
+addEventListener("resize",resize);
 resize();
 
-function spawn(){
-  return {
+for(let i=0;i<60;i++){
+  ps.push({
     x:Math.random()*w,
     y:Math.random()*h,
-    vx:(Math.random()-.5)*.6,
-    vy:(Math.random()-.5)*.6,
-    r:Math.random()*2+1,
-    a:Math.random()*.7+.2
-  };
+    a:Math.random()*.4+.1,
+    s:Math.random()*1.5+0.5
+  });
 }
-for(let i=0;i<90;i++) parts.push(spawn());
 
 function draw(){
   ctx.clearRect(0,0,w,h);
-  for(const p of parts){
-    p.x+=p.vx;
-    p.y+=p.vy;
-    if(p.x<0||p.x>w||p.y<0||p.y>h){
-      p.x=Math.random()*w;
-      p.y=Math.random()*h;
-    }
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle=`rgba(229,9,20,${p.a})`;
-    ctx.fill();
+  for(const p of ps){
+    ctx.fillStyle=`rgba(255,30,30,${p.a})`;
+    ctx.fillRect(p.x,p.y,p.s,p.s);
   }
   requestAnimationFrame(draw);
 }
 draw();
 
-/* ================= FLUXO ================= */
+/* ===== FLUXO ===== */
 function iniciar(){
   if(!online()){
     status.style.display="none";
     offline.style.display="block";
     return;
   }
-
   setTimeout(()=>{
     parent.postMessage("ABERTURA_OK","*");
   },3400);
