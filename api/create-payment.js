@@ -52,16 +52,24 @@ export default async function handler(req, res) {
 
       const referencia = crypto.randomUUID();
 
-      await sb.from("pagamentos").insert({
+      /* 🔹 REGISTRA NO BANCO */
+      const { error: insertError } = await sb.from("pagamentos").insert({
         referencia,
         user_id: user.id,
         plano_id: planoDB.id,
         tipo: "assinatura",
         valor: planoDB.valor,
         status: "pending",
+        metodo: "mercadopago",
         processado: false,
       });
 
+      if (insertError) {
+        console.error("❌ Erro ao registrar pagamento:", insertError);
+        return res.status(500).json({ error: "Erro ao registrar pagamento" });
+      }
+
+      /* 🔹 CRIA CHECKOUT MERCADO PAGO */
       const mpRes = await fetch(
         "https://api.mercadopago.com/checkout/preferences",
         {
@@ -92,6 +100,15 @@ export default async function handler(req, res) {
       );
 
       const mpData = await mpRes.json();
+
+      /* 🔹 SALVA PREFERENCE ID */
+      if (mpData.id) {
+        await sb
+          .from("pagamentos")
+          .update({ mp_preference_id: mpData.id })
+          .eq("referencia", referencia);
+      }
+
       return res.json({ url: mpData.init_point });
     }
 
@@ -127,16 +144,24 @@ export default async function handler(req, res) {
 
       const referencia = crypto.randomUUID();
 
-      await sb.from("pagamentos").insert({
+      /* 🔹 REGISTRA NO BANCO */
+      const { error: insertError } = await sb.from("pagamentos").insert({
         referencia,
         user_id: user.id,
         plano_id: planoDB.id,
         tipo: "apex",
         valor: planoDB.valor,
         status: "pending",
+        metodo: "mercadopago",
         processado: false,
       });
 
+      if (insertError) {
+        console.error("❌ Erro ao registrar Apex:", insertError);
+        return res.status(500).json({ error: "Erro ao registrar Apex" });
+      }
+
+      /* 🔹 CHECKOUT */
       const mpRes = await fetch(
         "https://api.mercadopago.com/checkout/preferences",
         {
@@ -172,6 +197,14 @@ export default async function handler(req, res) {
       if (!mpData.init_point) {
         console.error("Erro Mercado Pago Apex:", mpData);
         return res.status(500).json({ error: "Erro ao criar checkout Apex" });
+      }
+
+      /* 🔹 SALVA PREFERENCE ID */
+      if (mpData.id) {
+        await sb
+          .from("pagamentos")
+          .update({ mp_preference_id: mpData.id })
+          .eq("referencia", referencia);
       }
 
       return res.json({ url: mpData.init_point });
