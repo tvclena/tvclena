@@ -1248,6 +1248,26 @@ body.modal-open{
 </head>
 
 <body>
+
+<!-- 🚀 ABERTURA -->
+<iframe
+  id="aberturaFrame"
+  src="abertura.html"
+  style="
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    border:none;
+    z-index:999999;
+    background:#0f0f10;
+  ">
+</iframe>
+
+
+
+
+  
 <header>
   <h1 class="logo">
     <span class="logo-clena">CLENA</span>
@@ -2646,6 +2666,25 @@ async function carregarApex(){
   </div>
 </div>
 
+<script>
+  // trava scroll enquanto a abertura está ativa
+  document.body.style.overflow = "hidden";
+
+  window.addEventListener("message", (event) => {
+    if (event.data === "ABERTURA_OK") {
+      const frame = document.getElementById("aberturaFrame");
+      if (!frame) return;
+
+      frame.style.transition = "opacity .6s ease";
+      frame.style.opacity = "0";
+
+      setTimeout(() => {
+        frame.remove();
+        document.body.style.overflow = "";
+      }, 600);
+    }
+  });
+</script>
 
 
   
