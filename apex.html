@@ -333,7 +333,7 @@ async function continuarPagamento(){
       method:"POST",
       headers:{ "Content-Type":"application/json" },
      body: JSON.stringify({
-  action: "apex_payment",
+if (action === "apex" || action === "apex_payment") {
   plano_id: planoIdSelecionado,
   email
 })
