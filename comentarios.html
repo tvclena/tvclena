@@ -165,6 +165,58 @@ html, body {
 .container.hidden{
   display:none;
 }
+/* ===== CHAT STYLE ===== */
+
+.comment{
+  max-width:75%;
+  padding:10px 12px;
+  border-radius:14px;
+  margin-top:10px;
+  font-size:14px;
+  line-height:1.4;
+  position:relative;
+}
+
+/* OUTROS */
+.comment.other{
+  background:#111;
+  align-self:flex-start;
+  border-top-left-radius:4px;
+}
+
+/* MEU */
+.comment.me{
+  background:#e50914;
+  align-self:flex-end;
+  border-top-right-radius:4px;
+}
+
+/* @usuario */
+.comment .user{
+  font-size:11px;
+  opacity:.7;
+  margin-bottom:4px;
+}
+
+/* TEXTO */
+.comment .text{
+  word-break:break-word;
+}
+
+/* DATA */
+.comment .time{
+  font-size:10px;
+  opacity:.6;
+  margin-top:4px;
+  text-align:right;
+}
+
+/* LISTA COMO CHAT */
+#lista{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
 
   
 </style>
@@ -290,6 +342,22 @@ async function apagar(id){
     .eq("email", email);
   carregar();
 }
+
+function formatarData(data){
+  const d = new Date(data);
+  return d.toLocaleDateString("pt-BR", {
+    day:"2-digit",
+    month:"2-digit"
+  }) + " " + d.toLocaleTimeString("pt-BR", {
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+}
+
+
+
+
+  
 async function carregar(){
   const { data } = await sb
     .from("comentarios")
@@ -300,18 +368,18 @@ async function carregar(){
   const lista = document.getElementById("lista");
   lista.innerHTML = "";
 
-  data?.forEach(c=>{
-    lista.innerHTML += `
-      <div class="comment">
-        <b>@${c.arroba}</b>
-        <div>${parseTexto(c.comentario)}</div>
-        ${c.email === email ? `
-          <div class="actions">
-            <button onclick="apagar('${c.id}')">Apagar</button>
-          </div>` : ""}
-      </div>
-    `;
-  });
+ data?.forEach(c=>{
+  const isMe = c.email === email;
+
+  lista.innerHTML += `
+    <div class="comment ${isMe ? "me" : "other"}">
+      <div class="user">@${c.arroba}</div>
+      <div class="text">${parseTexto(c.comentario)}</div>
+      <div class="time">${formatarData(c.created_at)}</div>
+    </div>
+  `;
+});
+
 
   // 👇 sempre desce pro fim
   setTimeout(() => {
