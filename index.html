@@ -1309,21 +1309,21 @@ body.modal-open{
 <div class="hero" id="hero">
 
   <!-- 🎬 PREVIEW DE FUNDO -->
-  <video
-    id="heroVideo"
-    autoplay
-    muted
-    loop
-    playsinline
-    style="
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      z-index:0;
-    "
-  ></video>
+<video
+  id="heroVideo"
+  muted
+  loop
+  playsinline
+  style="
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    z-index:0;
+  "
+></video>
+
 
   <div class="hero-content">
     <h2 id="heroTitle"></h2>
@@ -1700,7 +1700,18 @@ async function iniciarApp() {
 
 const { data, error } = await sb
   .from("filmes")
-  .select("*");
+  .select(`
+  id,
+  titulo,
+  serie_nome,
+  tipo,
+  categoria,
+  capa_url,
+  descricao,
+  video_url
+`)
+.limit(50)
+;
 
 
 
@@ -1722,30 +1733,33 @@ dados = (data || []).map(d => {
   }
 
   return {
-    ...d,
+  ...d,
 
-    // 📆 ano
-    ano_lancamento: d.ano_lancamento
-      ? Number(d.ano_lancamento)
-      : null,
+  ano_lancamento: d.ano_lancamento
+    ? Number(d.ano_lancamento)
+    : null,
 
-    // ⭐ nota
-    nota_critica: d.nota_critica
-      ? Number(d.nota_critica)
-      : null,
+  nota_critica: d.nota_critica
+    ? Number(d.nota_critica)
+    : null,
 
-    // ⏱ duração
-    duracao_minutos: d.duracao_minutos
-      ? Number(d.duracao_minutos)
-      : null,
+  duracao_minutos: d.duracao_minutos
+    ? Number(d.duracao_minutos)
+    : null,
 
-    // 🎚 classificação pronta para filtro
-    classificacao_num: classificacaoNum,
+  classificacao_num: classificacaoNum,
 
-    // 🔤 normaliza texto
-    idioma: (d.idioma || "").toLowerCase(),
-    audio: (d.audio || "").toLowerCase()
-  };
+  idioma: (d.idioma || "").toLowerCase(),
+  audio: (d.audio || "").toLowerCase(),
+
+  // 🔥 CACHE DE BUSCA (CRÍTICO)
+  _search: `
+    ${d.titulo || ""}
+    ${d.serie_nome || ""}
+    ${d.categoria || ""}
+  `.toLowerCase()
+};
+
 });
   dadosCarregados = true;
 montarFiltrosCategorias(); // 👈 ADICIONE AQUI
@@ -1766,18 +1780,15 @@ montarFiltrosCategorias(); // 👈 ADICIONE AQUI
 
   const heroVideo = document.getElementById("heroVideo");
 
-  if (heroItem.video_url) {
-    heroVideo.pause();
-    heroVideo.removeAttribute("src");
-    heroVideo.load();
+  // ⏳ adia vídeo para depois do primeiro paint
+setTimeout(() => {
+  if (!heroItem.video_url) return;
 
-    heroVideo.src = heroItem.video_url;
-    heroVideo.muted = true;
-    heroVideo.autoplay = true;
-    heroVideo.loop = true;
+  heroVideo.src = heroItem.video_url;
+  heroVideo.muted = true;
+  heroVideo.play().catch(()=>{});
+}, 1200);
 
-    heroVideo.play().catch(() => {});
-  }
 
   render();
 }
@@ -1829,22 +1840,21 @@ function executarBusca(texto) {
 const resultados = [
   // 🎬 FILMES
   ...dados.filter(d =>
-    d.tipo === "filme" &&
-    (d.titulo || "").toLowerCase().includes(q)
+    d.tipo === "filme" && d._search.includes(q)
   ),
 
-  // 📺 SÉRIES AGRUPADAS POR serie_nome
+  // 📺 SÉRIES (AGRUPADAS)
   ...[
     ...new Map(
       dados
         .filter(d =>
-          d.tipo === "serie" &&
-          (d.serie_nome || "").toLowerCase().includes(q)
+          d.tipo === "serie" && d._search.includes(q)
         )
         .map(s => [s.serie_nome, s])
     ).values()
   ]
 ];
+
 
 
   if (!resultados.length) {
@@ -1946,32 +1956,24 @@ function card(i){
 }
 
 function renderComFiltros(f){
-  grid.innerHTML = "";
+  let html = "";
 
   dados.filter(d => {
 
-    // 🔍 busca texto
-    if (f.busca && !JSON.stringify(d).toLowerCase().includes(f.busca)) {
+    if (f.busca && !d._search.includes(f.busca)) {
       return false;
     }
 
-// 🎚 CLASSIFICAÇÃO INDICATIVA (IDADE)
-if (f.classificacao !== undefined) {
-  if (
-    d.classificacao_num !== null &&
-    d.classificacao_num > f.classificacao
-  ) {
-    return false;
-  }
-}
+    if (f.classificacao !== undefined) {
+      if (d.classificacao_num !== null && d.classificacao_num > f.classificacao) {
+        return false;
+      }
+    }
 
-
-    // 📆 ano
     if (f.anos?.length && !f.anos.includes(String(d.ano_lancamento))) {
       return false;
     }
 
-    // 🎭 categorias
     if (f.generos?.length) {
       const cats = (d.categoria || "").toLowerCase();
       if (!f.generos.some(g => cats.includes(g.toLowerCase()))) {
@@ -1979,50 +1981,38 @@ if (f.classificacao !== undefined) {
       }
     }
 
-    // 🎬 tipo
     if (f.tipos?.length && !f.tipos.includes(d.tipo)) {
       return false;
     }
 
-// ⭐ NOTA MÍNIMA
-if (f.notaMin && d.nota_critica !== null) {
-  if (d.nota_critica < f.notaMin) return false;
-}
+    if (f.notaMin && d.nota_critica !== null && d.nota_critica < f.notaMin) {
+      return false;
+    }
 
-// ⏱ DURAÇÃO MÍNIMA
-if (f.duracaoMin && d.duracao_minutos !== null) {
-  if (d.duracao_minutos < f.duracaoMin) return false;
-}
+    if (f.duracaoMin && d.duracao_minutos !== null && d.duracao_minutos < f.duracaoMin) {
+      return false;
+    }
 
-// 🌍 IDIOMA
-if (f.idiomas?.length) {
-  if (!f.idiomas.some(i => d.idioma.includes(i.toLowerCase()))) {
-    return false;
-  }
-}
+    if (f.idiomas?.length) {
+      if (!f.idiomas.some(i => d.idioma.includes(i.toLowerCase()))) {
+        return false;
+      }
+    }
 
-// 🔊 ÁUDIO
-if (f.audios?.length) {
-  if (!f.audios.some(a => d.audio.includes(a.toLowerCase()))) {
-    return false;
-  }
-}
+    if (f.audios?.length) {
+      if (!f.audios.some(a => d.audio.includes(a.toLowerCase()))) {
+        return false;
+      }
+    }
 
-
-
-
-
-
-
-
-
-
-    
     return true;
   }).forEach(item => {
-    grid.innerHTML += card(item);
+    html += card(item);
   });
+
+  grid.innerHTML = html;
 }
+
 
 function aplicarFiltrosAvancados(){
   const filtros = JSON.parse(
@@ -2040,57 +2030,37 @@ function aplicarFiltrosAvancados(){
 }
 
 
-  
 function render(buscaTxt = "") {
-  grid.innerHTML = "";
-
-  // 🔹 LISTA BASE (dados → categoria)
+  let html = "";
   let lista = dados;
 
-if (categoriaAtiva !== "todas") {
-  lista = lista.filter(d => {
-    if (!d.categoria) return false;
+  if (categoriaAtiva !== "todas") {
+    lista = lista.filter(d =>
+      d.categoria?.toLowerCase().split(",").includes(categoriaAtiva)
+    );
+  }
 
-    const categorias = d.categoria
-      .split(",")
-      .map(c => c.trim().toLowerCase());
-
-    return categorias.includes(categoriaAtiva.toLowerCase());
-  });
-}
-
-
-  // 🎬 FILMES
   if (filtro === "todos" || filtro === "filme") {
     lista
-      .filter(d => (d.tipo || "").toLowerCase() === "filme")
-      .filter(d => JSON.stringify(d).toLowerCase().includes(buscaTxt))
-      .forEach(f => grid.innerHTML += card(f));
+      .filter(d => d.tipo === "filme")
+      .filter(d => d._search.includes(buscaTxt))
+      .forEach(f => html += card(f));
   }
 
-  // 📺 SÉRIES (AGRUPADAS)
   if (filtro === "todos" || filtro === "serie") {
-    const series = [
-      ...new Map(
-        lista
-          .filter(d => (d.tipo || "").toLowerCase() === "serie")
-          .map(s => [s.serie_nome, s])
-      ).values()
-    ];
+    const series = [...new Map(
+      lista.filter(d => d.tipo === "serie")
+           .map(s => [s.serie_nome, s])
+    ).values()];
 
     series
-      .filter(s => JSON.stringify(s).toLowerCase().includes(buscaTxt))
-      .forEach(s => grid.innerHTML += card(s));
+      .filter(s => s._search.includes(buscaTxt))
+      .forEach(s => html += card(s));
   }
 
-  // 🔴 JOGOS AO VIVO
-  if (filtro === "todos" || filtro === "jogos_ao_vivo") {
-    lista
-      .filter(d => (d.tipo || "").toLowerCase() === "jogos_ao_vivo")
-      .filter(d => JSON.stringify(d).toLowerCase().includes(buscaTxt))
-      .forEach(j => grid.innerHTML += card(j));
-  }
+  grid.innerHTML = html;
 }
+
 
 
 function formatarReal(valor){
@@ -2254,10 +2224,13 @@ if ("serviceWorker" in navigator) {
       newWorker.addEventListener("statechange", () => {
         if (newWorker.state === "installed") {
           if (navigator.serviceWorker.controller) {
-           if (!sessionStorage.getItem("sw_reloaded")) {
-  sessionStorage.setItem("sw_reloaded", "1");
-  location.reload();
-}
+setTimeout(() => {
+  if (!sessionStorage.getItem("sw_reloaded")) {
+    sessionStorage.setItem("sw_reloaded", "1");
+    location.reload();
+  }
+}, 5000);
+
 
           }
         }
@@ -2466,17 +2439,22 @@ async function carregarAvatarHeader() {
 
 (async () => {
 
-  const ok = await validarSessao();
+// 🔥 inicia UI imediatamente
+iniciarApp();
+
+// valida sessão em paralelo
+validarSessao().then(ok => {
   if (!ok) return;
+  carregarAvatarHeader();
+});
 
-  await carregarAvatarHeader(); // ✅ ESSENCIAL
-  iniciarApp();
-
-setInterval(() => {
-  if (!redirecionando) {
-    validarSessao();
-  }
-}, 15000);
+setTimeout(() => {
+  setInterval(() => {
+    if (!redirecionando) {
+      validarSessao();
+    }
+  }, 15000);
+}, 5000);
 
 window.addEventListener("message", (event) => {
   if (event.data === "filtros_aplicados") {
@@ -2684,6 +2662,16 @@ async function carregarApex(){
       }, 600);
     }
   });
+</script>
+<script>
+  // 🔥 FAILSAFE ABSOLUTO DA ABERTURA
+  setTimeout(() => {
+    const frame = document.getElementById("aberturaFrame");
+    if (frame) {
+      frame.remove();
+      document.body.style.overflow = "";
+    }
+  }, 3500);
 </script>
 
 
