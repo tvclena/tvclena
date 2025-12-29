@@ -129,6 +129,50 @@ select{
   border-radius:14px;
   cursor:pointer;
 }
+
+/* ===== META INFO PLAYER ===== */
+.meta-box{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:10px 0 14px;
+}
+
+.meta-badge{
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+  background:#1f1f1f;
+  border:1px solid #2a2a2a;
+  color:#e5e5e5;
+  white-space:nowrap;
+}
+
+.meta-badge.tipo{
+  background:#e50914;
+  border-color:#e50914;
+  color:#fff;
+}
+
+.meta-badge.classificacao{
+  background:#111;
+  border:1px solid #e50914;
+  color:#e50914;
+  font-weight:800;
+}
+
+.meta-badge.nota{
+  background:#111;
+  border:1px solid #facc15;
+  color:#facc15;
+}
+
+.meta-badge.info{
+  background:#111;
+  color:#cfcfcf;
+}
+
 </style>
 </head>
 
@@ -277,9 +321,51 @@ const selEpisodio = document.getElementById("selEpisodio");
 titulo.textContent = item.titulo || item.serie_nome || "Conteúdo";
 desc.textContent = item.descricao || "";
 meta.innerHTML = `
-  <span class="badge">${item.categoria||"Geral"}</span>
-  <span class="badge tipo">${item.tipo}</span>
+  <div class="meta-box">
+
+    ${item.categoria
+      ? `<span class="meta-badge info">${item.categoria}</span>`
+      : ""
+    }
+
+    ${item.tipo
+      ? `<span class="meta-badge tipo">${item.tipo}</span>`
+      : ""
+    }
+
+    ${item.ano_lancamento
+      ? `<span class="meta-badge info">${item.ano_lancamento}</span>`
+      : ""
+    }
+
+    ${item.classificacao_indicativa
+      ? `<span class="meta-badge classificacao">+${item.classificacao_indicativa}</span>`
+      : ""
+    }
+
+    ${item.nota_critica
+      ? `<span class="meta-badge nota">⭐ ${item.nota_critica}</span>`
+      : ""
+    }
+
+    ${item.duracao_minutos
+      ? `<span class="meta-badge info">⏱ ${item.duracao_minutos} min</span>`
+      : ""
+    }
+
+    ${item.idioma
+      ? `<span class="meta-badge info">🌍 ${item.idioma}</span>`
+      : ""
+    }
+
+    ${item.audio
+      ? `<span class="meta-badge info">🎧 ${item.audio}</span>`
+      : ""
+    }
+
+  </div>
 `;
+
 
 /* ================= HELPERS ================= */
 function isVideoFile(v){
