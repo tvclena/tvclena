@@ -126,14 +126,16 @@ const sb = supabase.createClient(
 
 const email = localStorage.getItem("usuario_email");
 const params = new URLSearchParams(location.search);
-const item = params.get("item");
+const filme_id = params.get("filme_id");
 
-if(!item){
-  alert("Filme inválido");
+if (!filme_id) {
+  document.body.innerHTML = `
+    <div style="padding:20px;text-align:center">
+      Filme inválido
+    </div>
+  `;
+  throw new Error("filme_id ausente");
 }
-
-const filme = JSON.parse(decodeURIComponent(item));
-const filme_id = filme.id;
 
 
 let aberto = false;
