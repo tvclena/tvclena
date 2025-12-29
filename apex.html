@@ -342,7 +342,7 @@ const res = await fetch("/api/create-payment", {
 const data = await res.json();
 
 if (data.url) {
-  window.location.href = data.url;
+window.top.location.href = data.url;
 } else {
   console.error("Erro ao criar pagamento Apex:", data);
   alert("Erro ao iniciar pagamento");
