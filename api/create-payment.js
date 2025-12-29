@@ -15,14 +15,13 @@ export default async function handler(req, res) {
     }
 
     const { action } = req.body;
-
     if (!action) {
       return res.status(400).json({ error: "Action ausente" });
     }
 
-    /* ======================================================
-       🔹 ASSINATURA (PLANOS)
-    ====================================================== */
+    /* ==============================
+       🔹 ASSINATURA
+    ============================== */
     if (action === "assinatura") {
       const { email, plano } = req.body;
 
@@ -96,9 +95,9 @@ export default async function handler(req, res) {
       return res.json({ url: mpData.init_point });
     }
 
-    /* ======================================================
-       🔹 APEX (RECARGA DE CARTEIRA)
-    ====================================================== */
+    /* ==============================
+       🔹 APEX (RECARGA)
+    ============================== */
     if (action === "apex") {
       const { email, plano_id } = req.body;
 
@@ -118,7 +117,7 @@ export default async function handler(req, res) {
 
       const { data: planoDB } = await sb
         .from("planos")
-        .select("valor")
+        .select("id, valor")
         .eq("id", plano_id)
         .single();
 
@@ -127,26 +126,55 @@ export default async function handler(req, res) {
       }
 
       const referencia = crypto.randomUUID();
-      const apex = planoDB.valor * 15;
 
       await sb.from("pagamentos").insert({
         referencia,
         user_id: user.id,
-        plano_id,
+        plano_id: planoDB.id,
         tipo: "apex",
         valor: planoDB.valor,
         status: "pending",
         processado: false,
       });
 
-      // Mercado Pago (opcional)
-      // OU retorno direto se quiser simular
+      const mpRes = await fetch(
+        "https://api.mercadopago.com/checkout/preferences",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            items: [
+              {
+                title: "Recarga Apex - Clena TV",
+                quantity: 1,
+                unit_price: Number(planoDB.valor),
+                currency_id: "BRL",
+              },
+            ],
+            payer: { email },
+            external_reference: referencia,
+            back_urls: {
+              success: "https://www.clena.com.br/sucesso.html",
+              failure: "https://www.clena.com.br/erro.html",
+            },
+            notification_url:
+              "https://www.clena.com.br/api/webhook-mercadopago",
+            auto_return: "approved",
+          }),
+        }
+      );
 
-      return res.json({
-        success: true,
-        referencia,
-        apex
-      });
+      const mpData = await mpRes.json();
+
+      if (!mpData.init_point) {
+        console.error("Erro Mercado Pago Apex:", mpData);
+        return res.status(500).json({ error: "Erro ao criar checkout Apex" });
+      }
+
+      return res.json({ url: mpData.init_point });
     }
 
     return res.status(400).json({ error: "Action inválida" });
