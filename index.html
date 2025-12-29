@@ -2143,7 +2143,7 @@ function prepararLista(filtros = null, buscaTxt = "") {
     lista = lista.filter(d => d._search.includes(buscaTxt));
   }
 
-  dadosFiltrados = lista;
+dadosFiltrados = agruparSeries(lista);
   paginaAtual = 0;
   grid.innerHTML = "";
 
@@ -2619,6 +2619,21 @@ function fecharFiltros(){
   document.getElementById("filtrosOverlay").style.display = "none";
 }
 
+function agruparSeries(lista){
+  const mapa = new Map();
+
+  lista.forEach(item => {
+    if (item.tipo === "serie") {
+      if (!mapa.has(item.serie_nome)) {
+        mapa.set(item.serie_nome, item);
+      }
+    } else {
+      mapa.set(Symbol(), item); // filmes continuam normais
+    }
+  });
+
+  return Array.from(mapa.values());
+}
 
   
 function montarFiltrosCategorias(){
