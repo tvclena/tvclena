@@ -90,24 +90,8 @@ body{
 #side{
   background:#111;
   padding:22px;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
+  overflow-y:auto;
 }
-#comentariosBox{
-  margin-top:20px;
-  flex:1;
-  min-height:0;
-}
-
-#comentariosIframe{
-  width:100%;
-  height:100%;
-  border:0;
-  border-radius:14px;
-  background:#0b0b0b;
-}
-
 @media(max-width:900px){
   #side{max-height:45vh}
 }
@@ -188,46 +172,6 @@ select{
   background:#111;
   color:#cfcfcf;
 }
-@media (max-width: 900px) {
-
-  body {
-    overflow: hidden;
-  }
-
-  #layout {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  /* PLAYER FICA MENOR */
-  #playerArea {
-    padding: 10px;
-  }
-
-  .playerWrapper {
-    max-width: 100%;
-    aspect-ratio: 16 / 9;
-  }
-
-  /* SIDE GANHA MAIS ALTURA */
-  #side {
-    flex: 1;
-    max-height: none;
-    padding: 16px;
-  }
-
-  /* COMENTÁRIOS GANHAM PRIORIDADE */
-  #comentariosBox {
-    flex: 1;
-    margin-top: 14px;
-  }
-
-  #comentariosIframe {
-    height: 100%;
-    min-height: 260px; /* 🔥 espaço garantido */
-  }
-}
 
 </style>
 </head>
@@ -267,14 +211,14 @@ select{
   </div>
 
   <!-- COMENTÁRIOS (COLOCAR AQUI) -->
- <!-- COMENTÁRIOS -->
-<div id="comentariosBox">
-  <iframe
-    id="comentariosIframe"
-    src=""
-    loading="lazy">
-  </iframe>
-</div>
+  <div style="margin-top:20px;flex:1;min-height:420px">
+    <iframe
+      id="comentariosIframe"
+      src=""
+      style="width:100%;height:100%;border:0;border-radius:14px;background:#0b0b0b"
+      loading="lazy">
+    </iframe>
+  </div>
 
 </div>
 
