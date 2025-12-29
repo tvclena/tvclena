@@ -2685,6 +2685,7 @@ function agruparSeries(lista){
   
 function montarFiltrosCategorias(){
   const box = document.getElementById("filtrosCategorias");
+  if (!box) return; // 🔥 BLOQUEIO ATIVO → NÃO EXECUTA
 
   const todasCategorias = dados
     .flatMap(d =>
@@ -2707,6 +2708,7 @@ function montarFiltrosCategorias(){
     </button>
   `).join("");
 }
+
 
 function setCategoria(cat, el){
   categoriaAtiva = cat;
