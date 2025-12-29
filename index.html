@@ -1242,6 +1242,20 @@ body.modal-open{
   cursor:pointer;
   font-size:16px;
 }
+.btn-filtros-avancados{
+  background:#2b2b2b;
+  color:#fff;
+  padding:10px 18px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  transition:.25s;
+}
+
+.btn-filtros-avancados.ativo{
+  background: var(--accent);
+  box-shadow: 0 0 0 2px rgba(229,9,20,.35);
+}
 
   
 </style>
@@ -1334,17 +1348,13 @@ body.modal-open{
 <button onclick="setFiltro('documentarios', this)">Documentários</button>
 </div>
 <div class="filtros" style="padding:12px 40px 0">
-  <button onclick="abrirFiltrosAvancados()"
-    style="
-      background:#2b2b2b;
-      color:#fff;
-      padding:10px 18px;
-      border-radius:999px;
-      border:none;
-      cursor:pointer;
-    ">
-    🎛️ Filtros avançados
-  </button>
+ <button
+  id="btnFiltrosAvancados"
+  onclick="abrirFiltrosAvancados()"
+  class="btn-filtros-avancados">
+  🎛️ Filtros avançados
+</button>
+
 </div>
 
 <div class="filtros filtros-categorias" id="filtrosCategorias">
@@ -1595,6 +1605,23 @@ async function perfilSalvar(){
 
   perfilFechar();
 }
+function atualizarBotaoFiltros(){
+  const btn = document.getElementById("btnFiltrosAvancados");
+  if (!btn) return;
+
+  const filtros = JSON.parse(
+    localStorage.getItem("clena_filtros") || "{}"
+  );
+
+  const ativo =
+    (filtros.busca && filtros.busca.length) ||
+    (filtros.classificacao !== undefined && filtros.classificacao < 18) ||
+    (filtros.anos && filtros.anos.length) ||
+    (filtros.generos && filtros.generos.length) ||
+    (filtros.tipos && filtros.tipos.length);
+
+  btn.classList.toggle("ativo", !!ativo);
+}
 
 
 async function perfilUploadAvatar(input){
@@ -1748,13 +1775,15 @@ dados = (data || []).map(d => {
 });
   dadosCarregados = true;
 montarFiltrosCategorias(); // 👈 ADICIONE AQUI
-// 🔥 aplica filtros SOMENTE se sessão estiver ativa
+// ✅ aplica filtros APENAS se o popup de filtros ainda estiver ativo
 if (
-  sessionStorage.getItem("clena_session") &&
+  sessionStorage.getItem("clena_filtros_aberto") === "1" &&
   localStorage.getItem("clena_filtros")
 ) {
   aplicarFiltrosAvancados();
 }
+
+
 
   
 
@@ -1784,7 +1813,11 @@ setTimeout(() => {
 }, 1200);
 
 
-  render();
+  
+
+// 🔥 GARANTE ESTADO DO BOTÃO AO CARREGAR
+atualizarBotaoFiltros();
+
 }
 
 
@@ -2082,6 +2115,9 @@ function formatarData(data){
 }
 
 function abrirPlayer(item){
+  // 🔥 impede restauração ao voltar
+  sessionStorage.removeItem("clena_filtros_aberto");
+
   const dados = encodeURIComponent(JSON.stringify(item));
   location.href = `player.html?item=${dados}`;
 }
@@ -2470,6 +2506,8 @@ setTimeout(() => {
 window.addEventListener("message", (event) => {
   if (event.data === "filtros_aplicados") {
     aplicarFiltrosAvancados();
+        atualizarBotaoFiltros(); // 👈 ESSENCIAL
+
   }
 });
 
@@ -2478,10 +2516,15 @@ window.addEventListener("message", (event) => {
 
 function abrirFiltrosAvancados(){
   localStorage.setItem("clena_dados", JSON.stringify(dados));
+
+  // 🔥 AUTORIZA RESTAURAÇÃO SOMENTE NESTA ABERTURA
+  sessionStorage.setItem("clena_filtros_aberto", "1");
+
   document.body.classList.add("modal-open");
   document.getElementById("filtrosOverlay").style.display = "flex";
 }
 function fecharFiltros(){
+  sessionStorage.removeItem("clena_filtros_aberto");
   document.body.classList.remove("modal-open");
   document.getElementById("filtrosOverlay").style.display = "none";
 }
