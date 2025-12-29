@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     if (userError || !user) {
       return res.status(404).json({ saldo: 0, apex: 0 });
     }
-
+  // 2️⃣ Buscar carteira
     // 2️⃣ Buscar carteira
     const { data: carteira, error: cartError } = await sb
       .from("carteiras")
