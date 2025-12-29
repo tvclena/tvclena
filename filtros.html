@@ -6,88 +6,167 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+:root{
+  --bg:#0f0f10;
+  --card:#1c1c1f;
+  --border:#2a2a2e;
+  --accent:#e50914;
+  --text:#fff;
+  --muted:#9ca3af;
+}
+
+*{box-sizing:border-box}
+
 body{
   margin:0;
-  font-family:Inter,Arial;
-  background:#0f0f10;
-  color:#fff;
+  font-family:Inter,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
 }
+
 .box{
   max-width:900px;
   margin:0 auto;
-  padding:24px;
+  padding:28px;
 }
-h2{margin-bottom:20px}
 
-.filtro{
-  margin-bottom:20px;
+h2{
+  margin:0 0 24px;
+  font-size:24px;
+  font-weight:900;
 }
+
+/* ===== SEÇÕES ===== */
+.filtro{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:18px;
+}
+
 .filtro label{
   display:block;
-  font-size:14px;
-  margin-bottom:6px;
-  color:#ccc;
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:10px;
+  font-weight:600;
 }
 
+/* ===== BUSCA ===== */
+input[type="text"]{
+  width:100%;
+  padding:14px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#111;
+  color:#fff;
+  font-size:15px;
+}
+
+/* ===== RANGE ===== */
+.range-box{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+input[type="range"]{
+  flex:1;
+}
+.range-value{
+  font-size:13px;
+  font-weight:700;
+  color:#fff;
+  min-width:110px;
+  text-align:right;
+}
+
+/* ===== SCROLL HORIZONTAL ===== */
 .horizontal{
   display:flex;
-  gap:12px;
+  gap:10px;
   overflow-x:auto;
+  padding-bottom:4px;
 }
+.horizontal::-webkit-scrollbar{display:none}
+
 .horizontal label{
-  background:#1f1f1f;
-  padding:10px 14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:#111;
+  border:1px solid var(--border);
+  padding:10px 16px;
   border-radius:999px;
   cursor:pointer;
   white-space:nowrap;
+  transition:.2s;
 }
+
 .horizontal input{display:none}
+
 .horizontal input:checked + span{
-  background:#e50914;
+  background:var(--accent);
+  color:#fff;
+  border-color:var(--accent);
 }
 
-input[type="range"]{
-  width:100%;
+.horizontal span{
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:600;
 }
 
+/* ===== BOTÕES ===== */
 .actions{
   display:flex;
-  gap:12px;
-  margin-top:30px;
+  gap:14px;
+  margin-top:26px;
 }
+
 button{
   flex:1;
-  padding:14px;
+  padding:16px;
   border:none;
-  border-radius:10px;
+  border-radius:14px;
   font-size:15px;
-  font-weight:700;
+  font-weight:800;
   cursor:pointer;
 }
-.aplicar{background:#e50914;color:#fff}
-.limpar{background:#333;color:#fff}
+
+.aplicar{
+  background:var(--accent);
+  color:#fff;
+}
+.limpar{
+  background:#2a2a2e;
+  color:#fff;
+}
 </style>
 </head>
 
 <body>
 
 <div class="box">
-  <h2>Filtros avançados</h2>
+  <h2>🎛️ Filtros avançados</h2>
 
-  <!-- 🔍 PESQUISA -->
+  <!-- 🔍 BUSCA -->
   <div class="filtro">
-    <label>Buscar</label>
-    <input id="busca" placeholder="Nome do filme ou série">
+    <label>Buscar por nome</label>
+    <input id="busca" type="text" placeholder="Filme ou série">
   </div>
 
   <!-- 🎚 CLASSIFICAÇÃO -->
   <div class="filtro">
-    <label>Classificação máxima</label>
-    <input id="classificacao" type="range" min="0" max="18" value="18">
-    <span id="classValue">Até 18 anos</span>
+    <label>Classificação indicativa (máxima)</label>
+    <div class="range-box">
+      <input id="classificacao" type="range" min="0" max="18">
+      <div class="range-value" id="classValue"></div>
+    </div>
   </div>
 
-  <!-- 📆 ANOS -->
+  <!-- 📆 ANO -->
   <div class="filtro">
     <label>Ano de lançamento</label>
     <div class="horizontal" id="anos"></div>
@@ -109,33 +188,61 @@ button{
   </div>
 
   <div class="actions">
-    <button class="limpar" onclick="limpar()">Limpar filtros</button>
+    <button class="limpar" onclick="limpar()">Limpar</button>
     <button class="aplicar" onclick="aplicar()">Aplicar filtros</button>
   </div>
 </div>
 
 <script>
 const dados = JSON.parse(localStorage.getItem("clena_dados") || "[]");
+const filtrosSalvos = JSON.parse(localStorage.getItem("clena_filtros") || "{}");
 
-/* popula anos e gêneros dinamicamente */
-const anos = [...new Set(dados.map(d => d.ano_lancamento).filter(Boolean))].sort();
-const generos = [...new Set(
-  dados.flatMap(d => (d.categoria||"").split(",").map(g=>g.trim()))
+/* ===== POPULA ANOS E GÊNEROS ===== */
+const anosUnicos = [...new Set(dados.map(d => d.ano_lancamento).filter(Boolean))].sort();
+const generosUnicos = [...new Set(
+  dados.flatMap(d => (d.categoria || "").split(",").map(g => g.trim()))
 )].filter(Boolean);
 
 document.getElementById("anos").innerHTML =
-  anos.map(a=>`<label><input type="checkbox" value="${a}"><span>${a}</span></label>`).join("");
+  anosUnicos.map(a =>
+    `<label><input type="checkbox" value="${a}">
+      <span>${a}</span></label>`
+  ).join("");
 
 document.getElementById("generos").innerHTML =
-  generos.map(g=>`<label><input type="checkbox" value="${g}"><span>${g}</span></label>`).join("");
+  generosUnicos.map(g =>
+    `<label><input type="checkbox" value="${g}">
+      <span>${g}</span></label>`
+  ).join("");
+
+/* ===== RESTAURA FILTROS ===== */
+if(filtrosSalvos.busca)
+  busca.value = filtrosSalvos.busca;
 
 const range = document.getElementById("classificacao");
-const classValue = document.getElementById("classValue");
-range.oninput = () => classValue.textContent = `Até ${range.value} anos`;
+range.value = filtrosSalvos.classificacao ?? 18;
 
+document.getElementById("classValue").textContent =
+  `Até ${range.value} anos`;
+
+range.oninput = () =>
+  classValue.textContent = `Até ${range.value} anos`;
+
+document.querySelectorAll("#anos input").forEach(i=>{
+  if(filtrosSalvos.anos?.includes(i.value)) i.checked=true;
+});
+document.querySelectorAll("#generos input").forEach(i=>{
+  if(filtrosSalvos.generos?.includes(i.value)) i.checked=true;
+});
+document.querySelectorAll("input[value='filme'],input[value='serie']")
+  .forEach(i=>{
+    if(filtrosSalvos.tipos?.includes(i.value)) i.checked=true;
+  });
+
+/* ===== AÇÕES ===== */
 function aplicar(){
   const filtros = {
-    busca: busca.value.toLowerCase(),
+    busca: busca.value.trim().toLowerCase(),
     classificacao: Number(range.value),
     anos: [...document.querySelectorAll("#anos input:checked")].map(i=>i.value),
     generos: [...document.querySelectorAll("#generos input:checked")].map(i=>i.value),
@@ -144,14 +251,12 @@ function aplicar(){
   };
 
   localStorage.setItem("clena_filtros", JSON.stringify(filtros));
-  window.opener?.postMessage("filtros_aplicados","*");
-  window.close();
+  window.parent.postMessage("filtros_aplicados", "*");
 }
 
 function limpar(){
   localStorage.removeItem("clena_filtros");
-  window.opener?.postMessage("filtros_aplicados","*");
-  window.close();
+  window.parent.postMessage("filtros_aplicados", "*");
 }
 </script>
 
