@@ -1284,6 +1284,20 @@ body.modal-open{
 <button onclick="setFiltro('filme', this)">Filmes</button>
 <button onclick="setFiltro('serie', this)">Séries</button>
 </div>
+<div class="filtros" style="padding:12px 40px 0">
+  <button onclick="abrirFiltrosAvancados()"
+    style="
+      background:#2b2b2b;
+      color:#fff;
+      padding:10px 18px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+    ">
+    🎛️ Filtros avançados
+  </button>
+</div>
+
 <div class="filtros filtros-categorias" id="filtrosCategorias">
   <!-- categorias geradas via JS -->
 </div>
@@ -1820,7 +1834,63 @@ function card(i){
   `;
 }
 
+function renderComFiltros(f){
+  grid.innerHTML = "";
 
+  dados.filter(d => {
+
+    // 🔍 busca texto
+    if (f.busca && !JSON.stringify(d).toLowerCase().includes(f.busca)) {
+      return false;
+    }
+
+    // 🎚 classificação indicativa (IDADE)
+    if (f.classificacao !== undefined) {
+      const idade = parseInt(
+        (d.classificacao_indicativa || "").match(/\d+/)
+      );
+      if (!isNaN(idade) && idade > f.classificacao) return false;
+    }
+
+    // 📆 ano
+    if (f.anos?.length && !f.anos.includes(String(d.ano_lancamento))) {
+      return false;
+    }
+
+    // 🎭 categorias
+    if (f.generos?.length) {
+      const cats = (d.categoria || "").toLowerCase();
+      if (!f.generos.some(g => cats.includes(g.toLowerCase()))) {
+        return false;
+      }
+    }
+
+    // 🎬 tipo
+    if (f.tipos?.length && !f.tipos.includes(d.tipo)) {
+      return false;
+    }
+
+    return true;
+  }).forEach(item => {
+    grid.innerHTML += card(item);
+  });
+}
+
+function aplicarFiltrosAvancados(){
+  const filtros = JSON.parse(
+    localStorage.getItem("clena_filtros") || "{}"
+  );
+
+  // normaliza busca
+  if (filtros.busca) {
+    filtros.busca = filtros.busca.toLowerCase();
+  }
+
+  renderComFiltros(filtros);
+}
+
+
+  
 function render(buscaTxt = "") {
   grid.innerHTML = "";
 
@@ -2258,8 +2328,25 @@ setInterval(() => {
   }
 }, 15000);
 
+window.addEventListener("message", (event) => {
+  if (event.data === "filtros_aplicados") {
+    aplicarFiltrosAvancados();
+  }
+});
+
+  
 })();
 
+function abrirFiltrosAvancados(){
+  // envia os dados atuais para o popup
+  localStorage.setItem("clena_dados", JSON.stringify(dados));
+
+  window.open(
+    "filtros.html",
+    "filtros",
+    "width=900,height=700"
+  );
+}
 
   
 function montarFiltrosCategorias(){
