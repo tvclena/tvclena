@@ -1257,7 +1257,10 @@ body.modal-open{
   box-shadow: 0 0 0 2px rgba(229,9,20,.35);
 }
 
-  
+ #sentinela{
+  height: 1px;
+}
+ 
 </style>
 </head>
 
@@ -1364,6 +1367,9 @@ body.modal-open{
 <section>
   <h3>Catálogo</h3>
   <div class="grid" id="grid"></div>
+ <!-- 🔥 SENTINELA DO SCROLL INFINITO -->
+  <div id="sentinela"></div>
+  
 </section>
 
 <!-- PLAYER -->
@@ -1687,6 +1693,10 @@ let serieAtual=[], filmeAtual=null;
 let episodioIndexAtual = 0;
 let dadosCarregados = false;
 let categoriaAtiva = "todas";
+let dadosFiltrados = [];
+let paginaAtual = 0;
+const LIMITE_POR_PAGINA = 24;
+let carregando = false;
 
 
 // ================= ELEMENTOS DOM =================
@@ -1722,7 +1732,6 @@ const { data, error } = await sb
   descricao,
   video_url
 `)
-.limit(50)
 ;
 
 
@@ -1817,6 +1826,12 @@ setTimeout(() => {
 
 // 🔥 GARANTE ESTADO DO BOTÃO AO CARREGAR
 atualizarBotaoFiltros();
+// 🚀 LOAD INICIAL PROGRESSIVO
+prepararLista(
+  JSON.parse(localStorage.getItem("clena_filtros") || "null"),
+  busca?.value?.toLowerCase() || ""
+);
+
 
 }
 
@@ -1967,7 +1982,11 @@ function setFiltro(f, el){
     .forEach(b => b.classList.remove("active"));
 
   el.classList.add("active");
-  render(busca.value.toLowerCase());
+
+  prepararLista(
+    JSON.parse(localStorage.getItem("clena_filtros") || "null"),
+    busca?.value?.toLowerCase() || ""
+  );
 }
 
 
@@ -2046,10 +2065,9 @@ function aplicarFiltrosAvancados(){
     localStorage.getItem("clena_filtros") || "{}"
   );
 
-  // normaliza busca
-  if (filtros.busca) {
-    filtros.busca = filtros.busca.toLowerCase();
-  }
+  prepararLista(filtros, busca?.value?.toLowerCase() || "");
+}
+
 
 
   
@@ -2098,8 +2116,85 @@ function render(buscaTxt = "") {
   grid.innerHTML = html;
 }
 
+function prepararLista(filtros = null, buscaTxt = "") {
+  let lista = [...dados];
+
+  if (categoriaAtiva !== "todas") {
+    lista = lista.filter(d =>
+      d.categoria?.toLowerCase().split(",").includes(categoriaAtiva)
+    );
+  }
+
+  if (filtros) {
+    lista = lista.filter(d => {
+      if (filtros.busca && !d._search.includes(filtros.busca)) return false;
+      if (filtros.classificacao !== undefined &&
+          d.classificacao_num !== null &&
+          d.classificacao_num > filtros.classificacao) return false;
+      if (filtros.anos?.length &&
+          !filtros.anos.includes(String(d.ano_lancamento))) return false;
+      if (filtros.generos?.length) {
+        const cats = (d.categoria || "").toLowerCase();
+        if (!filtros.generos.some(g => cats.includes(g.toLowerCase())))
+          return false;
+      }
+      if (filtros.tipos?.length &&
+          !filtros.tipos.includes(d.tipo)) return false;
+      return true;
+    });
+  }
+
+  if (buscaTxt) {
+    lista = lista.filter(d => d._search.includes(buscaTxt));
+  }
+
+  dadosFiltrados = lista;
+  paginaAtual = 0;
+  grid.innerHTML = "";
+
+  observer.observe(sentinela); // ✅ ESSENCIAL
+  carregarProximaPagina();
+}
+
+function carregarProximaPagina() {
+  if (carregando) return;
+  carregando = true;
+
+  const inicio = paginaAtual * LIMITE_POR_PAGINA;
+  const fim = inicio + LIMITE_POR_PAGINA;
+
+  const lote = dadosFiltrados.slice(inicio, fim);
+
+if (!lote.length) {
+  observer.unobserve(sentinela); // 🛑 para o infinite scroll
+  carregando = false;
+  return;
+}
 
 
+  let html = "";
+  lote.forEach(item => {
+    html += card(item);
+  });
+
+  grid.insertAdjacentHTML("beforeend", html);
+
+  paginaAtual++;
+  carregando = false;
+}
+
+
+const sentinela = document.getElementById("sentinela");
+
+const observer = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting) {
+    carregarProximaPagina();
+  }
+}, {
+  rootMargin: "300px" // carrega antes de chegar no fim
+});
+
+observer.observe(sentinela);
 
 function formatarReal(valor){
   if(valor == null) return "-";
@@ -2565,7 +2660,10 @@ function setCategoria(cat, el){
 
   el.classList.add("active");
 
-  render(busca?.value?.toLowerCase() || "");
+prepararLista(
+  JSON.parse(localStorage.getItem("clena_filtros") || "null"),
+  busca?.value?.toLowerCase() || ""
+);
 }
 async function carregarPlanosBloqueio() {
   const res = await fetch("/api/get-planos");
