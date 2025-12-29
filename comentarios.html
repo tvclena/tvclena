@@ -190,6 +190,8 @@ const sb = supabase.createClient(
 const email = localStorage.getItem("usuario_email");
 const params = new URLSearchParams(location.search);
 const filme_id = params.get("filme_id");
+const auto = document.getElementById("auto");
+  
 
 if (!filme_id) {
   document.body.innerHTML = `
