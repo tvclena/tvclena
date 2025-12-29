@@ -1,7 +1,6 @@
 export const config = {
   runtime: "nodejs",
 };
-
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
@@ -63,7 +62,6 @@ export default async function handler(req, res) {
     if (planoError || !planoDB) {
       return res.status(400).json({ error: "Plano inválido" });
     }
-
     const { data: user } = await sb
       .from("usuarios")
       .select("id")
@@ -73,7 +71,6 @@ export default async function handler(req, res) {
     if (!user) {
       return res.status(400).json({ error: "Usuário não encontrado" });
     }
-
     const referencia = crypto.randomUUID();
 
     await sb.from("pagamentos").insert({
@@ -115,7 +112,6 @@ export default async function handler(req, res) {
         }),
       }
     );
-
     const mpData = await mpRes.json();
 
     if (!mpRes.ok) {
