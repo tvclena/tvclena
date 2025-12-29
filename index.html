@@ -1748,9 +1748,11 @@ dados = (data || []).map(d => {
 });
   dadosCarregados = true;
 montarFiltrosCategorias(); // 👈 ADICIONE AQUI
-// 🔥 aplica filtros avançados automaticamente ao carregar a página
-const filtrosSalvos = localStorage.getItem("clena_filtros");
-if (filtrosSalvos) {
+// 🔥 aplica filtros SOMENTE se sessão estiver ativa
+if (
+  sessionStorage.getItem("clena_session") &&
+  localStorage.getItem("clena_filtros")
+) {
   aplicarFiltrosAvancados();
 }
 
@@ -2438,6 +2440,12 @@ async function carregarAvatarHeader() {
   `;
 }
 
+// 🔐 CONTROLE DE SESSÃO DOS FILTROS
+if (!sessionStorage.getItem("clena_session")) {
+  // nova sessão (reload, aba nova, voltou depois)
+  localStorage.removeItem("clena_filtros");
+  sessionStorage.setItem("clena_session", "1");
+}
 
 
 (async () => {
