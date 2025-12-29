@@ -162,6 +162,9 @@ html, body {
 }
 
 
+.container.hidden{
+  display:none;
+}
 
   
 </style>
@@ -169,12 +172,12 @@ html, body {
 
 <body>
 
-<div class="header">
-  <div class="eye" onclick="toggle()">👁️‍🗨️</div>
-  <div class="hint">Toque para ver os comentários</div>
+<div class="header" onclick="toggle()" style="cursor:pointer">
+<div class="hint" id="hintText">Toque para ver os comentários</div>
 </div>
 
-<div id="container" class="container faded">
+
+<div id="container" class="container hidden">
   <textarea id="txt" placeholder="Escreva um comentário... Use / para marcar filmes"></textarea>
   <div id="auto" class="autocomplete" style="display:none"></div>
   <button onclick="enviar()">Enviar</button>
@@ -208,10 +211,19 @@ let arroba = null;
 let filmesCache = [];
 
 function toggle(){
-  aberto = !aberto;
-  document.getElementById("container")
-    .classList.toggle("faded", !aberto);
+  const c = document.getElementById("container");
+  const hint = document.getElementById("hintText");
+  const aberto = !c.classList.contains("hidden");
+
+  if (aberto) {
+    c.classList.add("hidden");
+    hint.textContent = "Toque para ver os comentários";
+  } else {
+    c.classList.remove("hidden");
+    hint.textContent = "Toque para ocultar os comentários";
+  }
 }
+
 
 async function init(){
   const { data:user } = await sb
