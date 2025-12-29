@@ -272,22 +272,23 @@ async function assinar(plano){
   }
 
   try{
-    const res = await fetch("/api/create-payment",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify({
-        action: "assinatura_payment",
-        plano: plano,
-        email: email
-      })
-    });
+    const res = await fetch(
+      "https://www.clena.com.br/api/create-payment",
+      {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          action: "assinatura_payment",
+          plano: plano,
+          email: email
+        })
+      }
+    );
 
     const data = await res.json();
+    console.log("RETORNO CREATE PAYMENT:", data);
 
     if(data?.url){
-      // 🔥 MOBILE + DESKTOP OK
       window.location.href = data.url;
       return;
     }
@@ -300,6 +301,7 @@ async function assinar(plano){
     console.error(e);
   }
 }
+
 
 /* INIT */
 carregarPlanos();
