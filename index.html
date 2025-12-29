@@ -2523,34 +2523,46 @@ return false;
 }
 
 
-async function abrirLinkPlano(nomePlano) {
+async function abrirLinkPlano(plano){
   const email = localStorage.getItem("usuario_email");
 
-  try {
-    const res = await fetch("/api/create-payment", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        action: "criar_pagamento",
-        plano: nomePlano,
-        email: email
-      })
-    });
+  if(!email){
+    localStorage.setItem("redirect_after_login", "index.html");
+    alert("Faça login para continuar");
+    location.href = "login.html";
+    return;
+  }
+
+  try{
+    const res = await fetch(
+      "https://www.clena.com.br/api/create-payment",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        credentials: "same-origin",
+        body: JSON.stringify({
+          action: "assinatura", // 🔥 IGUAL AO OUTRO
+          plano: plano,
+          email: email
+        })
+      }
+    );
 
     const data = await res.json();
+    console.log("RETORNO CREATE PAYMENT:", data);
 
-    if (data.url) {
+    if(data?.url){
       window.location.href = data.url;
-    } else {
-      console.error(data);
-      alert("Erro ao gerar link de pagamento");
+      return;
     }
 
-  } catch (err) {
-    console.error(err);
-    alert("Erro de conexão com o servidor");
+    alert("Erro ao iniciar pagamento");
+    console.error(data);
+
+  }catch(e){
+    alert("Falha de conexão");
+    console.error(e);
   }
 }
 
