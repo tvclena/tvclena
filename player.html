@@ -17,8 +17,6 @@
 </script>
 
 
-
-  
 <title>Sessão • Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -30,24 +28,10 @@ body{
   background:#000;
   color:#fff;
   font-family:Inter,Arial,sans-serif;
-  overflow-y:auto;
+  overflow:hidden;
 }
 
-
-#player{
-  position:relative;
-  background:#000;
-}
-@media (max-width: 900px) {
-
-  #playerArea{
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: #000;
-  }
-
-}
+#player{position:fixed;inset:0;background:#000}
 
 /* TOPO */
 #topActions{
@@ -108,23 +92,25 @@ body{
   padding:22px;
   display:flex;
   flex-direction:column;
-  overflow:visible; /* ✅ deixa crescer */
+  overflow:hidden;
 }
-
 #comentariosBox{
   margin-top:20px;
-  min-height:60vh; /* 🔥 espaço real */
+  flex:1;
+  min-height:0;
 }
 
 #comentariosIframe{
   width:100%;
-  height:60vh;
+  height:100%;
   border:0;
   border-radius:14px;
   background:#0b0b0b;
 }
 
-
+@media(max-width:900px){
+  #side{max-height:45vh}
+}
 
 .badge{
   display:inline-block;
@@ -202,13 +188,16 @@ select{
   background:#111;
   color:#cfcfcf;
 }
+@media (max-width: 900px) {
 
-
- @media (max-width: 900px) {
+  body {
+    overflow: hidden;
+  }
 
   #layout {
     display: flex;
     flex-direction: column;
+    height: 100%;
   }
 
   /* PLAYER FICA MENOR */
@@ -223,20 +212,22 @@ select{
 
   /* SIDE GANHA MAIS ALTURA */
   #side {
+    flex: 1;
+    max-height: none;
     padding: 16px;
   }
 
   /* COMENTÁRIOS GANHAM PRIORIDADE */
   #comentariosBox {
+    flex: 1;
     margin-top: 14px;
-    min-height: 70vh; /* 🔥 ainda melhor no mobile */
   }
 
   #comentariosIframe {
-    height: 70vh;
+    height: 100%;
+    min-height: 260px; /* 🔥 espaço garantido */
   }
 }
-
 
 </style>
 </head>
