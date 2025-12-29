@@ -4,10 +4,5 @@
       "path": "/api/cron/bloquear-assinaturas",
       "schedule": "5 0 * * *"
     }
-  ],
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "nodejs24.x"
-    }
-  }
+  ]
 }
