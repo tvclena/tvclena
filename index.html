@@ -2114,6 +2114,16 @@ function render(buscaTxt = "") {
 function prepararLista(filtros = null, buscaTxt = "") {
   let lista = [...dados];
 
+  // 🎯 FILTRO PRINCIPAL
+  if (filtro !== "todos") {
+    lista = lista.filter(d => {
+      if (filtro === "documentarios") {
+        return d.tipo === "documentario";
+      }
+      return d.tipo === filtro;
+    });
+  }
+
   if (categoriaAtiva !== "todas") {
     lista = lista.filter(d =>
       d.categoria?.toLowerCase().split(",").includes(categoriaAtiva)
@@ -2143,13 +2153,14 @@ function prepararLista(filtros = null, buscaTxt = "") {
     lista = lista.filter(d => d._search.includes(buscaTxt));
   }
 
-dadosFiltrados = agruparSeries(lista);
+  dadosFiltrados = agruparSeries(lista);
   paginaAtual = 0;
   grid.innerHTML = "";
 
-  observer.observe(sentinela); // ✅ ESSENCIAL
+  observer.observe(sentinela);
   carregarProximaPagina();
 }
+
 
 function carregarProximaPagina() {
   if (carregando) return;
