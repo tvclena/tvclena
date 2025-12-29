@@ -6,106 +6,237 @@
 <title>Clena TV</title>
 
 <style>
-body{
+html,body{
   margin:0;
-  background:#0f0f10;
+  width:100%;
+  height:100%;
+  background:#000;
+  overflow:hidden;
+  font-family:Inter,Arial,sans-serif;
+}
+
+/* ================= FUNDO ================= */
+#bg{
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at center, rgba(229,9,20,.25), transparent 60%),
+    #000;
+}
+
+/* ================= CONTAINER ================= */
+#wrap{
+  position:relative;
+  z-index:2;
+  height:100%;
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  height:100vh;
-  font-family:Inter,Arial;
+}
+
+/* ================= LOGO ================= */
+.logo{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  transform:scale(.88);
+  opacity:0;
+  animation:logoIn 2.6s cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+/* CLENA */
+.logo-text{
+  font-size:86px;
+  font-weight:900;
+  letter-spacing:2px;
+  color:#e50914;
+  position:relative;
+  text-shadow:
+    0 0 12px rgba(229,9,20,.6),
+    0 0 32px rgba(229,9,20,.4);
+}
+
+/* brilho passando */
+.logo-text::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255,255,255,.85) 50%,
+    transparent 100%
+  );
+  transform:translateX(-120%);
+  animation:shine 2.4s ease forwards 1.2s;
+  mix-blend-mode:overlay;
+}
+
+@keyframes shine{
+  to{ transform:translateX(120%); }
+}
+
+/* TV CAPSULA */
+.tv-box{
+  position:relative;
+  padding:18px 28px 18px 58px;
+  border-radius:22px;
+  background:linear-gradient(180deg,#ff1c1c,#b80000);
+  box-shadow:
+    0 0 18px rgba(229,9,20,.8),
+    0 0 48px rgba(229,9,20,.5);
+  font-size:42px;
+  font-weight:900;
   color:#fff;
 }
 
-.container{
-  text-align:center;
+/* PLAY */
+.tv-box::before{
+  content:"▶";
+  position:absolute;
+  left:20px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:26px;
+  color:#fff;
+  text-shadow:0 0 10px rgba(255,255,255,.9);
 }
 
-svg{
-  width:220px;
-}
-
-/* animação “pintando” */
-path{
-  fill:none;
-  stroke:#e50914;
-  stroke-width:4;
-  stroke-dasharray:1000;
-  stroke-dashoffset:1000;
-  animation: draw 2.4s ease forwards;
-}
-
-@keyframes draw{
-  to{ stroke-dashoffset:0; }
-}
-
-.status{
-  margin-top:24px;
+/* ================= STATUS ================= */
+#status{
+  margin-top:26px;
   font-size:14px;
   color:#aaa;
+  letter-spacing:.4px;
 }
 
-.offline{
+/* OFFLINE */
+#offline{
+  display:none;
+  margin-top:22px;
   color:#ff5555;
-  margin-top:20px;
+  text-align:center;
 }
-
-button{
-  margin-top:18px;
-  padding:12px 22px;
+#offline button{
+  margin-top:14px;
+  padding:12px 26px;
   border-radius:999px;
   border:none;
   background:#e50914;
   color:#fff;
-  font-weight:600;
+  font-weight:700;
   cursor:pointer;
+}
+
+/* ================= ANIMAÇÕES ================= */
+@keyframes logoIn{
+  0%{
+    opacity:0;
+    transform:scale(.85) translateY(20px);
+  }
+  60%{
+    opacity:1;
+  }
+  100%{
+    opacity:1;
+    transform:scale(1) translateY(0);
+  }
+}
+
+/* ================= PARTICULAS ================= */
+canvas{
+  position:fixed;
+  inset:0;
+  z-index:1;
 }
 </style>
 </head>
 
 <body>
-<div class="container">
 
-  <!-- ✨ LOGO DESENHANDO -->
-  <svg viewBox="0 0 400 120">
-    <!-- substitua pelo SVG REAL da sua logo -->
-    <path d="M20 60 L380 60"/>
-  </svg>
+<div id="bg"></div>
+<canvas id="fx"></canvas>
 
-  <div class="status" id="status">
-    Carregando…
+<div id="wrap">
+  <div class="logo">
+    <div class="logo-text">CLENA</div>
+    <div class="tv-box">TV</div>
   </div>
 
-  <div class="offline" id="offline" style="display:none">
-    Sem conexão com a internet
-    <br>
+  <div id="status">Carregando…</div>
+
+  <div id="offline">
+    Sem conexão com a internet<br>
     <button onclick="location.reload()">Recarregar</button>
   </div>
-
 </div>
 
 <script>
+/* ================= INTERNET ================= */
 function online(){
   return navigator.onLine;
 }
 
+/* ================= PARTICULAS ================= */
+const canvas = document.getElementById("fx");
+const ctx = canvas.getContext("2d");
+let w,h,parts=[];
+
+function resize(){
+  w = canvas.width = innerWidth;
+  h = canvas.height = innerHeight;
+}
+addEventListener("resize", resize);
+resize();
+
+function spawn(){
+  return {
+    x:Math.random()*w,
+    y:Math.random()*h,
+    vx:(Math.random()-.5)*.6,
+    vy:(Math.random()-.5)*.6,
+    r:Math.random()*2+1,
+    a:Math.random()*.7+.2
+  };
+}
+for(let i=0;i<90;i++) parts.push(spawn());
+
+function draw(){
+  ctx.clearRect(0,0,w,h);
+  for(const p of parts){
+    p.x+=p.vx;
+    p.y+=p.vy;
+    if(p.x<0||p.x>w||p.y<0||p.y>h){
+      p.x=Math.random()*w;
+      p.y=Math.random()*h;
+    }
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(229,9,20,${p.a})`;
+    ctx.fill();
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+
+/* ================= FLUXO ================= */
 function iniciar(){
   if(!online()){
-    document.getElementById("status").style.display="none";
-    document.getElementById("offline").style.display="block";
+    status.style.display="none";
+    offline.style.display="block";
     return;
   }
 
-  // simula preload bonito
-  setTimeout(() => {
-    parent.postMessage("ABERTURA_OK", "*");
-  }, 2600);
+  setTimeout(()=>{
+    parent.postMessage("ABERTURA_OK","*");
+  },3400);
 }
 
-window.addEventListener("online", iniciar);
-window.addEventListener("offline", iniciar);
-
+addEventListener("online", iniciar);
+addEventListener("offline", iniciar);
 iniciar();
 </script>
+
 </body>
 </html>
