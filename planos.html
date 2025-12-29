@@ -213,10 +213,13 @@ function voltar(){
 /* CARREGA PLANOS DA API (compatível com get-planos atual) */
 async function carregarPlanos(){
   try{
-    const res = await fetch(
-      "https://www.clena.com.br/api/get-planos",
-      { cache: "no-store" }
-    );
+  const res = await fetch(
+  "https://www.clena.com.br/api/get-planos",
+  { cache: "no-store" }
+);
+
+const planos = await res.json();
+
 
     const json = await res.json();
     const planos = json.planos || [];
@@ -285,7 +288,6 @@ async function assinar(plano){
     cache: "no-store",              // 🔥 ISSO BLOQUEIA O SW
     credentials: "same-origin",
     body: JSON.stringify({
-      action: "assinatura_payment",
       plano: plano,
       email: email
     })
@@ -309,9 +311,6 @@ async function assinar(plano){
   }
 }
 
-
-/* INIT */
-carregarPlanos();
 </script>
 
 
