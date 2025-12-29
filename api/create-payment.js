@@ -90,8 +90,8 @@ export default async function handler(req, res) {
             payer: { email },
             external_reference: referencia,
             back_urls: {
-              success: "https://www.clena.com.br/sucesso.html",
-              failure: "https://www.clena.com.br/erro.html",
+              success: "https://www.clena.com.br/sucessoassinatura.html",
+              failure: "https://www.clena.com.br/erroassinatura.html",
             },
             notification_url:
               "https://www.clena.com.br/api/webhook-mercadopago",
@@ -182,8 +182,8 @@ export default async function handler(req, res) {
             payer: { email },
             external_reference: referencia,
             back_urls: {
-              success: "https://www.clena.com.br/sucesso.html",
-              failure: "https://www.clena.com.br/erro.html",
+              success: "https://www.clena.com.br/sucessoapex.html",
+              failure: "https://www.clena.com.br/erroapex.html",
             },
             notification_url:
               "https://www.clena.com.br/api/webhook-mercadopago",
