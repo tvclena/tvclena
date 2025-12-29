@@ -1,4 +1,27 @@
 {
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/create-payment",
+      "dest": "/api/create-payment.js"
+    },
+    {
+      "src": "/api/get-planos",
+      "dest": "/api/get-planos.js"
+    },
+    {
+      "src": "/api/webhook-mercadopago",
+      "dest": "/api/webhook-mercadopago.js"
+    },
+    {
+      "src": "/api/cron/bloquear-assinaturas",
+      "dest": "/api/cron/bloquear-assinaturas.js"
+    }
+  ],
   "crons": [
     {
       "path": "/api/cron/bloquear-assinaturas",
