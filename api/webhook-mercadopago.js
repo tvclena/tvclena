@@ -17,17 +17,15 @@ const sb = createClient(
    🧠 HELPERS
 ===================================================== */
 
-// Sempre retornar 200 (Mercado Pago exige)
+// Mercado Pago SEMPRE exige HTTP 200
 function ok(res, payload = {}) {
   return res.status(200).json({ ok: true, ...payload });
 }
 
-// Datas
 function now() {
   return new Date();
 }
 
-// Dias → ms
 function diasParaMs(dias) {
   return dias * 86400000;
 }
@@ -37,7 +35,7 @@ function diasParaMs(dias) {
 ===================================================== */
 export default async function handler(req, res) {
   try {
-    // 🔥 MP SEMPRE espera 200
+    // 🔥 MP só aceita 200
     if (req.method !== "POST") {
       return ok(res);
     }
@@ -60,13 +58,12 @@ export default async function handler(req, res) {
     );
 
     if (!mpRes.ok) {
-      console.error("❌ MP fetch erro");
+      console.error("❌ Erro ao consultar MP");
       return ok(res, { ignored: true });
     }
 
     const payment = await mpRes.json();
 
-    // 🔐 valida referência
     if (!payment.external_reference) {
       return ok(res, { ignored: true });
     }
@@ -74,7 +71,7 @@ export default async function handler(req, res) {
     const referencia = payment.external_reference;
 
     /* =====================================================
-       🔄 ATUALIZA STATUS (sempre sincroniza)
+       🔄 SINCRONIZA STATUS DO PAGAMENTO
     ===================================================== */
     await sb
       .from("pagamentos")
@@ -86,7 +83,7 @@ export default async function handler(req, res) {
       })
       .eq("referencia", referencia);
 
-    // ❌ só continua se aprovado
+    // ❌ Só processa quando aprovado
     if (payment.status !== "approved") {
       return ok(res, { status: payment.status });
     }
@@ -112,7 +109,9 @@ export default async function handler(req, res) {
       return ok(res, { ignored: true });
     }
 
-    // 🔒 IDEMPOTÊNCIA (anti crédito duplo)
+    /* =====================================================
+       🔒 IDEMPOTÊNCIA (ANTI DUPLICAÇÃO)
+    ===================================================== */
     if (pag.processado === true) {
       return ok(res, { duplicated: true });
     }
@@ -144,7 +143,7 @@ export default async function handler(req, res) {
     // 💰 RECARGA APEX
     // =====================
     else {
-      // saldo SEMPRE em REAIS (conversão é só visual)
+      // saldo salvo em REAIS (1 real = 15 Apex é só visual)
       await sb.rpc("somar_saldo_carteira", {
         p_user_id: pag.user_id,
         p_valor: pag.valor,
@@ -152,7 +151,7 @@ export default async function handler(req, res) {
     }
 
     /* =====================================================
-       ✅ MARCA COMO PROCESSADO (FINAL)
+       ✅ MARCA COMO PROCESSADO
     ===================================================== */
     await sb
       .from("pagamentos")
