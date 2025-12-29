@@ -267,11 +267,30 @@ async function carregarPlanosApex(){
       body: JSON.stringify({ action: "list_apex" })
     });
 
-    const planos = await res.json();
-    const grid = document.getElementById("recargaGrid");
-    grid.innerHTML = "";
+const response = await res.json();
 
-    planos.forEach(plano => {
+if (!response || !Array.isArray(response.planos)) {
+  console.error("Resposta inválida da API Apex:", response);
+  return;
+}
+
+const planos = response.planos;
+if (planos.length === 0) {
+  document.getElementById("recargaGrid").innerHTML =
+    "<p style='opacity:.6;font-size:14px'>Nenhum plano disponível</p>";
+  return;
+}
+
+
+
+    
+const grid = document.getElementById("recargaGrid");
+grid.innerHTML = "";
+
+planos.forEach(plano => {
+
+
+      
       const apex = plano.valor * 15;
 
       const card = document.createElement("div");
