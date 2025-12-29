@@ -1680,7 +1680,40 @@ if (error) {
 
   console.log("🎬 FILMES CARREGADOS:", data);
 
-  dados = data || [];
+dados = (data || []).map(d => {
+  // 🔢 classificação indicativa → número
+  let classificacaoNum = null;
+  if (d.classificacao_indicativa) {
+    const m = d.classificacao_indicativa.match(/\d+/);
+    if (m) classificacaoNum = Number(m[0]);
+  }
+
+  return {
+    ...d,
+
+    // 📆 ano
+    ano_lancamento: d.ano_lancamento
+      ? Number(d.ano_lancamento)
+      : null,
+
+    // ⭐ nota
+    nota_critica: d.nota_critica
+      ? Number(d.nota_critica)
+      : null,
+
+    // ⏱ duração
+    duracao_minutos: d.duracao_minutos
+      ? Number(d.duracao_minutos)
+      : null,
+
+    // 🎚 classificação pronta para filtro
+    classificacao_num: classificacaoNum,
+
+    // 🔤 normaliza texto
+    idioma: (d.idioma || "").toLowerCase(),
+    audio: (d.audio || "").toLowerCase()
+  };
+});
   dadosCarregados = true;
 montarFiltrosCategorias(); // 👈 ADICIONE AQUI
 
@@ -1889,13 +1922,16 @@ function renderComFiltros(f){
       return false;
     }
 
-    // 🎚 classificação indicativa (IDADE)
-    if (f.classificacao !== undefined) {
-      const idade = parseInt(
-        (d.classificacao_indicativa || "").match(/\d+/)
-      );
-      if (!isNaN(idade) && idade > f.classificacao) return false;
-    }
+// 🎚 CLASSIFICAÇÃO INDICATIVA (IDADE)
+if (f.classificacao !== undefined) {
+  if (
+    d.classificacao_num !== null &&
+    d.classificacao_num > f.classificacao
+  ) {
+    return false;
+  }
+}
+
 
     // 📆 ano
     if (f.anos?.length && !f.anos.includes(String(d.ano_lancamento))) {
@@ -1915,6 +1951,40 @@ function renderComFiltros(f){
       return false;
     }
 
+// ⭐ NOTA MÍNIMA
+if (f.notaMin && d.nota_critica !== null) {
+  if (d.nota_critica < f.notaMin) return false;
+}
+
+// ⏱ DURAÇÃO MÍNIMA
+if (f.duracaoMin && d.duracao_minutos !== null) {
+  if (d.duracao_minutos < f.duracaoMin) return false;
+}
+
+// 🌍 IDIOMA
+if (f.idiomas?.length) {
+  if (!f.idiomas.some(i => d.idioma.includes(i.toLowerCase()))) {
+    return false;
+  }
+}
+
+// 🔊 ÁUDIO
+if (f.audios?.length) {
+  if (!f.audios.some(a => d.audio.includes(a.toLowerCase()))) {
+    return false;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+    
     return true;
   }).forEach(item => {
     grid.innerHTML += card(item);
@@ -1931,6 +2001,8 @@ function aplicarFiltrosAvancados(){
     filtros.busca = filtros.busca.toLowerCase();
   }
 
+
+  
   renderComFiltros(filtros);
 }
 
