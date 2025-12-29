@@ -217,9 +217,11 @@ button{
 <script>
 /* ===== DADOS DO INDEX ===== */
 const dados = JSON.parse(localStorage.getItem("clena_dados") || "[]");
-const filtrosSalvos = sessionStorage.getItem("clena_session")
-  ? JSON.parse(localStorage.getItem("clena_filtros") || "{}")
-  : {};
+const filtrosSalvos =
+  sessionStorage.getItem("clena_filtros_aberto") === "1"
+    ? JSON.parse(localStorage.getItem("clena_filtros") || "{}")
+    : {};
+
 
 /* ===== POPULA ANOS ===== */
 const anosUnicos = [...new Set(
