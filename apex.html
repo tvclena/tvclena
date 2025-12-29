@@ -332,9 +332,11 @@ async function continuarPagamento(){
 
     const data = await res.json();
 
-    if(data.url){
-  window.open(data.url, "_blank", "noopener,noreferrer");
-    }else{
+if (data.url) {
+  window.location.href = data.url;
+}
+
+    else{
       alert("Erro ao gerar pagamento");
       console.error(data);
     }
