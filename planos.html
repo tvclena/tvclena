@@ -213,13 +213,10 @@ function voltar(){
 /* CARREGA PLANOS DA API (compatível com get-planos atual) */
 async function carregarPlanos(){
   try{
-  const res = await fetch(
-  "https://www.clena.com.br/api/get-planos",
-  { cache: "no-store" }
-);
-
-const planos = await res.json();
-
+    const res = await fetch(
+      "https://www.clena.com.br/api/get-planos",
+      { cache: "no-store" }
+    );
 
     const json = await res.json();
     const planos = json.planos || [];
@@ -267,6 +264,7 @@ const planos = await res.json();
   }
 }
 
+
 carregarPlanos();
 /* INICIAR PAGAMENTO (compatível com create-payment atual) */
 async function assinar(plano){
@@ -280,19 +278,20 @@ async function assinar(plano){
   }
 
   try{
-   const res = await fetch(
-  "https://www.clena.com.br/api/create-payment",
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    cache: "no-store",              // 🔥 ISSO BLOQUEIA O SW
-    credentials: "same-origin",
-    body: JSON.stringify({
-      plano: plano,
-      email: email
-    })
-  }
-);
+    const res = await fetch(
+      "https://www.clena.com.br/api/create-payment",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        credentials: "same-origin",
+        body: JSON.stringify({
+          action: "assinatura",   // 🔥 alinhado com backend
+          plano: plano,
+          email: email
+        })
+      }
+    );
 
     const data = await res.json();
     console.log("RETORNO CREATE PAYMENT:", data);
@@ -310,6 +309,7 @@ async function assinar(plano){
     console.error(e);
   }
 }
+
 
 </script>
 
