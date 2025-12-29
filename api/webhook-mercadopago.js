@@ -9,7 +9,7 @@ const sb = createClient(
 );
 export default async function handler(req, res) {
   try {
-    // Mercado Pago SEMPRE espera 200
+    //  Mercado Pago SEMPRE espera 200
     if (req.method !== "POST") {
       return res.status(200).json({ ok: true });
     }
