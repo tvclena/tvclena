@@ -1,9 +1,6 @@
 {
   "name": "clena",
   "version": "1.0.0",
-  "engines": {
-    "node": "24.x"
-  },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.7"
   }
