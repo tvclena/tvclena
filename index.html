@@ -1249,21 +1249,6 @@ body.modal-open{
 
 <body>
 
-<!-- 🚀 ABERTURA -->
-<iframe
-  id="aberturaFrame"
-  src="abertura.html"
-  style="
-    position:fixed;
-    inset:0;
-    width:100%;
-    height:100%;
-    border:none;
-    z-index:999999;
-    background:#0f0f10;
-  ">
-</iframe>
-
 
 
 
@@ -1763,8 +1748,7 @@ dados = (data || []).map(d => {
 });
   dadosCarregados = true;
 montarFiltrosCategorias(); // 👈 ADICIONE AQUI
-
-// 🔥 aplica filtros avançados automaticamente (se existirem)
+// 🔥 aplica filtros avançados automaticamente ao carregar a página
 const filtrosSalvos = localStorage.getItem("clena_filtros");
 if (filtrosSalvos) {
   aplicarFiltrosAvancados();
@@ -2652,34 +2636,62 @@ async function carregarApex(){
   </div>
 </div>
 
+
+  <script>
+  // 🚀 CRIA ABERTURA APENAS UMA VEZ POR SESSÃO
+  if (!sessionStorage.getItem("clena_abertura_ok")) {
+    document.body.style.overflow = "hidden";
+
+    const iframe = document.createElement("iframe");
+    iframe.id = "aberturaFrame";
+    iframe.src = "abertura.html";
+    iframe.style.cssText = `
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:none;
+      z-index:999999;
+      background:#0f0f10;
+    `;
+
+    document.body.appendChild(iframe);
+  }
+</script>
+
 <script>
-  // trava scroll enquanto a abertura está ativa
-  document.body.style.overflow = "hidden";
 
-  window.addEventListener("message", (event) => {
-    if (event.data === "ABERTURA_OK") {
-      const frame = document.getElementById("aberturaFrame");
-      if (!frame) return;
 
-      frame.style.transition = "opacity .6s ease";
-      frame.style.opacity = "0";
+ 
+window.addEventListener("message", (event) => {
+  if (event.data === "ABERTURA_OK") {
+    sessionStorage.setItem("clena_abertura_ok", "1");
 
-      setTimeout(() => {
-        frame.remove();
-        document.body.style.overflow = "";
-      }, 600);
-    }
-  });
+    const frame = document.getElementById("aberturaFrame");
+    if (!frame) return;
+
+    frame.style.transition = "opacity .6s ease";
+    frame.style.opacity = "0";
+
+    setTimeout(() => {
+      frame.remove();
+      document.body.style.overflow = "";
+    }, 600);
+  }
+});
+
 </script>
 <script>
   // 🔥 FAILSAFE ABSOLUTO DA ABERTURA
-  setTimeout(() => {
-    const frame = document.getElementById("aberturaFrame");
-    if (frame) {
-      frame.remove();
-      document.body.style.overflow = "";
-    }
-  }, 3500);
+setTimeout(() => {
+  const frame = document.getElementById("aberturaFrame");
+  if (frame) {
+    sessionStorage.setItem("clena_abertura_ok", "1");
+    frame.remove();
+    document.body.style.overflow = "";
+  }
+}, 3500);
+
 </script>
 
 
