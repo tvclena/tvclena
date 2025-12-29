@@ -2575,10 +2575,17 @@ async function carregarApex(){
     const res = await fetch(`/api/carteira?email=${encodeURIComponent(email)}`);
     const data = await res.json();
 
-    document.getElementById("apexQtd").textContent =
-      Number.isInteger(data.apex)
-        ? data.apex
-        : Number(data.apex).toFixed(2);
+    // 🔥 saldo vem em REAIS do backend
+    const saldoReais = Number(data.apex || 0);
+
+    // 🔥 converte para APEX
+    const apex = reaisParaApex(saldoReais);
+
+    document.getElementById("apexQtd").textContent = apex;
+
+    // (opcional, mas PREMIUM) tooltip em reais
+    document.getElementById("apexQtd").title =
+      `≈ R$ ${apexParaReais(apex)}`;
 
   } catch (err) {
     console.error("Erro ao carregar Apex:", err);
