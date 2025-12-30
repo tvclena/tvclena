@@ -98,28 +98,6 @@ button{
   display:flex;gap:10px;padding:10px;cursor:pointer
 }
 .autocomplete img{width:42px;border-radius:6px}
-
-#modalArroba{
-  position:fixed;inset:0;background:rgba(0,0,0,.65);
-  backdrop-filter:blur(14px);
-  display:none;align-items:center;justify-content:center;
-  z-index:9999
-}
-#modalArroba .box{
-  width:320px;padding:20px;border-radius:18px;
-  background:rgba(20,20,20,.9);
-  border:1px solid rgba(255,255,255,.15);
-  text-align:center
-}
-#modalArroba input{
-  width:100%;margin-top:10px;padding:12px;
-  border-radius:12px;border:1px solid rgba(255,255,255,.2);
-  background:#111;color:#fff
-}
-#erroArroba{
-  margin-top:8px;font-size:12px;
-  color:#ff6b6b;display:none
-}
 </style>
 </head>
 
@@ -133,21 +111,12 @@ button{
 <div id="container" class="container hidden">
   <div id="lista"></div>
   <div class="input">
-    <textarea id="txt" placeholder="Use / para marcar filmes"></textarea>
+    <textarea id="txt" placeholder="Use /Nome do Filme"></textarea>
     <button onclick="enviar()">Enviar</button>
   </div>
 </div>
 
 <div id="auto" class="autocomplete" style="display:none"></div>
-
-<div id="modalArroba">
-  <div class="box">
-    <h3>Escolha seu @</h3>
-    <input id="novoArroba" placeholder="@seunome">
-    <div id="erroArroba"></div>
-    <button onclick="salvarArroba()" style="margin-top:14px;width:100%">Salvar</button>
-  </div>
-</div>
 
 <script>
 const sb = supabase.createClient(
@@ -156,11 +125,11 @@ const sb = supabase.createClient(
 );
 
 const email = localStorage.getItem("usuario_email");
-let arroba="", usuarioId=null, cache=[], filmeAtual=null, aberto=false;
+let aberto=false, filmeAtual=null;
 
 function slugify(t){
-  return t.toLowerCase().normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
+  return t.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .replace(/[^a-z0-9]+/g,"-")
     .replace(/(^-|-$)/g,"");
 }
@@ -173,72 +142,53 @@ function toggle(){
     : "Toque para ver os comentários";
 }
 
+/* 🔍 Detecta filme pela URL */
 async function detectarFilmePorURL(){
-  const slug = location.pathname.replace("/","").trim();
-  if(!slug) return carregar();
+  const slugURL = location.pathname.replace("/","").trim();
+  if(!slugURL) return carregar();
 
   const {data} = await sb.from("filmes")
-    .select("*").eq("slug",slug).maybeSingle();
+    .select("*").eq("ativo",true);
 
-  if(data){
-    filmeAtual=data;
-    abrirPopupFilme(data);
-  }
+  filmeAtual = data?.find(f=>slugify(f.titulo)===slugURL) || null;
   carregar();
 }
 
-function abrirPopupFilme(f){
-  const html=`
-  <div id="popupFilme" style="
-    position:fixed;inset:0;
-    background:rgba(0,0,0,.7);
-    backdrop-filter:blur(14px);
-    display:flex;align-items:center;justify-content:center;
-    z-index:99999">
-    <div style="
-      width:340px;background:#111;
-      border-radius:20px;padding:18px;
-      border:1px solid rgba(255,255,255,.15)">
-      <img src="${f.capa_url}" style="width:100%;border-radius:14px">
-      <h2>${f.titulo}</h2>
-      <p style="font-size:13px;opacity:.7">${f.descricao||""}</p>
-      <button onclick="location.href='player.html?filme_id=${f.id}'"
-        style="width:100%;padding:14px;border-radius:14px;background:#e50914;color:#fff">
-        ▶ Assistir
-      </button>
-      <button onclick="popupFilme.remove()"
-        style="margin-top:10px;width:100%;background:none;color:#aaa;border:none">
-        Fechar
-      </button>
-    </div>
-  </div>`;
-  document.body.insertAdjacentHTML("beforeend",html);
-}
+/* 🔁 SERIALIZA SEM DEPENDER DE CACHE */
+async function serializarComentario(txt){
+  let out = txt;
+  const matchs = [...txt.matchAll(/\/([^\n\r]+)/g)];
 
-function serializar(t){
-  return t.replace(/\/([^\s]+)/g,(m,n)=>{
-    const f=cache.find(x=>slugify(x.titulo)===slugify(n));
-    return f?`{{filme:${f.id}|${f.titulo}|${f.capa_url}}}`:m;
-  });
-}
+  for(const m of matchs){
+    const nome = m[1].trim();
+    const slug = slugify(nome);
 
-function renderizar(t){
-  return t.replace(/\{\{filme:(\d+)\|(.+?)\|(.+?)\}\}/g,
-    (m,id,t,c)=>`
-    <div class="filme-card" onclick="location.href='/${slugify(t)}'">
-      <img src="${c}">
-      <div><strong>${t}</strong><div>Ver agora</div></div>
-    </div>`);
+    const {data} = await sb.from("filmes")
+      .select("id,titulo,capa_url")
+      .eq("ativo",true);
+
+    const filme = data?.find(f=>slugify(f.titulo)===slug);
+    if(filme){
+      out = out.replace(
+        m[0],
+        `{{filme:${filme.id}|${filme.titulo}|${filme.capa_url}}}`
+      );
+    }
+  }
+  return out;
 }
 
 async function enviar(){
-  const v=txt.value.trim();
+  const v = txt.value.trim();
   if(!v) return;
+
+  const comentarioFinal = await serializarComentario(v);
 
   await sb.from("comentarios").insert({
     filme_id: filmeAtual ? filmeAtual.id : null,
-    email, arroba,
-    comentario: serializar(v)
+    email,
+    arroba: email.split("@")[0],
+    comentario: comentarioFinal
   });
 
   txt.value="";
@@ -248,9 +198,10 @@ async function enviar(){
 async function carregar(){
   let q = sb.from("comentarios").select("*").order("created_at");
   if(filmeAtual) q = q.eq("filme_id",filmeAtual.id);
-  const {data}=await q;
 
+  const {data} = await q;
   lista.innerHTML="";
+
   data.forEach(c=>{
     lista.innerHTML+=`
     <div class="msg ${c.email===email?"me":""}">
@@ -261,58 +212,49 @@ async function carregar(){
       </div>
     </div>`;
   });
+
   lista.scrollTop=lista.scrollHeight;
 }
 
+function renderizar(t){
+  return t.replace(
+    /\{\{filme:([a-f0-9\-]+)\|(.+?)\|(.+?)\}\}/g,
+    (m,id,titulo,capa)=>`
+    <div class="filme-card" onclick="location.href='/${slugify(titulo)}'">
+      <img src="${capa}">
+      <div>
+        <strong>${titulo}</strong>
+        <div>Ver agora</div>
+      </div>
+    </div>`
+  );
+}
+
+/* AUTOCOMPLETE */
 txt.addEventListener("input",async e=>{
   const i=e.target.value.lastIndexOf("/");
   if(i<0) return auto.style.display="none";
+
   const t=e.target.value.slice(i+1);
-  const {data}=await sb.from("filmes")
-    .select("id,titulo,capa_url")
-    .ilike("titulo",`%${t}%`).limit(5);
-  cache=data||[];
-  auto.innerHTML=cache.map(f=>`
+  const {data} = await sb.from("filmes")
+    .select("titulo,capa_url")
+    .ilike("titulo",`%${t}%`)
+    .eq("ativo",true)
+    .limit(6);
+
+  auto.innerHTML = data.map(f=>`
     <div onclick="sel('${f.titulo}')">
       <img src="${f.capa_url}">${f.titulo}
     </div>`).join("");
+
   auto.style.display="block";
 });
 
 function sel(t){
-  txt.value=txt.value.replace(/\/[^\s]*$/,"/"+t+" ");
+  txt.value = txt.value.replace(/\/[^\s]*$/,"/"+t+" ");
   auto.style.display="none";
 }
 
-async function init(){
-  const {data:user}=await sb.from("usuarios")
-    .select("id,username").eq("email",email).single();
-  usuarioId=user.id;
-  if(!user.username){
-    modalArroba.style.display="flex";
-    return;
-  }
-  arroba=user.username;
-}
-
-async function salvarArroba(){
-  const v=novoArroba.value.replace("@","").trim();
-  if(!/^[a-zA-Z0-9_.]{3,20}$/.test(v)){
-    erroArroba.textContent="Nome inválido";
-    erroArroba.style.display="block";return;
-  }
-  const {data:existe}=await sb.from("usuarios")
-    .select("id").eq("username",v).maybeSingle();
-  if(existe){
-    erroArroba.textContent="Esse @ já está em uso";
-    erroArroba.style.display="block";return;
-  }
-  await sb.from("usuarios").update({username:v}).eq("id",usuarioId);
-  arroba=v;
-  modalArroba.style.display="none";
-}
-
-init();
 detectarFilmePorURL();
 </script>
 
