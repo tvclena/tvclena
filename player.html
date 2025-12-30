@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 
-<!-- ================= GA4 ================= -->
+<!-- GA4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T97MS35TJ6"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
@@ -16,95 +16,67 @@ gtag('config','G-T97MS35TJ6');
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-/* ================= RESET ================= */
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{
-  background:#000;
-  color:#fff;
-  font-family:Inter,Arial,sans-serif;
-}
+html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
-/* ================= TOPO ================= */
+/* TOPO */
 #top{
-  position:sticky;
-  top:0;
-  z-index:100;
+  position:sticky;top:0;z-index:100;
   padding:16px 20px;
   background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0));
 }
 #top button{
-  background:none;
-  border:none;
-  color:#fff;
-  font-size:15px;
-  cursor:pointer;
-  opacity:.85;
+  background:none;border:none;color:#fff;
+  font-size:15px;cursor:pointer;opacity:.85;
 }
-#top button:hover{opacity:1}
 
-/* ================= LAYOUT ================= */
+/* LAYOUT */
 #layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
   min-height:100vh;
 }
 
-/* ================= PLAYER ================= */
+/* PLAYER */
 #playerArea{padding:16px}
 #player{
-  position:sticky;
-  top:80px;
-  width:100%;
-  max-width:1120px;
-  margin:auto;
+  position:sticky;top:80px;
+  max-width:1120px;margin:auto;
   aspect-ratio:16/9;
   border-radius:26px;
   overflow:hidden;
   background:#000;
-  box-shadow:
-    0 0 70px rgba(220,38,38,.55),
-    inset 0 0 50px rgba(0,0,0,.7);
+  box-shadow:0 0 70px rgba(220,38,38,.55), inset 0 0 50px rgba(0,0,0,.7);
 }
 #player::before{
   content:"";
   position:absolute;
   inset:-40px;
-  background:radial-gradient(circle at center,
-    rgba(220,38,38,.35),
-    rgba(0,0,0,0) 70%);
+  background:radial-gradient(circle,rgba(220,38,38,.35),rgba(0,0,0,0) 70%);
   z-index:-1;
 }
-#player video,
-#player iframe{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  border:0;
+#player video,#player iframe{
+  position:absolute;inset:0;width:100%;height:100%;border:0;
 }
 
-/* ================= SIDE ================= */
+/* SIDE */
 #side{
-  padding:22px 22px 30px;
+  padding:22px;
   display:flex;
   flex-direction:column;
   gap:14px;
 }
 
-/* ================= TITULO ================= */
-#titulo{
-  font-size:28px;
-  font-weight:700;
-  line-height:1.2;
-}
+/* TITULO */
+#titulo{font-size:28px;font-weight:700}
 
-/* ================= META EM LINHA ================= */
+/* META */
 #meta{
   display:flex;
   flex-wrap:wrap;
   gap:14px 22px;
   font-size:14px;
-  opacity:.9;
+  opacity:.92;
 }
 .meta-item{
   display:flex;
@@ -114,12 +86,8 @@ html,body{
 }
 .meta-item span{opacity:.75}
 
-/* ================= DESCRIÇÃO ================= */
-#desc{
-  font-size:15px;
-  line-height:1.65;
-  opacity:.88;
-}
+/* DESCRIÇÃO */
+#desc{font-size:15px;line-height:1.65;opacity:.9}
 #desc.collapsed{
   display:-webkit-box;
   -webkit-line-clamp:3;
@@ -127,16 +95,11 @@ html,body{
   overflow:hidden;
 }
 #lerMais{
-  background:none;
-  border:none;
-  color:#f87171;
-  font-weight:600;
-  cursor:pointer;
-  padding:0;
-  align-self:flex-start;
+  background:none;border:none;color:#f87171;
+  font-weight:600;cursor:pointer;
 }
 
-/* ================= CHAT ================= */
+/* CHAT */
 #chat{
   margin-top:10px;
   height:680px;
@@ -149,21 +112,13 @@ html,body{
   flex-direction:column;
 }
 #chatTop{
-  padding:14px;
-  text-align:center;
-  font-weight:600;
-  cursor:pointer;
+  padding:14px;text-align:center;
+  font-weight:600;cursor:pointer;
   background:linear-gradient(to bottom,#1a0b0b,#0b0b0b);
   border-bottom:1px solid #2a0f0f;
 }
-#chatTop:hover{opacity:.9}
-#chat iframe{
-  flex:1;
-  border:0;
-  background:#fff;
-}
+#chat iframe{flex:1;border:0;background:#fff}
 
-/* ================= MOBILE ================= */
 @media(max-width:900px){
   #layout{grid-template-columns:1fr}
   #player{position:relative;top:0}
@@ -174,14 +129,12 @@ html,body{
 
 <body>
 
-<!-- TOPO -->
 <div id="top">
   <button onclick="history.back()">← Voltar</button>
 </div>
 
 <div id="layout">
 
-  <!-- PLAYER -->
   <div id="playerArea">
     <div id="player">
       <video id="video" controls playsinline></video>
@@ -189,11 +142,8 @@ html,body{
     </div>
   </div>
 
-  <!-- SIDE -->
   <div id="side">
-
     <h1 id="titulo"></h1>
-
     <div id="meta"></div>
 
     <p id="desc" class="collapsed"></p>
@@ -205,86 +155,75 @@ html,body{
       </div>
       <iframe id="comentariosIframe"></iframe>
     </div>
-
   </div>
 
 </div>
 
 <script>
-/* ================= ITEM ================= */
+/* ITEM */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get('item'))
 );
 
-/* ================= EXTRATORES ================= */
-function extrairDuracao(raw){
+/* EXTRATORES RAW_INFO */
+const extract = (raw, regex) => {
   if(!raw) return null;
-  const m = raw.match(/Duração:\s*(\d+)\s*Min/i);
-  return m ? m[1] + ' min' : null;
-}
+  const m = raw.match(regex);
+  return m ? m[1].trim() : null;
+};
 
-function extrairClassificacao(raw){
-  if(!raw) return null;
-  const m = raw.match(/Cl[aá]ssifica[cç][aã]o:\s*(\d+)\s*Anos/i);
-  return m ? m[1] + ' Anos' : null;
-}
+const duracaoRaw = extract(item.raw_info,/Duração:\s*(\d+)\s*Min/i);
+const idiomaRaw  = extract(item.raw_info,/Idioma:\s*([^\n]+)/i);
+const idadeRaw   = extract(item.raw_info,/Cl[aá]ssifica[cç][aã]o:\s*(\d+\s*Anos)/i);
+const notaRaw    = extract(item.raw_info,/Nota da Cr[ií]tica:\s*([\d.]+)/i);
 
-function extrairNota(raw){
-  if(!raw) return null;
-  const m = raw.match(/Nota da Cr[ií]tica:\s*([\d.]+)/i);
-  return m ? m[1] : null;
-}
-
-/* ================= UI ================= */
+/* UI */
 titulo.textContent = item.titulo || item.serie_nome || 'Conteúdo';
 desc.textContent   = item.descricao || '';
 
 const metas = [];
 
+// PRINCIPAIS
 if(item.categoria) metas.push(['🎬', item.categoria]);
 if(item.tipo) metas.push(['📺', item.tipo]);
 if(item.ano_lancamento) metas.push(['📅', item.ano_lancamento]);
 
-if(item.serie_nome) metas.push(['📀', item.serie_nome]);
-if(item.temporada) metas.push(['📦', 'Temporada ' + item.temporada]);
-if(item.episodio) metas.push(['▶️', 'Episódio ' + item.episodio]);
-
-const duracao =
-  item.duracao_minutos
-    ? item.duracao_minutos + ' min'
-    : extrairDuracao(item.raw_info);
+// DURAÇÃO
+const duracao = item.duracao_minutos
+  ? item.duracao_minutos + ' min'
+  : duracaoRaw;
 if(duracao) metas.push(['⏱️', duracao]);
 
-if(item.idioma) metas.push(['🌎', item.idioma]);
+// IDIOMA / ÁUDIO
+const idioma = item.idioma || idiomaRaw;
+if(idioma) metas.push(['🌎', idioma]);
 if(item.audio) metas.push(['🔊', item.audio]);
 
-const classif =
-  item.classificacao_indicativa ||
-  extrairClassificacao(item.raw_info);
-if(classif) metas.push(['🔞', classif]);
+// CLASSIFICAÇÃO
+const idade = item.classificacao_indicativa || idadeRaw;
+if(idade) metas.push(['🔞', idade]);
 
-const nota =
-  item.nota_critica ||
-  extrairNota(item.raw_info);
+// NOTA
+const nota = item.nota_critica || notaRaw;
 if(nota) metas.push(['⭐', nota]);
 
 meta.innerHTML = metas.map(
   m => `<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`
 ).join('');
 
-/* ================= LER MAIS ================= */
+/* LER MAIS */
 setTimeout(()=>{
   if(desc.scrollHeight > desc.clientHeight){
-    lerMais.style.display = 'inline';
+    lerMais.style.display='inline';
   }
 },50);
 lerMais.onclick = ()=> desc.classList.toggle('collapsed');
 
-/* ================= CHAT ================= */
+/* CHAT */
 comentariosIframe.src =
   `comentarios.html?filme_id=${item.id}&tipo=${item.tipo}`;
 
-/* ================= PLAYER ================= */
+/* PLAYER */
 function tocar(src){
   if(!src) return;
   if(/\.m3u8$/i.test(src)){
