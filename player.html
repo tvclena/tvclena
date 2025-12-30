@@ -12,9 +12,22 @@ gtag('config','G-T97MS35TJ6');
 </script>
 
 <title>Sessão • Player</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta 
+  name="viewport" 
+  content="
+    width=device-width,
+    initial-scale=1.0,
+    maximum-scale=1.0,
+    user-scalable=no
+  "
+>
 
 <style>
+html, body {
+  touch-action: manipulation;
+  overscroll-behavior: none;
+}
+
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
@@ -293,6 +306,31 @@ function tocar(src){
   }
 }
 tocar(item.video_url);
+</script>
+<script>
+/* 🔒 BLOQUEIO TOTAL DE ZOOM */
+
+/* Ctrl + Scroll */
+window.addEventListener('wheel', function(e) {
+  if (e.ctrlKey) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
+/* Ctrl + "+" "-" "0" */
+window.addEventListener('keydown', function(e) {
+  if (
+    e.ctrlKey &&
+    (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')
+  ) {
+    e.preventDefault();
+  }
+});
+
+/* Pinch zoom (Safari / iOS) */
+window.addEventListener('gesturestart', e => e.preventDefault());
+window.addEventListener('gesturechange', e => e.preventDefault());
+window.addEventListener('gestureend', e => e.preventDefault());
 </script>
 
 </body>
