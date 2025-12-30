@@ -5,7 +5,6 @@
 <title>Sessão • Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -97,6 +96,8 @@ video{
   margin-top:6px;
   text-align:right
 }
+
+/* CARD FILME */
 .filme-card{
   margin-top:8px;
   display:flex;
@@ -163,26 +164,32 @@ button.send{
 </div>
 
 <script>
-/* SUPABASE */
+/* ================= SUPABASE ================= */
 const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* USUÁRIO */
+/* ================= USUÁRIO ================= */
 const email = localStorage.getItem("usuario_email") || "anonimo@clena";
+const arroba = email.split("@")[0];
 
-/* FILME */
+/* ================= FILME ================= */
 const params = new URLSearchParams(location.search);
+if(!params.get("item")){
+  alert("Filme inválido");
+  throw new Error("Item não informado");
+}
+
 const item = JSON.parse(decodeURIComponent(params.get("item")));
 const filmeId = item.id;
 
-/* PLAYER */
+/* ================= PLAYER ================= */
 video.src = item.video_url.startsWith("http")
   ? item.video_url
   : `https://sessao99.b-cdn.net/videos/${item.video_url}.m3u8`;
 
-/* SLUG */
+/* ================= UTIL ================= */
 function slugify(t){
   return t.toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
@@ -190,89 +197,99 @@ function slugify(t){
     .replace(/(^-|-$)/g,"");
 }
 
-/* RENDER */
-function renderizar(t){
-  return t.replace(
+/* ================= RENDER ================= */
+function renderizar(txt){
+  return txt.replace(
     /\{\{filme:([a-f0-9\-]+)\|(.+?)\|(.+?)\}\}/g,
     (m,id,titulo,capa)=>`
-    <div class="filme-card" onclick="location.href='/${slugify(titulo)}'">
-      <img src="${capa}">
-      <div>
-        <strong>${titulo}</strong>
-        <div>Ver agora</div>
-      </div>
-    </div>`
+      <div class="filme-card" onclick="location.href='/${slugify(titulo)}'">
+        <img src="${capa}">
+        <div>
+          <strong>${titulo}</strong>
+          <div>Ver agora</div>
+        </div>
+      </div>`
   );
 }
 
-/* CARREGAR COMENTÁRIOS */
+/* ================= CARREGAR ================= */
 async function carregar(){
   const {data,error} = await sb
     .from("comentarios")
     .select("*")
-    .eq("filme_id",filmeId)
+    .eq("filme_id", filmeId)
     .order("created_at");
 
   if(error){
-    console.error(error);
+    console.error("Erro comentários:", error);
     return;
   }
 
   lista.innerHTML="";
   data.forEach(c=>{
     lista.innerHTML+=`
-    <div class="msg ${c.email===email?"me":""}">
-      <div class="user">@${c.arroba || c.email.split("@")[0]}</div>
-      <div>${renderizar(c.comentario)}</div>
-      <div class="time">
-        ${new Date(c.created_at).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
-      </div>
-    </div>`;
+      <div class="msg ${c.email===email?"me":""}">
+        <div class="user">@${c.arroba || arroba}</div>
+        <div>${renderizar(c.comentario)}</div>
+        <div class="time">
+          ${new Date(c.created_at).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
+        </div>
+      </div>`;
   });
 
   lista.scrollTop = lista.scrollHeight;
 }
 
-/* SERIALIZAR /FILME */
+/* ================= SERIALIZAR /FILME ================= */
 async function serializarComentario(txt){
   let out = txt;
-  const matchs = [...txt.matchAll(/\/([^\n\r]+)/g)];
+  const matches = [...txt.matchAll(/\/([^\n\r]+)/g)];
 
-  for(const m of matchs){
+  if(matches.length === 0) return out;
+
+  const {data:filmes} = await sb
+    .from("filmes")
+    .select("id,titulo,capa_url");
+
+  for(const m of matches){
     const nome = m[1].trim();
     const slug = slugify(nome);
-
-    const {data} = await sb.from("filmes").select("id,titulo,capa_url");
-
-    const filme = data?.find(f=>slugify(f.titulo)===slug);
-    if(filme){
+    const f = filmes.find(x=>slugify(x.titulo)===slug);
+    if(f){
       out = out.replace(
         m[0],
-        `{{filme:${filme.id}|${filme.titulo}|${filme.capa_url}}}`
+        `{{filme:${f.id}|${f.titulo}|${f.capa_url}}}`
       );
     }
   }
   return out;
 }
 
-/* ENVIAR */
+/* ================= ENVIAR ================= */
 async function enviar(){
   const v = txt.value.trim();
   if(!v) return;
 
   const comentarioFinal = await serializarComentario(v);
 
-  await sb.from("comentarios").insert({
+  const {error} = await sb.from("comentarios").insert({
     filme_id: filmeId,
     email,
-    arroba: email.split("@")[0],
+    arroba,
     comentario: comentarioFinal
   });
+
+  if(error){
+    alert("Erro ao enviar comentário");
+    console.error(error);
+    return;
+  }
 
   txt.value="";
   carregar();
 }
 
+/* ================= INIT ================= */
 carregar();
 </script>
 
