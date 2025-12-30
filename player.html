@@ -231,9 +231,11 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial}
 
 <script>
 const sb = supabase.createClient(
- "https://dxkszikemntfusfyrzos.supabase.co",
- "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
+
+const API_BASE = "https://tvclena.vercel.app";
 
 const item = JSON.parse(
  decodeURIComponent(new URLSearchParams(location.search).get("item"))
@@ -355,7 +357,7 @@ async function carregar(){
       downloadBtn.textContent = "Processando compra...";
 
       try {
-        const res = await fetch("/api/comprar-download", {
+const res = await fetch(`${API_BASE}/api/comprar-download`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -371,7 +373,7 @@ async function carregar(){
           return;
         }
 
-const r = await fetch("/api/download", {
+const r = await fetch(`${API_BASE}/api/download`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -387,21 +389,18 @@ if (!r.ok || !d.url) {
   return;
 }
 
-// 🚀 dispara o download
 window.location.href = d.url;
+return; // ⛔ encerra execução
 
         // 🔜 PRÓXIMO PASSO (ainda não aqui):
         // const r = await fetch("/api/download", {...})
         // window.location.href = r.url;
-
       } catch (e) {
         alert("Erro de conexão");
-      } finally {
-        downloadBtn.disabled = false;
-        downloadBtn.textContent = `⬇️ Baixar • ${filme.valor_apex} Apex`;
       }
-    };
-  }
+    }; // ✅ FECHA downloadBtn.onclick
+
+    
 
   // ======= SÉRIES =======
   if (filme.tipo?.toLowerCase() === "serie") {
