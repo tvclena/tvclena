@@ -447,9 +447,10 @@ section{padding:20px 14px}
   background:rgba(255,255,255,.28);
 }
 html, body {
-  overscroll-behavior: none;
-  touch-action: manipulation;
+  overscroll-behavior: auto;
+  touch-action: auto;
 }
+
 #searchResults{
   position:fixed;
   top:64px;
@@ -874,12 +875,20 @@ body.search-open {
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
 
-  max-height: 70vh;       /* 🔥 limite visível */
-  overflow-y: auto;       /* 🔥 libera rolagem */
-  padding-right: 6px;
+  max-height: calc(100vh - 240px);
+  overflow-y: scroll;
 
-  overscroll-behavior: contain;
+  padding-bottom: 60px;
+
+  -webkit-overflow-scrolling: touch;
 }
+@media (max-width: 768px) {
+  .planos-bloqueio {
+    grid-template-columns: 1fr;
+    max-height: calc(100vh - 200px);
+  }
+}
+
 
 
 .plano-card {
@@ -2453,8 +2462,7 @@ return false;
 
   const agora = new Date();
   const expira = new Date(data.trial_expires_at);
-
- if (data.status === "bloqueado") {
+if (data.status === "bloqueado") {
   const emailUser = email;
 
   const mensagem = encodeURIComponent(
@@ -2467,53 +2475,75 @@ Gostaria de regularizar minha assinatura.`
 
   const whatsappUrl = `https://wa.me/5575998112535?text=${mensagem}`;
 
-document.body.innerHTML = `
-  <div style="
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:#0f0f10;
-    color:#fff;
-    font-family:Inter,Arial;
-    padding:20px;
-  ">
-    <div style="width:100%;max-width:960px">
+  // 🔥 DESARMA DEFINITIVAMENTE A ABERTURA (CRÍTICO)
+  sessionStorage.setItem("clena_abertura_ok", "1");
+  const aberturaFrame = document.getElementById("aberturaFrame");
+  if (aberturaFrame) aberturaFrame.remove();
 
-      <!-- 🚫 BLOQUEIO -->
-      <div style="
-        background:#1b1b1e;
-        padding:30px;
-        border-radius:16px;
-        box-shadow:0 20px 40px rgba(0,0,0,.6);
-        text-align:center;
-        margin-bottom:26px;
-      ">
-        <h1 style="color:#e50914;margin-bottom:10px">
-          🚫 Acesso bloqueado
-        </h1>
+  // 🔥 LIMPA QUALQUER TRAVA GLOBAL (MODAL / BUSCA / OVERFLOW)
+  document.body.classList.remove("modal-open");
+  document.body.classList.remove("search-open");
 
-        <p style="color:#ccc;margin-bottom:14px">
-          Seu acesso está temporariamente bloqueado.<br>
-          Escolha um plano abaixo para continuar assistindo.
-        </p>
+  document.body.style.overflow = "auto";
+  document.documentElement.style.overflow = "auto";
+  document.body.style.touchAction = "auto";
+  document.body.style.height = "auto";
 
-        <div style="font-size:12px;color:#777">
-          Email: <strong>${email}</strong>
+  // 🧱 TELA DE BLOQUEIO
+  document.body.innerHTML = `
+    <div style="
+      min-height:100vh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      background:#0f0f10;
+      color:#fff;
+      font-family:Inter,Arial;
+      padding:20px;
+      overflow-y:auto;
+    ">
+      <div style="width:100%;max-width:960px">
+
+        <!-- 🚫 BLOQUEIO -->
+        <div style="
+          background:#1b1b1e;
+          padding:30px;
+          border-radius:16px;
+          box-shadow:0 20px 40px rgba(0,0,0,.6);
+          text-align:center;
+          margin-bottom:26px;
+        ">
+          <h1 style="color:#e50914;margin-bottom:10px">
+            🚫 Acesso bloqueado
+          </h1>
+
+          <p style="color:#ccc;margin-bottom:14px">
+            Seu acesso está temporariamente bloqueado.<br>
+            Escolha um plano abaixo para continuar assistindo.
+          </p>
+
+          <div style="font-size:12px;color:#777">
+            Email: <strong>${email}</strong>
+          </div>
         </div>
+
+        <!-- 💳 PLANOS -->
+        <div id="planosContainer"></div>
+
       </div>
-
-      <!-- 💳 PLANOS AQUI EMBAIXO -->
-      <div id="planosContainer"></div>
-
     </div>
-  </div>
-`;
-carregarPlanosBloqueio();
-return false;
+  `;
 
+  // 🔥 FORÇA RECÁLCULO DE SCROLL (SAFARI / iOS)
+  setTimeout(() => {
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  }, 0);
+
+  // 🚀 CARREGA PLANOS
+  carregarPlanosBloqueio();
+  return false;
 }
-
 
 
 
