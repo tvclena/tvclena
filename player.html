@@ -2,15 +2,20 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-
-<!-- GA4 -->
+<!-- Google tag (GA4) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T97MS35TJ6"></script>
 <script>
-window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config','G-T97MS35TJ6');
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-T97MS35TJ6', {
+    page_title: 'Player',
+    page_location: location.href,
+    debug_mode: true
+  });
 </script>
+
 
 <title>Sessão • Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,223 +24,482 @@ gtag('config','G-T97MS35TJ6');
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
+body{
+  background:#000;
+  color:#fff;
+  font-family:Inter,Arial,sans-serif;
+  overflow:hidden;
+}
+
+#player{position:fixed;inset:0;background:#000}
 
 /* TOPO */
-#top{
-  position:sticky;top:0;z-index:100;
-  padding:16px 20px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0));
+#topActions{
+  position:absolute;
+  top:14px;left:14px;
+  z-index:99
 }
-#top button{
-  background:none;border:none;color:#fff;
-  font-size:15px;cursor:pointer;opacity:.85;
+
+.topBtn{
+  padding:10px 16px;
+  background:rgba(0,0,0,.65);
+  color:#fff;
+  border:none;
+  border-radius:999px;
+  font-size:14px;
+  cursor:pointer;
 }
 
 /* LAYOUT */
 #layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
-  min-height:100vh;
+  height:100%;
+}
+@media(max-width:900px){
+  #layout{grid-template-columns:1fr}
 }
 
 /* PLAYER */
-#playerArea{padding:16px}
-#player{
-  position:sticky;top:80px;
-  max-width:1120px;margin:auto;
-  aspect-ratio:16/9;
-  border-radius:26px;
-  overflow:hidden;
+#playerArea{
+  display:flex;
+  align-items:center;
+  justify-content:center;
   background:#000;
-  box-shadow:0 0 70px rgba(220,38,38,.55), inset 0 0 50px rgba(0,0,0,.7);
+  padding:20px;
 }
-#player::before{
-  content:"";
+
+.playerWrapper{
+  width:100%;
+  max-width:1200px;
+  aspect-ratio:16/9;
+  position:relative;
+}
+
+.playerWrapper video,
+.playerWrapper iframe{
   position:absolute;
-  inset:-40px;
-  background:radial-gradient(circle,rgba(220,38,38,.35),rgba(0,0,0,0) 70%);
-  z-index:-1;
-}
-#player video,#player iframe{
-  position:absolute;inset:0;width:100%;height:100%;border:0;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0;
+  background:#000;
 }
 
 /* SIDE */
 #side{
+  background:#111;
   padding:22px;
-  display:flex;
-  flex-direction:column;
-  gap:14px;
+  overflow-y:auto;
+}
+@media(max-width:900px){
+  #side{max-height:45vh}
 }
 
-/* TITULO */
-#titulo{font-size:28px;font-weight:700}
+.badge{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  background:#222;
+  margin-right:6px;
+}
+.badge.tipo{background:#e50914}
 
-/* META */
-#meta{
+select{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  background:#1c1c1c;
+  border:1px solid #333;
+  border-radius:12px;
+  color:#fff;
+  font-size:15px;
+}
+
+#fullscreenBtn{
+  width:100%;
+  margin-top:16px;
+  padding:16px;
+  font-size:16px;
+  font-weight:600;
+  background:#fff;
+  color:#000;
+  border:none;
+  border-radius:14px;
+  cursor:pointer;
+}
+
+/* ===== META INFO PLAYER ===== */
+.meta-box{
   display:flex;
   flex-wrap:wrap;
-  gap:14px 22px;
-  font-size:14px;
+  gap:8px;
+  margin:10px 0 14px;
 }
-.meta-item{
-  display:flex;
-  align-items:center;
-  gap:6px;
+
+.meta-badge{
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+  background:#1f1f1f;
+  border:1px solid #2a2a2a;
+  color:#e5e5e5;
   white-space:nowrap;
 }
-.meta-item span{opacity:.85}
 
-/* DESCRIÇÃO */
-#desc{font-size:15px;line-height:1.65;opacity:.9}
-#desc.collapsed{
-  display:-webkit-box;
-  -webkit-line-clamp:3;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
-}
-#lerMais{
-  background:none;border:none;color:#f87171;
-  font-weight:600;cursor:pointer;
+.meta-badge.tipo{
+  background:#e50914;
+  border-color:#e50914;
+  color:#fff;
 }
 
-/* CHAT */
-#chat{
-  margin-top:10px;
-  height:680px;
-  border-radius:26px;
-  overflow:hidden;
-  background:#0b0b0b;
-  border:1px solid #2a0f0f;
-  box-shadow:0 0 35px rgba(220,38,38,.35);
-  display:flex;
-  flex-direction:column;
+.meta-badge.classificacao{
+  background:#111;
+  border:1px solid #e50914;
+  color:#e50914;
+  font-weight:800;
 }
-#chatTop{
-  padding:14px;text-align:center;
-  font-weight:600;cursor:pointer;
-  background:linear-gradient(to bottom,#1a0b0b,#0b0b0b);
-  border-bottom:1px solid #2a0f0f;
-}
-#chat iframe{flex:1;border:0;background:#fff}
 
-@media(max-width:900px){
-  #layout{grid-template-columns:1fr}
-  #player{position:relative;top:0}
-  #chat{height:85vh}
+.meta-badge.nota{
+  background:#111;
+  border:1px solid #facc15;
+  color:#facc15;
 }
+
+.meta-badge.info{
+  background:#111;
+  color:#cfcfcf;
+}
+
 </style>
 </head>
 
 <body>
 
-<div id="top">
-  <button onclick="history.back()">← Voltar</button>
-</div>
+<div id="player">
 
-<div id="layout">
-
-  <div id="playerArea">
-    <div id="player">
-      <video id="video" controls playsinline></video>
-      <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
-    </div>
+  <div id="topActions">
+    <button class="topBtn" onclick="sair()">←</button>
   </div>
 
-  <div id="side">
-    <h1 id="titulo"></h1>
-    <div id="meta"></div>
+  <div id="layout">
 
-    <p id="desc" class="collapsed"></p>
-    <button id="lerMais" style="display:none">Ler mais</button>
-
-    <div id="chat">
-      <div id="chatTop" onclick="document.getElementById('player').scrollIntoView({behavior:'smooth'})">
-        ⬆️ Voltar para o player
+    <!-- PLAYER -->
+    <div id="playerArea">
+      <div class="playerWrapper">
+        <video id="video" controls playsinline></video>
+        <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
       </div>
-      <iframe id="comentariosIframe"></iframe>
     </div>
-  </div>
 
+    <!-- SIDE -->
+    <div id="side">
+      <h2 id="titulo"></h2>
+      <div id="meta"></div>
+      <p id="desc" style="opacity:.8;margin:10px 0"></p>
+
+      <!-- CONTROLES DE SÉRIE -->
+      <div id="serieControls" style="display:none">
+        <select id="selTemporada"></select>
+        <select id="selEpisodio"></select>
+
+        <button id="fullscreenBtn" onclick="abrirFullscreen()">
+          ⛶ Assistir em tela cheia
+        </button>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <script>
-/* 🔗 SUPABASE */
+/* ================= CONFIG ================= */
+const LIBRARY_ID = "569072";
+
+/* ================= SUPABASE ================= */
 const sb = supabase.createClient(
-  'https://dxkszikemntfusfyrzos.supabase.co',
-  'sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed'
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const id = new URLSearchParams(location.search).get('id');
+// 🔒 PROTEÇÃO DO PLAYER
+async function protegerPlayer() {
+  const email = localStorage.getItem("usuario_email");
 
-function limpar(v){
-  if(v === null || v === undefined) return null;
-  if(typeof v === 'string'){
-    const t = v.trim();
-    return t === '' ? null : t;
+  // ❌ Não está logado
+  if (!email) {
+    location.replace("login.html");
+    return false;
   }
-  return v;
+
+  const { data, error } = await sb
+    .from("usuarios")
+    .select("status, trial_expires_at")
+    .eq("email", email)
+    .maybeSingle();
+
+  // ❌ Usuário inválido
+  if (error || !data) {
+    localStorage.clear();
+    location.replace("login.html");
+    return false;
+  }
+
+  const agora = new Date();
+  const expira = new Date(data.trial_expires_at);
+
+  // 🚫 Usuário bloqueado
+  if (data.status === "bloqueado") {
+    location.replace("index.html");
+    return false;
+  }
+
+  // ⏱️ Trial expirado e não aprovado
+  if (agora > expira && data.status !== "aprovado") {
+    localStorage.clear();
+    location.replace("login.html");
+    return false;
+  }
+
+  // ✅ Pode assistir
+  return true;
 }
 
-async function carregar(){
-  const { data:item, error } = await sb
-    .from('filmes')
-    .select('*')
-    .eq('id', id)
-    .single();
 
-  if(error || !item){
-    console.error(error);
-    alert('Erro ao carregar conteúdo');
-    return;
-  }
+  
+/* ================= ITEM ================= */
+const item = JSON.parse(
+  decodeURIComponent(new URLSearchParams(location.search).get("item"))
+);
 
-  titulo.textContent = item.titulo;
-  desc.textContent   = item.descricao || '';
+/* ================= ANALYTICS ================= */
+function track(event, params = {}) {
+  if (typeof gtag !== "function") return;
 
-  const metas = [];
+  gtag("event", event, {
+    content_title: item.titulo || item.serie_nome || "Conteúdo",
+    content_type: item.tipo,
+    categoria: item.categoria || "Geral",
+    ...params
+  });
+}
 
-  if(limpar(item.categoria)) metas.push(['🎬', item.categoria]);
-  if(limpar(item.tipo)) metas.push(['📺', item.tipo]);
-  if(limpar(item.ano_lancamento)) metas.push(['📅', item.ano_lancamento]);
-  if(limpar(item.duracao_minutos)) metas.push(['⏱️', item.duracao_minutos + ' Min']);
-  if(limpar(item.idioma)) metas.push(['🌎', item.idioma]);
-  if(limpar(item.audio)) metas.push(['🔊', item.audio]);
-  if(limpar(item.classificacao_indicativa)) metas.push(['🔞', item.classificacao_indicativa]);
-  if(limpar(item.nota_critica)) metas.push(['⭐', item.nota_critica]);
 
-  meta.innerHTML = metas
-    .map(m => `<div class="meta-item">✔ ${m[0]} <span>${m[1]}</span></div>`)
-    .join('');
 
-  comentariosIframe.src = `comentarios.html?filme_id=${item.id}&tipo=${item.tipo}`;
-  tocar(item.video_url);
+  
+/* ================= ELEMENTOS ================= */
+const video = document.getElementById("video");
+let inicioAssistido = 0;
 
-  setTimeout(()=>{
-    if(desc.scrollHeight > desc.clientHeight){
-      lerMais.style.display = 'inline';
+video.addEventListener("play", () => {
+  inicioAssistido = Date.now();
+  track("video_play");
+});
+
+video.addEventListener("pause", () => {
+  if (!inicioAssistido) return;
+
+  const segundos = Math.round((Date.now() - inicioAssistido) / 1000);
+  track("video_pause", { segundos_assistidos: segundos });
+});
+
+video.addEventListener("ended", () => {
+  track("video_end");
+});
+
+const iframe = document.getElementById("iframe");
+const titulo = document.getElementById("titulo");
+const meta = document.getElementById("meta");
+const desc = document.getElementById("desc");
+const serieControls = document.getElementById("serieControls");
+const selTemporada = document.getElementById("selTemporada");
+const selEpisodio = document.getElementById("selEpisodio");
+
+/* ================= UI ================= */
+titulo.textContent = item.titulo || item.serie_nome || "Conteúdo";
+desc.textContent = item.descricao || "";
+meta.innerHTML = `
+  <div class="meta-box">
+
+    ${item.categoria
+      ? `<span class="meta-badge info">${item.categoria}</span>`
+      : ""
     }
-  },50);
+
+    ${item.tipo
+      ? `<span class="meta-badge tipo">${item.tipo}</span>`
+      : ""
+    }
+
+    ${item.ano_lancamento
+      ? `<span class="meta-badge info">${item.ano_lancamento}</span>`
+      : ""
+    }
+
+    ${item.classificacao_indicativa
+      ? `<span class="meta-badge classificacao">+${item.classificacao_indicativa}</span>`
+      : ""
+    }
+
+    ${item.nota_critica
+      ? `<span class="meta-badge nota">⭐ ${item.nota_critica}</span>`
+      : ""
+    }
+
+    ${item.duracao_minutos
+      ? `<span class="meta-badge info">⏱ ${item.duracao_minutos} min</span>`
+      : ""
+    }
+
+    ${item.idioma
+      ? `<span class="meta-badge info">🌍 ${item.idioma}</span>`
+      : ""
+    }
+
+    ${item.audio
+      ? `<span class="meta-badge info">🎧 ${item.audio}</span>`
+      : ""
+    }
+
+  </div>
+`;
+
+
+/* ================= HELPERS ================= */
+function isVideoFile(v){
+  return /\.m3u8$/i.test(v);
 }
+function isIframeUrl(v){ return v.includes("iframe.mediadelivery.net"); }
+function isBunnyId(v){ return /^[a-f0-9\-]{20,}$/i.test(v); }
 
-lerMais.onclick = ()=> desc.classList.toggle('collapsed');
-
-function tocar(src){
-  if(!src) return;
-  if(/\.m3u8$/i.test(src)){
+/* ================= PLAYER ================= */
+function tocarFonte(source){
+  if(isVideoFile(source)){
     iframe.remove();
-    video.src = src;
+    video.src = source;
     video.play().catch(()=>{});
-  }else{
+  }
+  else if(isIframeUrl(source)){
     video.remove();
-    iframe.src = `https://iframe.mediadelivery.net/embed/569072/${src}`;
+    iframe.src = source;
+  }
+  else if(isBunnyId(source)){
+    video.remove();
+    iframe.src = `https://iframe.mediadelivery.net/embed/${LIBRARY_ID}/${source}`;
+  }
+  else{
+    alert("Formato de vídeo não suportado");
+    sair();
   }
 }
 
-carregar();
-</script>
+(async () => {
+  const autorizado = await protegerPlayer();
+  if (!autorizado) return;
 
+  tocarFonte(item.video_url);
+})();
+track("open_content", {
+  video_url: item.video_url
+});
+
+track("open_content", {
+  video_url: item.video_url
+});
+
+
+  
+/* ================= FULLSCREEN ================= */
+function abrirFullscreen(){
+  track("fullscreen_open");
+
+  if(video && video.requestFullscreen){
+    video.requestFullscreen();
+  }else if(iframe && iframe.requestFullscreen){
+    iframe.requestFullscreen();
+  }
+}
+
+
+/* ================= SÉRIES ================= */
+let serie = [];
+
+if(item.tipo === "serie") carregarSerie();
+
+async function carregarSerie(){
+  const { data } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("serie_nome", item.serie_nome)
+    .order("temporada")
+    .order("episodio");
+
+  if(!data || !data.length) return;
+
+  serie = data;
+  serieControls.style.display = "block";
+
+  const temps = [...new Set(serie.map(e => e.temporada))];
+  selTemporada.innerHTML = temps.map(t =>
+    `<option value="${t}">Temporada ${t}</option>`
+  ).join("");
+
+  selTemporada.onchange = trocarTemporada;
+  selEpisodio.onchange = trocarEpisodio;
+
+  trocarTemporada();
+}
+
+function trocarTemporada(){
+  const eps = serie.filter(e => e.temporada == selTemporada.value);
+
+  track("select_season", {
+    serie: item.serie_nome,
+    temporada: selTemporada.value
+  });
+
+  selEpisodio.innerHTML = eps.map((e,i) =>
+    `<option value="${i}">Episódio ${e.episodio}</option>`
+  ).join("");
+
+  tocarFonte(eps[0].video_url);
+}
+
+
+function trocarEpisodio(){
+  const eps = serie.filter(e => e.temporada == selTemporada.value);
+
+  track("select_episode", {
+    serie: item.serie_nome,
+    temporada: selTemporada.value,
+    episodio: eps[selEpisodio.value].episodio
+  });
+
+  tocarFonte(eps[selEpisodio.value].video_url);
+}
+
+
+/* ================= SAIR ================= */
+function sair(){
+  if(video) video.pause();
+  location.replace("index.html");
+}
+
+function track(event, params = {}) {
+  if (typeof gtag !== "function") return;
+
+  gtag("event", event, {
+    content_id: item.id || item.video_url,
+    content_title: item.titulo || item.serie_nome || "Conteúdo",
+    content_type: item.tipo || "unknown",
+    categoria: item.categoria || "Geral",
+    ...params
+  });
+}
+
+</script>
 
 </body>
 </html>
