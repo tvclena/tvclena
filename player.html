@@ -4,12 +4,8 @@
 <meta charset="UTF-8">
 <title>Sessão • Player</title>
 
-<meta name="viewport" content="
-  width=device-width,
-  initial-scale=1.0,
-  maximum-scale=1.0,
-  user-scalable=no
-">
+<meta name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -95,6 +91,13 @@ html,body{
 }
 .meta-item span{opacity:.85}
 
+/* ESTRELAS */
+.stars{
+  color:#facc15;
+  font-size:15px;
+  letter-spacing:1px;
+}
+
 /* DESCRIÇÃO */
 #desc{
   font-size:15px;
@@ -107,6 +110,8 @@ html,body{
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
+
+/* LER MAIS */
 #lerMais{
   background:none;
   border:none;
@@ -155,52 +160,90 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ITEM (vem do chat) */
+/* ITEM (vem do chat / listagem) */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get('item'))
 );
 
-/* BUSCAR FILME COMPLETO */
-async function carregarFilme(){
-  const { data, error } = await sb
+/* GERAR ESTRELAS (ASSINANTES) */
+function gerarEstrelas(media){
+  if(!media) return '☆☆☆☆☆';
+  const estrelas = Math.round(media / 2);
+  let out='';
+  for(let i=1;i<=5;i++){
+    out += i<=estrelas ? '⭐' : '☆';
+  }
+  return `<span class="stars">${out}</span>`;
+}
+
+/* CARREGAR FILME + AVALIAÇÕES */
+async function carregar(){
+  /* FILME */
+  const { data: filme } = await sb
     .from("filmes")
     .select("*")
     .eq("id", item.id)
     .single();
 
-  if(error || !data){
+  if(!filme){
     titulo.textContent = "Conteúdo não encontrado";
     return;
   }
 
+  /* MÉDIA DOS ASSINANTES */
+  const { data: avals } = await sb
+    .from("avaliacoes")
+    .select("nota")
+    .eq("filme_id", item.id);
+
+  let mediaAssinantes = null;
+  if(avals && avals.length){
+    const soma = avals.reduce((t,a)=>t+a.nota,0);
+    mediaAssinantes = soma / avals.length;
+  }
+
   /* TÍTULO / DESCRIÇÃO */
-  titulo.textContent = data.titulo;
-  desc.textContent   = data.descricao || "";
+  titulo.textContent = filme.titulo;
+  desc.textContent   = filme.descricao || "";
 
   /* META */
-  const metas=[];
-  if(data.categoria) metas.push(['🎬',data.categoria]);
-  if(data.tipo) metas.push(['📺',data.tipo]);
-  if(data.ano_lancamento) metas.push(['📅',data.ano_lancamento]);
-  if(data.duracao_minutos) metas.push(['⏱️',data.duracao_minutos+' Min']);
-  if(data.idioma) metas.push(['🌎',data.idioma]);
-  if(data.audio) metas.push(['🔊',data.audio]);
-  if(data.classificacao_indicativa || data.classificacao)
-    metas.push(['🔞',data.classificacao_indicativa || data.classificacao]);
-  if(data.nota_critica) metas.push(['⭐',data.nota_critica]);
+  const metas = [];
+
+  if(filme.categoria) metas.push(['🎬', filme.categoria]);
+  if(filme.tipo) metas.push(['📺', filme.tipo]);
+  if(filme.ano_lancamento) metas.push(['📅', filme.ano_lancamento]);
+  if(filme.idioma) metas.push(['🌎', filme.idioma]);
+  if(filme.audio) metas.push(['🔊', filme.audio]);
+  if(filme.classificacao_indicativa || filme.classificacao)
+    metas.push(['🔞', filme.classificacao_indicativa || filme.classificacao]);
+
+  /* NOTA CRÍTICA (NÚMERO) */
+  if(filme.nota_critica)
+    metas.push(['⭐', filme.nota_critica + ' • Crítica']);
+
+  /* NOTA ASSINANTES (ESTRELAS) */
+  if(mediaAssinantes !== null)
+    metas.push(['👥', gerarEstrelas(mediaAssinantes) + ' • Assinantes']);
 
   meta.innerHTML = metas
-    .map(m=>`<div class="meta-item">✔ ${m[0]} <span>${m[1]}</span></div>`)
+    .map(m=>`<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`)
     .join('');
 
-  /* LER MAIS */
+  /* LER MAIS / MENOS */
   setTimeout(()=>{
-    if(desc.scrollHeight > desc.clientHeight)
-      lerMais.style.display='inline';
+    if(desc.scrollHeight > desc.clientHeight){
+      lerMais.style.display = 'inline';
+      lerMais.textContent = 'Ler mais';
+    }
   },50);
 
+  lerMais.onclick = ()=>{
+    const fechado = desc.classList.toggle('collapsed');
+    lerMais.textContent = fechado ? 'Ler mais' : 'Ler menos';
+  };
+
   /* PLAYER */
-  tocar(data.video_url);
+  tocar(filme.video_url);
 }
 
 /* PLAYER */
@@ -216,9 +259,7 @@ function tocar(src){
   }
 }
 
-lerMais.onclick = ()=> desc.classList.toggle('collapsed');
-
-carregarFilme();
+carregar();
 </script>
 
 </body>
