@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <title>Sessão • Player</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -11,32 +13,20 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:#000;color:#fff;font-family:Inter,Arial}
 
-  
 /* TOPO */
-#top{
-  position:sticky;top:0;z-index:100;
-  padding:16px 20px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0))
-}
+#top{position:sticky;top:0;z-index:100;padding:16px 20px;
+background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0))}
 #top button{background:none;border:none;color:#fff;font-size:15px;cursor:pointer}
 
 /* LAYOUT */
 #layout{display:grid;grid-template-columns:3fr 1.4fr;min-height:100vh}
-@media(max-width:900px){#layout{grid-template-columns:1fr}}
 
 /* PLAYER */
 #playerArea{padding:16px}
-#player{
-  position:sticky;top:80px;
-  max-width:1120px;margin:auto;
-  aspect-ratio:16/9;
-  border-radius:26px;
-  overflow:hidden;background:#000;
-  box-shadow:0 0 70px rgba(220,38,38,.55)
-}
-#player video,#player iframe{
-  position:absolute;inset:0;width:100%;height:100%;border:0
-}
+#player{position:sticky;top:80px;max-width:1120px;margin:auto;
+aspect-ratio:16/9;border-radius:26px;overflow:hidden;background:#000;
+box-shadow:0 0 70px rgba(220,38,38,.55)}
+#player video,#player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 
 /* SIDE */
 #side{padding:22px;display:flex;flex-direction:column;gap:14px}
@@ -44,7 +34,7 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial}
 
 /* META */
 #meta{display:flex;flex-wrap:wrap;gap:12px 22px;font-size:14px}
-.meta-item{display:flex;align-items:center;gap:6px}
+.meta-item{display:flex;align-items:center;gap:6px;white-space:nowrap}
 .meta-item span{opacity:.85}
 
 /* AVALIAÇÃO */
@@ -58,74 +48,15 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial}
 /* DESCRIÇÃO */
 #desc{font-size:15px;line-height:1.65;opacity:.9}
 #desc.collapsed{
-  display:-webkit-box;
-  -webkit-line-clamp:3;
-  -webkit-box-orient:vertical;
-  overflow:hidden
-}
-#lerMais{
-  background:none;border:none;color:#f87171;
-  font-weight:600;cursor:pointer
-}
+display:-webkit-box;-webkit-line-clamp:3;
+-webkit-box-orient:vertical;overflow:hidden}
+#lerMais{background:none;border:none;color:#f87171;
+font-weight:600;cursor:pointer;align-self:flex-start}
 
-/* SÉRIE */
-#controlesSerie{display:none;gap:10px;flex-wrap:wrap}
-#controlesSerie select{
-  background:#111;color:#fff;border:1px solid #333;
-  padding:12px 14px;border-radius:12px
+@media(max-width:900px){
+#layout{grid-template-columns:1fr}
+#player{position:relative;top:0}
 }
-
-/* BOTÕES */
-#fullscreenBtn{
-  margin-top:14px;padding:16px;font-size:16px;
-  font-weight:600;background:#fff;color:#000;
-  border:none;border-radius:14px;cursor:pointer
-}
-#downloadBtn{
-  margin-top:14px;padding:14px 16px;font-size:15px;
-  font-weight:700;border-radius:14px;
-  border:1px solid #333;background:#111;
-  color:#fff;cursor:pointer
-}
-#downloadBtn:hover{background:#dc2626;border-color:#dc2626}
-@media(max-width:900px){#fullscreenBtn{display:none}}
-
-/* MODAL */
-.modal{position:fixed;inset:0;z-index:9999;
-display:flex;align-items:center;justify-content:center}
-.modal.hidden{display:none}
-.modal-backdrop{position:absolute;inset:0;
-background:rgba(0,0,0,.75);backdrop-filter:blur(6px)}
-.modal-box{
-  position:relative;width:min(92%,420px);
-  background:#0b0b0b;border-radius:22px;
-  padding:26px 24px;text-align:center;
-  box-shadow:0 0 60px rgba(220,38,38,.45)
-}
-.modal-box h2{margin-bottom:10px}
-.modal-box p{font-size:14px;line-height:1.6;opacity:.9}
-
-.modal-actions{display:flex;gap:10px;margin-top:18px}
-.modal-actions button{
-  flex:1;padding:14px;border-radius:14px;
-  font-weight:700;border:none;cursor:pointer
-}
-.btn-cancelar{background:#1a1a1a;color:#fff}
-.btn-confirmar{background:#dc2626;color:#fff}
-
-.btn-recarregar{
-  margin-top:10px;background:none;border:none;
-  color:#facc15;font-weight:600;cursor:pointer
-}
-
-.modal-loading{margin-top:16px;display:none;gap:10px;justify-content:center}
-.modal-loading.active{display:flex}
-.loader{
-  width:18px;height:18px;border:3px solid #333;
-  border-top-color:#dc2626;border-radius:50%;
-  animation:spin .8s linear infinite
-}
-@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 
@@ -136,10 +67,11 @@ background:rgba(0,0,0,.75);backdrop-filter:blur(6px)}
 </div>
 
 <div id="layout">
+
   <div id="playerArea">
     <div id="player">
       <video id="video" controls playsinline></video>
-      <iframe id="iframe"></iframe>
+      <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
     </div>
   </div>
 
@@ -154,39 +86,8 @@ background:rgba(0,0,0,.75);backdrop-filter:blur(6px)}
 
     <p id="desc" class="collapsed"></p>
     <button id="lerMais" style="display:none">Ler mais</button>
-
-    <button id="downloadBtn" style="display:none">⬇️ Baixar</button>
-
-    <div id="controlesSerie">
-      <select id="selectTemporada"></select>
-      <select id="selectEpisodio"></select>
-    </div>
-
-    <button id="fullscreenBtn">⛶ Assistir em tela cheia</button>
   </div>
-</div>
 
-<!-- MODAL DOWNLOAD -->
-<div id="modalDownload" class="modal hidden">
-  <div class="modal-backdrop"></div>
-  <div class="modal-box">
-    <h2>Confirmar download</h2>
-    <p id="modalText"></p>
-
-    <button class="btn-recarregar" id="btnRecarregar">
-      💳 Recarregar carteira
-    </button>
-
-    <div class="modal-actions">
-      <button class="btn-cancelar">Cancelar</button>
-      <button class="btn-confirmar">Confirmar</button>
-    </div>
-
-    <div class="modal-loading" id="modalLoading">
-      <span class="loader"></span>
-      <span>Processando…</span>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -199,110 +100,136 @@ const item = JSON.parse(
  decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
 
-let usuario=null;
-let saldoApex=0;
+let usuario = null;
 
-/* USUÁRIO */
+/* 🔐 VALIDAR LOGIN CUSTOM */
 async function carregarUsuario(){
-  const email=localStorage.getItem("usuario_email");
-  const token=localStorage.getItem("session_token");
-  if(!email||!token)return;
+  const email = localStorage.getItem("usuario_email");
+  const token = localStorage.getItem("session_token");
 
-  const {data}=await sb
+  if(!email || !token) return;
+
+  const { data } = await sb
     .from("usuarios")
-    .select("id,email,session_token,apex")
-    .eq("email",email)
-    .eq("session_token",token)
+    .select("id,email,session_token")
+    .eq("email", email)
+    .eq("session_token", token)
     .single();
 
-  if(data){
-    usuario=data;
-    saldoApex=Number(data.apex||0);
-  }
+  if(data) usuario = data;
 }
 
-/* PLAYER */
+/* ⭐ ESTRELAS */
+function renderAvaliarStars(nota=0){
+  const box = avaliarStars;
+  box.innerHTML="";
+  const fixas=Math.round(nota/2);
+
+  for(let i=1;i<=5;i++){
+    const s=document.createElement("span");
+    s.textContent="★";
+    if(i<=fixas)s.classList.add("active");
+    s.onmouseenter=()=>pintar(i);
+    s.onmouseleave=()=>pintar(fixas);
+    s.onclick=()=>salvarAvaliacao(i*2);
+    box.appendChild(s);
+  }
+}
+function pintar(q){
+  [...avaliarStars.children].forEach((s,i)=>{
+    s.classList.toggle("hover",i<q);
+  });
+}
+
+/* 💾 SALVAR */
+async function salvarAvaliacao(nota){
+  if(!usuario){
+    alert("Faça login para avaliar");
+    return;
+  }
+
+  await sb.from("avaliacoes").upsert({
+    filme_id:item.id,
+    usuario_id:usuario.id,
+    nota
+  },{onConflict:"filme_id,usuario_id"});
+
+  renderAvaliarStars(nota);
+  carregar();
+}
+
+/* ▶ PLAYER */
 function tocar(src){
+  if(!src)return;
   if(/\.m3u8$/i.test(src)){
-    iframe.remove();
-    video.src=src;
-    video.play().catch(()=>{});
+    iframe.remove();video.src=src;video.play().catch(()=>{});
   }else{
     video.remove();
     iframe.src=`https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
 }
 
-/* MODAL */
-const modal=document.getElementById("modalDownload");
-const modalText=document.getElementById("modalText");
-const btnCancelar=modal.querySelector(".btn-cancelar");
-const btnConfirmar=modal.querySelector(".btn-confirmar");
-const modalLoading=document.getElementById("modalLoading");
-
-function abrirModal(valor){
-  modalText.innerHTML=`
-    Valor do download: <strong>${valor} Apex</strong><br>
-    Seu saldo: <strong>${saldoApex} Apex</strong><br><br>
-    O download pode ser feito apenas uma vez.
-  `;
-  modal.classList.remove("hidden");
-}
-function fecharModal(){
-  modal.classList.add("hidden");
-  modalLoading.classList.remove("active");
-}
-btnCancelar.onclick=fecharModal;
-modal.querySelector(".modal-backdrop").onclick=fecharModal;
-
-document.getElementById("btnRecarregar").onclick=()=>{
-  window.open("apex.html","apex","width=420,height=600");
-};
-
-/* CARREGAR */
+/* 📥 CARREGAR */
 async function carregar(){
-  const {data:filme}=await sb
-    .from("filmes").select("*")
-    .eq("id",item.id).single();
+  const { data: filme } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("id", item.id)
+    .single();
 
-  titulo.textContent=filme.titulo;
-  desc.textContent=filme.descricao||"";
+  titulo.textContent = filme.titulo;
+  desc.textContent = filme.descricao || "";
+
+  const { data: avals } = await sb
+    .from("avaliacoes")
+    .select("nota")
+    .eq("filme_id", item.id);
+
+  let media=null;
+  if(avals?.length)
+    media=avals.reduce((t,a)=>t+a.nota,0)/avals.length;
+
+  const metas=[];
+  if(filme.categoria) metas.push(['🎬',filme.categoria]);
+  if(filme.tipo) metas.push(['📺',filme.tipo]);
+  if(filme.ano_lancamento) metas.push(['📅',filme.ano_lancamento]);
+  if(filme.idioma) metas.push(['🌎',filme.idioma]);
+  if(filme.audio) metas.push(['🔊',filme.audio]);
+  if(filme.classificacao) metas.push(['🔞',filme.classificacao]);
+  if(filme.nota_critica) metas.push(['⭐',filme.nota_critica+" • Crítica"]);
+  if(media!==null) metas.push(['👥',"⭐".repeat(Math.round(media/2))+" • Assinantes"]);
+
+  meta.innerHTML=metas.map(m=>
+    `<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`
+  ).join("");
+
+  if(usuario){
+    const { data:minha } = await sb
+      .from("avaliacoes")
+      .select("nota")
+      .eq("filme_id",item.id)
+      .eq("usuario_id",usuario.id)
+      .single();
+    renderAvaliarStars(minha?.nota||0);
+  }else{
+    renderAvaliarStars(0);
+  }
+
   tocar(filme.video_url);
 
-  if(filme.permite_download){
-    downloadBtn.style.display="block";
-    downloadBtn.textContent=`⬇️ Baixar • ${filme.valor_apex} Apex`;
-
-    downloadBtn.onclick=()=>{
-      if(!usuario)return alert("Faça login");
-      abrirModal(filme.valor_apex);
-    };
-
-    btnConfirmar.onclick=async()=>{
-      modalLoading.classList.add("active");
-
-      const res=await fetch("/api/comprar-download",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({email:usuario.email,filme_id:item.id})
-      });
-      const data=await res.json();
-      if(!res.ok)return alert(data.error);
-
-      const r=await fetch("/api/download",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({email:usuario.email,filme_id:item.id})
-      });
-      const d=await r.json();
-      if(!d.url)return alert("Erro no download");
-
-      fecharModal();
-      window.location.href=d.url;
-    };
-  }
+  setTimeout(()=>{
+    if(desc.scrollHeight>desc.clientHeight){
+      lerMais.style.display="inline";
+      lerMais.onclick=()=>{
+        desc.classList.toggle("collapsed");
+        lerMais.textContent=
+          desc.classList.contains("collapsed")?"Ler mais":"Ler menos";
+      };
+    }
+  },50);
 }
 
+/* INIT */
 (async()=>{
   await carregarUsuario();
   carregar();
