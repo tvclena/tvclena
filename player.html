@@ -2,20 +2,19 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+
 <!-- Google tag (GA4) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T97MS35TJ6"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-T97MS35TJ6', {
     page_title: 'Player',
     page_location: location.href,
     debug_mode: true
   });
 </script>
-
 
 <title>Sessão • Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,11 +23,7 @@
 
 <style>
 /* RESET */
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
+*{margin:0;padding:0;box-sizing:border-box}
 
 /* BODY */
 body{
@@ -39,21 +34,20 @@ body{
   overflow-y:auto;
 }
 
-/* CONTAINER PRINCIPAL */
+/* CONTAINER */
 #player{
   position:fixed;
   inset:0;
   background:#000;
 }
 
-/* ===== TOPO ===== */
+/* TOPO */
 #topActions{
   position:absolute;
   top:14px;
   left:14px;
   z-index:99;
 }
-
 .topBtn{
   padding:10px 16px;
   background:rgba(0,0,0,.65);
@@ -64,29 +58,26 @@ body{
   cursor:pointer;
 }
 
-/* ===== LAYOUT ===== */
+/* LAYOUT */
 #layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
   height:100%;
 }
 
-/* ===== PLAYER ===== */
+/* PLAYER */
 #playerArea{
   display:flex;
   align-items:center;
   justify-content:center;
-  background:#000;
   padding:20px;
 }
-
 .playerWrapper{
   width:100%;
   max-width:1200px;
-  aspect-ratio:16 / 9;
+  aspect-ratio:16/9;
   position:relative;
 }
-
 .playerWrapper video,
 .playerWrapper iframe{
   position:absolute;
@@ -97,7 +88,7 @@ body{
   background:#000;
 }
 
-/* ===== SIDE ===== */
+/* SIDE */
 #side{
   background:#111;
   padding:22px;
@@ -106,35 +97,65 @@ body{
   overflow-y:auto;
 }
 
-/* ===== COMENTÁRIOS ===== */
-#comentariosBox{
-  margin-top:20px;
-  flex:1;
-  min-height:260px;
+/* ===== INFO CARDS ===== */
+.info-cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(120px,1fr));
+  gap:10px;
+  margin:12px 0 14px;
 }
 
-#comentariosIframe{
-  width:100%;
-  height:100%;
-  border:0;
+.info-card{
+  background:linear-gradient(180deg,#1b1b1b,#121212);
+  border:1px solid #262626;
   border-radius:14px;
-  background:#0b0b0b;
+  padding:10px 12px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  box-shadow:0 6px 18px rgba(0,0,0,.4);
 }
 
-/* ===== BADGES ===== */
-.badge{
-  display:inline-block;
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-  background:#222;
-  margin-right:6px;
-}
-.badge.tipo{
-  background:#e50914;
+.info-card span{
+  font-size:11px;
+  opacity:.6;
 }
 
-/* ===== SELECT ===== */
+.info-card strong{
+  font-size:13px;
+  font-weight:600;
+}
+
+.info-card.tipo{
+  border-color:#e50914;
+}
+.info-card.nota{
+  border-color:#facc15;
+}
+
+/* DESCRIÇÃO */
+.desc{
+  opacity:.85;
+  font-size:14px;
+  line-height:1.5;
+}
+.desc.collapsed{
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.ler-mais{
+  background:none;
+  border:none;
+  color:#e50914;
+  font-weight:600;
+  cursor:pointer;
+  margin-top:6px;
+  align-self:flex-start;
+}
+
+/* SELECTS */
 select{
   width:100%;
   padding:14px;
@@ -146,7 +167,7 @@ select{
   font-size:15px;
 }
 
-/* ===== BOTÃO FULLSCREEN ===== */
+/* FULLSCREEN */
 #fullscreenBtn{
   width:100%;
   margin-top:16px;
@@ -160,81 +181,39 @@ select{
   cursor:pointer;
 }
 
-/* ===== META INFO ===== */
-.meta-box{
+/* ===== COMENTÁRIOS (CHAT STYLE) ===== */
+#comentariosBox{
+  margin-top:20px;
+  flex:1;
+  background:#0b0b0b;
+  border-radius:18px;
+  padding:12px;
+  box-shadow:
+    inset 0 0 0 1px #1e1e1e,
+    0 12px 30px rgba(0,0,0,.6);
   display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin:10px 0 14px;
+  flex-direction:column;
+}
+#comentariosHeader{
+  font-size:13px;
+  opacity:.6;
+  margin-bottom:8px;
+}
+#comentariosIframe{
+  flex:1;
+  width:100%;
+  border:0;
+  border-radius:14px;
+  background:#0e0e0e;
 }
 
-.meta-badge{
-  padding:6px 12px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:600;
-  background:#1f1f1f;
-  border:1px solid #2a2a2a;
-  color:#e5e5e5;
-  white-space:nowrap;
-}
-
-.meta-badge.tipo{
-  background:#e50914;
-  border-color:#e50914;
-  color:#fff;
-}
-
-.meta-badge.classificacao{
-  background:#111;
-  border:1px solid #e50914;
-  color:#e50914;
-  font-weight:800;
-}
-
-.meta-badge.nota{
-  background:#111;
-  border:1px solid #facc15;
-  color:#facc15;
-}
-
-.meta-badge.info{
-  background:#111;
-  color:#cfcfcf;
-}
-
-/* ===== MOBILE ===== */
-@media (max-width:900px){
-
-  #layout{
-    grid-template-columns:1fr;
-    grid-template-rows:auto 1fr;
-  }
-
-  #playerArea{
-    padding:10px;
-  }
-
-  .playerWrapper{
-    max-width:100%;
-  }
-
-  #side{
-    padding:16px;
-    overflow-y:auto;
-  }
-
-  #comentariosBox{
-    margin-top:14px;
-    min-height:260px;
-  }
-
-  #comentariosIframe{
-    height:100%;
-  }
+/* MOBILE */
+@media(max-width:900px){
+  #layout{grid-template-columns:1fr}
+  #playerArea{padding:10px}
+  #side{padding:16px}
 }
 </style>
-
 </head>
 
 <body>
@@ -255,34 +234,32 @@ select{
       </div>
     </div>
 
-   <!-- SIDE -->
-<div id="side">
-  <h2 id="titulo"></h2>
-  <div id="meta"></div>
-  <p id="desc" style="opacity:.8;margin:10px 0"></p>
+    <!-- SIDE -->
+    <div id="side">
 
-  <!-- CONTROLES DE SÉRIE -->
-  <div id="serieControls" style="display:none">
-    <select id="selTemporada"></select>
-    <select id="selEpisodio"></select>
+      <h2 id="titulo"></h2>
 
-    <button id="fullscreenBtn" onclick="abrirFullscreen()">
-      ⛶ Assistir em tela cheia
-    </button>
-  </div>
+      <!-- INFO CARDS -->
+      <div id="infoCards" class="info-cards"></div>
 
-  <!-- COMENTÁRIOS (COLOCAR AQUI) -->
- <!-- COMENTÁRIOS -->
-<div id="comentariosBox">
-  <iframe
-    id="comentariosIframe"
-    src=""
-    loading="lazy">
-  </iframe>
-</div>
+      <!-- DESCRIÇÃO -->
+      <p id="desc" class="desc collapsed"></p>
+      <button id="lerMaisBtn" class="ler-mais" style="display:none">Ler mais</button>
 
-</div>
+      <!-- CONTROLES DE SÉRIE -->
+      <div id="serieControls" style="display:none">
+        <select id="selTemporada"></select>
+        <select id="selEpisodio"></select>
+        <button id="fullscreenBtn" onclick="abrirFullscreen()">⛶ Assistir em tela cheia</button>
+      </div>
 
+      <!-- COMENTÁRIOS -->
+      <div id="comentariosBox">
+        <div id="comentariosHeader">💬 Comentários</div>
+        <iframe id="comentariosIframe" loading="lazy"></iframe>
+      </div>
+
+    </div>
 
   </div>
 </div>
@@ -297,219 +274,67 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-// 🔒 PROTEÇÃO DO PLAYER
-async function protegerPlayer() {
-  const email = localStorage.getItem("usuario_email");
-
-  // ❌ Não está logado
-  if (!email) {
-    location.replace("login.html");
-    return false;
-  }
-
-  const { data, error } = await sb
-    .from("usuarios")
-    .select("status, trial_expires_at")
-    .eq("email", email)
-    .maybeSingle();
-
-  // ❌ Usuário inválido
-  if (error || !data) {
-    localStorage.clear();
-    location.replace("login.html");
-    return false;
-  }
-
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
-
-  // 🚫 Usuário bloqueado
-  if (data.status === "bloqueado") {
-    location.replace("index.html");
-    return false;
-  }
-
-  // ⏱️ Trial expirado e não aprovado
-  if (agora > expira && data.status !== "aprovado") {
-    localStorage.clear();
-    location.replace("login.html");
-    return false;
-  }
-
-  // ✅ Pode assistir
-  return true;
-}
-
-
-  
 /* ================= ITEM ================= */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
-const comentariosIframe = document.getElementById("comentariosIframe");
 
-const paramsComentarios = new URLSearchParams({
-  filme_id: item.id || item.video_url,
-  tipo: item.tipo
-});
+/* COMENTÁRIOS */
+comentariosIframe.src =
+  `comentarios.html?filme_id=${item.id || item.video_url}&tipo=${item.tipo}`;
 
-
-comentariosIframe.src = `comentarios.html?${paramsComentarios.toString()}`;
-
-
-  
-/* ================= ANALYTICS ================= */
-function track(event, params = {}) {
-  if (typeof gtag !== "function") return;
-
-  gtag("event", event, {
-    content_title: item.titulo || item.serie_nome || "Conteúdo",
-    content_type: item.tipo,
-    categoria: item.categoria || "Geral",
-    ...params
-  });
-}
-
-
-
-  
-/* ================= ELEMENTOS ================= */
-const video = document.getElementById("video");
-let inicioAssistido = 0;
-
-video.addEventListener("play", () => {
-  inicioAssistido = Date.now();
-  track("video_play");
-});
-
-video.addEventListener("pause", () => {
-  if (!inicioAssistido) return;
-
-  const segundos = Math.round((Date.now() - inicioAssistido) / 1000);
-  track("video_pause", { segundos_assistidos: segundos });
-});
-
-video.addEventListener("ended", () => {
-  track("video_end");
-});
-
-const iframe = document.getElementById("iframe");
-const titulo = document.getElementById("titulo");
-const meta = document.getElementById("meta");
-const desc = document.getElementById("desc");
-const serieControls = document.getElementById("serieControls");
-const selTemporada = document.getElementById("selTemporada");
-const selEpisodio = document.getElementById("selEpisodio");
-
-/* ================= UI ================= */
+/* UI */
 titulo.textContent = item.titulo || item.serie_nome || "Conteúdo";
-desc.textContent = item.descricao || "";
-meta.innerHTML = `
-  <div class="meta-box">
 
-    ${item.categoria
-      ? `<span class="meta-badge info">${item.categoria}</span>`
-      : ""
-    }
-
-    ${item.tipo
-      ? `<span class="meta-badge tipo">${item.tipo}</span>`
-      : ""
-    }
-
-    ${item.ano_lancamento
-      ? `<span class="meta-badge info">${item.ano_lancamento}</span>`
-      : ""
-    }
-
-    ${item.classificacao_indicativa
-      ? `<span class="meta-badge classificacao">+${item.classificacao_indicativa}</span>`
-      : ""
-    }
-
-    ${item.nota_critica
-      ? `<span class="meta-badge nota">⭐ ${item.nota_critica}</span>`
-      : ""
-    }
-
-    ${item.duracao_minutos
-      ? `<span class="meta-badge info">⏱ ${item.duracao_minutos} min</span>`
-      : ""
-    }
-
-    ${item.idioma
-      ? `<span class="meta-badge info">🌍 ${item.idioma}</span>`
-      : ""
-    }
-
-    ${item.audio
-      ? `<span class="meta-badge info">🎧 ${item.audio}</span>`
-      : ""
-    }
-
-  </div>
+/* INFO CARDS */
+infoCards.innerHTML = `
+  ${item.categoria ? `<div class="info-card"><span>Categoria</span><strong>${item.categoria}</strong></div>`:""}
+  ${item.tipo ? `<div class="info-card tipo"><span>Tipo</span><strong>${item.tipo}</strong></div>`:""}
+  ${item.ano_lancamento ? `<div class="info-card"><span>Ano</span><strong>${item.ano_lancamento}</strong></div>`:""}
+  ${item.duracao_minutos ? `<div class="info-card"><span>Duração</span><strong>${item.duracao_minutos} min</strong></div>`:""}
+  ${item.idioma ? `<div class="info-card"><span>Idioma</span><strong>${item.idioma}</strong></div>`:""}
+  ${item.audio ? `<div class="info-card"><span>Áudio</span><strong>${item.audio}</strong></div>`:""}
+  ${item.classificacao_indicativa ? `<div class="info-card"><span>Classificação</span><strong>+${item.classificacao_indicativa}</strong></div>`:""}
+  ${item.nota_critica ? `<div class="info-card nota"><span>Nota</span><strong>⭐ ${item.nota_critica}</strong></div>`:""}
 `;
 
+/* DESCRIÇÃO */
+desc.textContent = item.descricao || "";
+setTimeout(()=>{
+  if(desc.scrollHeight > desc.clientHeight){
+    lerMaisBtn.style.display = "inline";
+  }
+},50);
 
-/* ================= HELPERS ================= */
-function isVideoFile(v){
-  return /\.m3u8$/i.test(v);
-}
-function isIframeUrl(v){ return v.includes("iframe.mediadelivery.net"); }
-function isBunnyId(v){ return /^[a-f0-9\-]{20,}$/i.test(v); }
+lerMaisBtn.onclick = ()=>{
+  const aberto = !desc.classList.contains("collapsed");
+  desc.classList.toggle("collapsed", aberto);
+  lerMaisBtn.textContent = aberto ? "Ler mais" : "Ler menos";
+};
 
-/* ================= PLAYER ================= */
-function tocarFonte(source){
-  if(isVideoFile(source)){
+/* PLAYER */
+function tocarFonte(src){
+  if(/\.m3u8$/i.test(src)){
     iframe.remove();
-    video.src = source;
+    video.src = src;
     video.play().catch(()=>{});
-  }
-  else if(isIframeUrl(source)){
+  }else if(src.includes("mediadelivery")){
     video.remove();
-    iframe.src = source;
-  }
-  else if(isBunnyId(source)){
+    iframe.src = src;
+  }else{
     video.remove();
-    iframe.src = `https://iframe.mediadelivery.net/embed/${LIBRARY_ID}/${source}`;
-  }
-  else{
-    alert("Formato de vídeo não suportado");
-    sair();
+    iframe.src = `https://iframe.mediadelivery.net/embed/${LIBRARY_ID}/${src}`;
   }
 }
+tocarFonte(item.video_url);
 
-(async () => {
-  const autorizado = await protegerPlayer();
-  if (!autorizado) return;
-
-  tocarFonte(item.video_url);
-})();
-track("open_content", {
-  video_url: item.video_url
-});
-
-track("open_content", {
-  video_url: item.video_url
-});
-
-
-  
-/* ================= FULLSCREEN ================= */
+/* FULLSCREEN */
 function abrirFullscreen(){
-  track("fullscreen_open");
-
-  if(video && video.requestFullscreen){
-    video.requestFullscreen();
-  }else if(iframe && iframe.requestFullscreen){
-    iframe.requestFullscreen();
-  }
+  (video || iframe).requestFullscreen();
 }
-
 
 /* ================= SÉRIES ================= */
 let serie = [];
-
 if(item.tipo === "serie") carregarSerie();
 
 async function carregarSerie(){
@@ -532,57 +357,27 @@ async function carregarSerie(){
 
   selTemporada.onchange = trocarTemporada;
   selEpisodio.onchange = trocarEpisodio;
-
   trocarTemporada();
 }
 
 function trocarTemporada(){
   const eps = serie.filter(e => e.temporada == selTemporada.value);
-
-  track("select_season", {
-    serie: item.serie_nome,
-    temporada: selTemporada.value
-  });
-
   selEpisodio.innerHTML = eps.map((e,i) =>
     `<option value="${i}">Episódio ${e.episodio}</option>`
   ).join("");
-
   tocarFonte(eps[0].video_url);
 }
 
-
 function trocarEpisodio(){
   const eps = serie.filter(e => e.temporada == selTemporada.value);
-
-  track("select_episode", {
-    serie: item.serie_nome,
-    temporada: selTemporada.value,
-    episodio: eps[selEpisodio.value].episodio
-  });
-
   tocarFonte(eps[selEpisodio.value].video_url);
 }
 
-
-/* ================= SAIR ================= */
+/* SAIR */
 function sair(){
   if(video) video.pause();
   location.replace("index.html");
 }
-
-function track(event, params = {}) {
-  if (typeof gtag !== "function") return;
-
-  gtag("event", event, {
-    content_id: item.id || item.video_url,
-    content_title: item.titulo || item.serie_nome || "Conteúdo",
-    content_type: item.tipo || "unknown",
-    categoria: item.categoria || "Geral",
-    ...params
-  });
-}
-
 </script>
 
 </body>
