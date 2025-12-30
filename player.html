@@ -91,7 +91,7 @@ html,body{
 }
 .meta-item span{opacity:.85}
 
-/* ESTRELAS */
+/* ESTRELAS (MÉDIA) */
 .stars{
   color:#facc15;
   font-size:15px;
@@ -107,18 +107,23 @@ html,body{
   opacity:.7;
   margin-bottom:6px;
 }
+
+/* ⭐ ESTRELAS INTERATIVAS */
 .avaliar-stars{
   display:flex;
-  gap:6px;
-  font-size:24px;
+  gap:8px;
+  font-size:26px;
   cursor:pointer;
+  user-select:none;
 }
 .avaliar-stars span{
-  color:#444;
-  transition:.2s;
+  color:#333;
+  transition:color .2s, transform .15s;
 }
+.avaliar-stars span.hover,
 .avaliar-stars span.active{
   color:#facc15;
+  transform:scale(1.08);
 }
 
 /* DESCRIÇÃO */
@@ -170,7 +175,7 @@ html,body{
     <h1 id="titulo"></h1>
     <div id="meta"></div>
 
-    <!-- AVALIAÇÃO DO USUÁRIO -->
+    <!-- AVALIAÇÃO -->
     <div id="avaliarBox">
       <div class="avaliar-label">Avalie este conteúdo</div>
       <div id="avaliarStars" class="avaliar-stars"></div>
@@ -194,7 +199,7 @@ const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get('item'))
 );
 
-/* ESTRELAS (ASSINANTES) */
+/* ⭐ ESTRELAS MÉDIA */
 function estrelasMedia(media){
   if(media === null) return '☆☆☆☆☆';
   const q = Math.round(media / 2);
@@ -203,19 +208,35 @@ function estrelasMedia(media){
   return `<span class="stars">${out}</span>`;
 }
 
-/* RENDER ESTRELAS AVALIAÇÃO */
-function renderAvaliarStars(valor=0){
+/* ⭐ ESTRELAS INTERATIVAS */
+let notaAtual = 0;
+
+function renderAvaliarStars(nota = 0){
+  notaAtual = nota;
   const box = document.getElementById('avaliarStars');
   box.innerHTML = '';
-  const q = Math.round(valor / 2);
+
+  const fixas = Math.round(nota / 2);
 
   for(let i=1;i<=5;i++){
     const s = document.createElement('span');
     s.textContent = '★';
-    if(i<=q) s.classList.add('active');
-    s.onclick = ()=> salvarAvaliacao(i*2);
+
+    if(i <= fixas) s.classList.add('active');
+
+    s.onmouseenter = ()=> pintar(i);
+    s.onmouseleave = ()=> pintar(fixas);
+    s.onclick = ()=> salvarAvaliacao(i * 2);
+
     box.appendChild(s);
   }
+}
+
+function pintar(qtd){
+  document.querySelectorAll('#avaliarStars span')
+    .forEach((s,i)=>{
+      s.classList.toggle('hover', i < qtd);
+    });
 }
 
 /* SALVAR AVALIAÇÃO */
@@ -232,7 +253,8 @@ async function salvarAvaliacao(nota){
     nota
   }, { onConflict:'filme_id,usuario_id' });
 
-  carregar(); // atualiza média
+  renderAvaliarStars(nota);
+  carregar();
 }
 
 /* PLAYER */
@@ -284,9 +306,11 @@ async function carregar(){
       .single();
 
     renderAvaliarStars(minha?.nota || 0);
+  }else{
+    renderAvaliarStars(0);
   }
 
-  /* TÍTULO / DESCRIÇÃO */
+  /* TEXTO */
   titulo.textContent = filme.titulo;
   desc.textContent   = filme.descricao || "";
 
@@ -306,9 +330,9 @@ async function carregar(){
   if(media !== null)
     metas.push(['👥',estrelasMedia(media) + ' • Assinantes']);
 
-  meta.innerHTML = metas.map(m =>
-    `<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`
-  ).join('');
+  meta.innerHTML = metas
+    .map(m=>`<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`)
+    .join('');
 
   /* LER MAIS */
   setTimeout(()=>{
