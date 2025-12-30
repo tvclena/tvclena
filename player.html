@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+
 <!-- GA4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T97MS35TJ6"></script>
 <script>
@@ -12,28 +13,26 @@ gtag('config','G-T97MS35TJ6');
 </script>
 
 <title>Sessão • Player</title>
-<meta 
-  name="viewport" 
-  content="
-    width=device-width,
-    initial-scale=1.0,
-    maximum-scale=1.0,
-    user-scalable=no
-  "
->
+
+<meta name="viewport" content="
+  width=device-width,
+  initial-scale=1.0,
+  maximum-scale=1.0,
+  user-scalable=no
+">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-html, body {
-  touch-action: manipulation;
-  overscroll-behavior: none;
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  background:#000;
+  color:#fff;
+  font-family:Inter,Arial,sans-serif;
+  touch-action:manipulation;
+  overscroll-behavior:none;
 }
 
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
-
-
-
-  
 /* TOPO */
 #top{
   position:sticky;
@@ -73,13 +72,6 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
     0 0 70px rgba(220,38,38,.55),
     inset 0 0 50px rgba(0,0,0,.7);
 }
-#player::before{
-  content:"";
-  position:absolute;
-  inset:-40px;
-  background:radial-gradient(circle,rgba(220,38,38,.35),rgba(0,0,0,0) 70%);
-  z-index:-1;
-}
 #player video,
 #player iframe{
   position:absolute;
@@ -107,9 +99,8 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 #meta{
   display:flex;
   flex-wrap:wrap;
-  gap:14px 22px;
+  gap:12px 22px;
   font-size:14px;
-  opacity:.95;
 }
 .meta-item{
   display:flex;
@@ -117,9 +108,7 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   gap:6px;
   white-space:nowrap;
 }
-.meta-item span{
-  opacity:.85;
-}
+.meta-item span{opacity:.85}
 
 /* DESCRIÇÃO */
 #desc{
@@ -144,34 +133,90 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
 /* CHAT */
 #chat{
-  margin-top:10px;
-  height:680px;
+  margin-top:18px;
   border-radius:26px;
-  overflow:hidden;
   background:#0b0b0b;
   border:1px solid #2a0f0f;
   box-shadow:0 0 35px rgba(220,38,38,.35);
   display:flex;
   flex-direction:column;
+  overflow:hidden;
 }
 #chatTop{
   padding:14px;
   text-align:center;
   font-weight:600;
-  cursor:pointer;
   background:linear-gradient(to bottom,#1a0b0b,#0b0b0b);
   border-bottom:1px solid #2a0f0f;
 }
-#chat iframe{
-  flex:1;
-  border:0;
-  background:#fff;
+#comentarios{
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  max-height:520px;
+  overflow-y:auto;
+}
+.comment{
+  padding:14px;
+  border-radius:18px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.12);
+}
+.comment .user{
+  font-size:13px;
+  font-weight:600;
+  margin-bottom:6px;
+  opacity:.85;
+}
+.filme-card{
+  margin-top:10px;
+  display:flex;
+  gap:12px;
+  padding:10px;
+  border-radius:14px;
+  background:#000;
+  border:1px solid rgba(255,255,255,.15);
+  cursor:pointer;
+}
+.filme-card img{
+  width:50px;
+  height:70px;
+  object-fit:cover;
+  border-radius:8px;
+}
+.filme-card strong{color:#4da3ff}
+
+/* COMPOSER */
+#composer{
+  padding:14px;
+  border-top:1px solid rgba(255,255,255,.15);
+}
+#composer textarea{
+  width:100%;
+  min-height:52px;
+  background:#000;
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:14px;
+  padding:12px;
+  color:#fff;
+  resize:none;
+}
+#composer button{
+  margin-top:10px;
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:none;
+  background:#e50914;
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
 }
 
 @media(max-width:900px){
   #layout{grid-template-columns:1fr}
   #player{position:relative;top:0}
-  #chat{height:85vh}
 }
 </style>
 </head>
@@ -198,139 +243,130 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
     <p id="desc" class="collapsed"></p>
     <button id="lerMais" style="display:none">Ler mais</button>
 
+    <!-- CHAT EMBUTIDO -->
     <div id="chat">
-      <div id="chatTop" onclick="document.getElementById('player').scrollIntoView({behavior:'smooth'})">
-        ⬆️ Voltar para o player
+      <div id="chatTop">💬 Comentários</div>
+      <div id="comentarios"></div>
+      <div id="composer">
+        <textarea id="txt" placeholder="Escreva um comentário... use / para marcar filmes"></textarea>
+        <button onclick="enviar()">Enviar</button>
       </div>
-      <iframe id="comentariosIframe"></iframe>
     </div>
-  </div>
 
+  </div>
 </div>
 
 <script>
+/* SUPABASE */
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
 /* ITEM */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get('item'))
 );
 
-/* NORMALIZA */
-function valor(v){
-  if(v === null || v === undefined) return null;
-  if(typeof v === 'string'){
-    const limpo = v.replace(/\s+/g,' ').trim();
-    return limpo === '' ? null : limpo;
-  }
-  return v;
-}
+const email = localStorage.getItem("usuario_email");
 
-
-/* EXTRATORES RAW_INFO */
-const extract = (raw, regex) => {
-  if(!raw) return null;
-  const m = raw.match(regex);
-  return m ? m[1].trim() : null;
-};
-
-const duracaoRaw = extract(item.raw_info,/Duração:\s*([\dh\sMinutos]+)/i);
-const idiomaRaw  = extract(item.raw_info,/Idioma:\s*([^\n]+)/i);
-const idadeRaw   = extract(item.raw_info,/Cl[aá]ssifica[cç][aã]o:\s*([^\n]+)/i);
-const notaRaw    = extract(item.raw_info,/Nota da Cr[ií]tica:\s*([\d.]+)/i);
-
-/* UI */
-titulo.textContent = item.titulo || item.serie_nome || 'Conteúdo';
+/* META */
+titulo.textContent = item.titulo || item.serie_nome || '';
 desc.textContent   = item.descricao || '';
 
-const metas = [];
+const metas=[];
+if(item.categoria) metas.push(['🎬',item.categoria]);
+if(item.tipo) metas.push(['📺',item.tipo]);
+if(item.ano_lancamento) metas.push(['📅',item.ano_lancamento]);
+if(item.duracao_minutos) metas.push(['⏱️',item.duracao_minutos+' Min']);
+if(item.idioma) metas.push(['🌎',item.idioma]);
+if(item.audio) metas.push(['🔊',item.audio]);
+if(item.classificacao_indicativa || item.classificacao)
+  metas.push(['🔞',item.classificacao_indicativa||item.classificacao]);
+if(item.nota_critica) metas.push(['⭐',item.nota_critica]);
 
-/* ✔ 🎬 CATEGORIA */
-if(valor(item.categoria)) metas.push(['🎬', item.categoria]);
-
-/* ✔ 📺 TIPO */
-if(valor(item.tipo)) metas.push(['📺', item.tipo]);
-
-/* ✔ 📅 ANO */
-if(valor(item.ano_lancamento)) metas.push(['📅', item.ano_lancamento]);
-
-/* ✔ ⏱️ DURAÇÃO */
-const duracao =
-  valor(item.duracao_minutos)
-    ? item.duracao_minutos + ' Min'
-    : duracaoRaw;
-if(duracao) metas.push(['⏱️', duracao]);
-
-/* ✔ 🌎 IDIOMA */
-const idioma = valor(item.idioma) || idiomaRaw;
-if(idioma) metas.push(['🌎', idioma]);
-
-/* ✔ 🔊 ÁUDIO */
-if(valor(item.audio)) metas.push(['🔊', item.audio]);
-
-/* ✔ 🔞 CLASSIFICAÇÃO */
-const idade =
-  valor(item.classificacao_indicativa) ||
-  valor(item.classificacao) ||
-  idadeRaw;
-if(idade) metas.push(['🔞', idade]);
-
-/* ✔ ⭐ NOTA */
-const nota = valor(item.nota_critica) || notaRaw;
-if(nota) metas.push(['⭐', nota]);
-
-meta.innerHTML = metas
-  .map(m => `<div class="meta-item">✔ ${m[0]} <span>${m[1]}</span></div>`)
-  .join('');
+meta.innerHTML = metas.map(m =>
+  `<div class="meta-item">✔ ${m[0]} <span>${m[1]}</span></div>`
+).join('');
 
 /* LER MAIS */
 setTimeout(()=>{
-  if(desc.scrollHeight > desc.clientHeight){
+  if(desc.scrollHeight > desc.clientHeight)
     lerMais.style.display='inline';
-  }
 },50);
-lerMais.onclick = ()=> desc.classList.toggle('collapsed');
-
-/* CHAT */
-comentariosIframe.src =
-  `comentarios.html?filme_id=${item.id}&tipo=${item.tipo}`;
+lerMais.onclick=()=>desc.classList.toggle('collapsed');
 
 /* PLAYER */
 function tocar(src){
   if(!src) return;
   if(/\.m3u8$/i.test(src)){
     iframe.remove();
-    video.src = src;
+    video.src=src;
     video.play().catch(()=>{});
   }else{
     video.remove();
-    iframe.src = `https://iframe.mediadelivery.net/embed/569072/${src}`;
+    iframe.src=`https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
 }
 tocar(item.video_url);
+
+/* RENDER FILME NO CHAT */
+function renderizar(txt){
+  return txt.replace(
+    /\{\{filme:([a-f0-9\-]+)\|(.+?)\|(.+?)\}\}/g,
+    (m,id,titulo,capa)=>`
+      <div class="filme-card">
+        <img src="${capa}">
+        <div><strong>${titulo}</strong></div>
+      </div>
+    `
+  );
+}
+
+/* CARREGAR COMENTÁRIOS */
+async function carregar(){
+  const {data}=await sb
+    .from("comentarios")
+    .select("*")
+    .eq("filme_id",item.id)
+    .order("created_at",{ascending:false});
+
+  comentarios.innerHTML="";
+  data?.forEach(c=>{
+    comentarios.innerHTML+=`
+      <div class="comment">
+        <div class="user">@${c.arroba}</div>
+        <div>${renderizar(c.comentario)}</div>
+      </div>
+    `;
+  });
+}
+carregar();
+
+/* ENVIAR */
+async function enviar(){
+  const v=txt.value.trim();
+  if(!v) return;
+  await sb.from("comentarios").insert({
+    filme_id:item.id,
+    email,
+    arroba:email,
+    comentario:v
+  });
+  txt.value="";
+  carregar();
+}
 </script>
+
 <script>
 /* 🔒 BLOQUEIO TOTAL DE ZOOM */
-
-/* Ctrl + Scroll */
-window.addEventListener('wheel', function(e) {
-  if (e.ctrlKey) {
-    e.preventDefault();
-  }
-}, { passive: false });
-
-/* Ctrl + "+" "-" "0" */
-window.addEventListener('keydown', function(e) {
-  if (
-    e.ctrlKey &&
-    (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')
-  ) {
-    e.preventDefault();
-  }
+window.addEventListener('wheel',e=>{if(e.ctrlKey)e.preventDefault()},{passive:false});
+window.addEventListener('keydown',e=>{
+  if(e.ctrlKey && ['+','-','=','0'].includes(e.key)) e.preventDefault();
 });
-
-/* Pinch zoom (Safari / iOS) */
-window.addEventListener('gesturestart', e => e.preventDefault());
-window.addEventListener('gesturechange', e => e.preventDefault());
-window.addEventListener('gestureend', e => e.preventDefault());
+window.addEventListener('gesturestart',e=>e.preventDefault());
+window.addEventListener('gesturechange',e=>e.preventDefault());
+window.addEventListener('gestureend',e=>e.preventDefault());
 </script>
 
 </body>
