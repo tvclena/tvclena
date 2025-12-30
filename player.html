@@ -57,6 +57,23 @@ font-weight:600;cursor:pointer;align-self:flex-start}
 #layout{grid-template-columns:1fr}
 #player{position:relative;top:0}
 }
+
+#controlesSerie select{
+  background:#111;
+  color:#fff;
+  border:1px solid #333;
+  padding:12px 14px;
+  border-radius:12px;
+  font-size:14px;
+  cursor:pointer;
+}
+#controlesSerie{
+  display:flex;
+}
+#btnFullscreen:hover{
+  filter:brightness(1.08);
+}
+
 </style>
 </head>
 
@@ -73,8 +90,36 @@ font-weight:600;cursor:pointer;align-self:flex-start}
       <video id="video" controls playsinline></video>
       <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
     </div>
+
+    <!-- CONTROLES DE SÉRIE (APENAS SÉRIE) -->
+<div id="controlesSerie" style="display:none;gap:10px;flex-wrap:wrap;margin-top:14px">
+  <select id="selectTemporada"></select>
+  <select id="selectEpisodio"></select>
+</div>
+
+<!-- BOTÃO TELA CHEIA (FILME E SÉRIE) -->
+<button id="btnFullscreen"
+  style="
+    margin-top:14px;
+    width:100%;
+    padding:14px;
+    border-radius:16px;
+    border:none;
+    background:#dc2626;
+    color:#fff;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer">
+  ⛶ Tela cheia
+</button>
+
   </div>
 
+
+
+
+
+  
   <div id="side">
     <h1 id="titulo"></h1>
     <div id="meta"></div>
@@ -217,6 +262,44 @@ async function carregar(){
 
   tocar(filme.video_url);
 
+/* 📺 CONTROLES APENAS PARA SÉRIE */
+if(filme.tipo?.toLowerCase() === "serie" || filme.tipo?.toLowerCase() === "série"){
+  controlesSerie.style.display = "flex";
+
+  selectTemporada.innerHTML = "";
+  selectEpisodio.innerHTML = "";
+
+  filme.temporadas?.forEach((t,i)=>{
+    const op = document.createElement("option");
+    op.value = i;
+    op.textContent = `Temporada ${t.temporada}`;
+    selectTemporada.appendChild(op);
+  });
+
+  function carregarEpisodios(tIndex){
+    selectEpisodio.innerHTML = "";
+    const eps = filme.temporadas[tIndex].episodios;
+
+    eps.forEach(e=>{
+      const op = document.createElement("option");
+      op.value = e.src;
+      op.textContent = `Episódio ${e.ep}`;
+      selectEpisodio.appendChild(op);
+    });
+
+    tocar(eps[0].src);
+  }
+
+  selectTemporada.onchange = e => carregarEpisodios(e.target.value);
+  selectEpisodio.onchange = e => tocar(e.target.value);
+
+  carregarEpisodios(0);
+}else{
+  controlesSerie.style.display = "none";
+}
+
+
+  
   setTimeout(()=>{
     if(desc.scrollHeight>desc.clientHeight){
       lerMais.style.display="inline";
@@ -230,6 +313,15 @@ async function carregar(){
 }
 
 /* INIT */
+
+/* ⛶ TELA CHEIA */
+btnFullscreen.onclick = () => {
+  const alvo = video.isConnected ? video : iframe;
+  if(alvo.requestFullscreen) alvo.requestFullscreen();
+  else if(alvo.webkitRequestFullscreen) alvo.webkitRequestFullscreen();
+};
+
+  
 (async()=>{
   await carregarUsuario();
   carregar();
