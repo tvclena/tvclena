@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 
-<!-- ================= GA4 ================= -->
+<!-- VIEWPORT CORRETO (REMOVE FAIXA PRETA) -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<!-- GA4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T97MS35TJ6"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
@@ -13,15 +16,14 @@ gtag('config','G-T97MS35TJ6');
 </script>
 
 <title>Sessão • Player</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-/* ================= RESET ================= */
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{
   background:#000;
   color:#fff;
   font-family:Inter,Arial,sans-serif;
+  min-height:100%;
 }
 
 /* ================= TOPO ================= */
@@ -29,8 +31,8 @@ html,body{
   position:sticky;
   top:0;
   z-index:100;
-  padding:16px 20px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0));
+  padding:14px 20px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,0));
 }
 #top button{
   background:none;
@@ -40,7 +42,6 @@ html,body{
   cursor:pointer;
   opacity:.85;
 }
-#top button:hover{opacity:1}
 
 /* ================= LAYOUT ================= */
 #layout{
@@ -50,10 +51,10 @@ html,body{
 }
 
 /* ================= PLAYER ================= */
-#playerArea{padding:16px}
+#playerArea{padding:0}
 #player{
   position:sticky;
-  top:80px;
+  top:0;
   width:100%;
   max-width:1120px;
   margin:auto;
@@ -62,15 +63,15 @@ html,body{
   overflow:hidden;
   background:#000;
   box-shadow:
-    0 0 70px rgba(220,38,38,.55),
-    inset 0 0 50px rgba(0,0,0,.7);
+    0 0 80px rgba(220,38,38,.55),
+    inset 0 0 60px rgba(0,0,0,.7);
 }
 #player::before{
   content:"";
   position:absolute;
-  inset:-40px;
-  background:radial-gradient(circle at center,
-    rgba(220,38,38,.35),
+  inset:-60px;
+  background:radial-gradient(circle,
+    rgba(220,38,38,.45),
     rgba(0,0,0,0) 70%);
   z-index:-1;
 }
@@ -95,7 +96,6 @@ html,body{
 #titulo{
   font-size:28px;
   font-weight:700;
-  line-height:1.2;
 }
 
 /* ================= META EM LINHA ================= */
@@ -104,7 +104,7 @@ html,body{
   flex-wrap:wrap;
   gap:14px 22px;
   font-size:14px;
-  opacity:.9;
+  opacity:.92;
 }
 .meta-item{
   display:flex;
@@ -118,7 +118,7 @@ html,body{
 #desc{
   font-size:15px;
   line-height:1.65;
-  opacity:.88;
+  opacity:.9;
 }
 #desc.collapsed{
   display:-webkit-box;
@@ -132,8 +132,6 @@ html,body{
   color:#f87171;
   font-weight:600;
   cursor:pointer;
-  padding:0;
-  align-self:flex-start;
 }
 
 /* ================= CHAT ================= */
@@ -156,17 +154,30 @@ html,body{
   background:linear-gradient(to bottom,#1a0b0b,#0b0b0b);
   border-bottom:1px solid #2a0f0f;
 }
-#chatTop:hover{opacity:.9}
 #chat iframe{
   flex:1;
   border:0;
   background:#fff;
 }
 
-/* ================= MOBILE ================= */
+/* ================= MOBILE (CRÍTICO) ================= */
 @media(max-width:900px){
   #layout{grid-template-columns:1fr}
-  #player{position:relative;top:0}
+
+  #top{
+    position:fixed;
+    top:env(safe-area-inset-top);
+    left:0;
+    right:0;
+    padding-top:calc(12px + env(safe-area-inset-top));
+  }
+
+  #player{
+    position:relative;
+    top:0;
+    border-radius:18px;
+  }
+
   #chat{height:85vh}
 }
 </style>
@@ -174,14 +185,12 @@ html,body{
 
 <body>
 
-<!-- TOPO -->
 <div id="top">
   <button onclick="history.back()">← Voltar</button>
 </div>
 
 <div id="layout">
 
-  <!-- PLAYER -->
   <div id="playerArea">
     <div id="player">
       <video id="video" controls playsinline></video>
@@ -189,7 +198,6 @@ html,body{
     </div>
   </div>
 
-  <!-- SIDE -->
   <div id="side">
 
     <h1 id="titulo"></h1>
@@ -216,23 +224,19 @@ const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get('item'))
 );
 
-/* ================= EXTRATORES ================= */
-function extrairDuracao(raw){
+/* ================= RAW INFO ================= */
+function extrair(raw, regex){
   if(!raw) return null;
-  const m = raw.match(/Duração:\s*(\d+)\s*Min/i);
-  return m ? m[1] + ' min' : null;
+  const m = raw.match(regex);
+  return m ? m[1].trim() : null;
 }
-
-function extrairClassificacao(raw){
-  if(!raw) return null;
-  const m = raw.match(/Cl[aá]ssifica[cç][aã]o:\s*(\d+)\s*Anos/i);
-  return m ? m[1] + ' Anos' : null;
+function duracao(raw){
+  const v = extrair(raw,/Duração:\s*(\d+)\s*Min/i);
+  return v ? v+' min' : null;
 }
-
-function extrairNota(raw){
-  if(!raw) return null;
-  const m = raw.match(/Nota da Cr[ií]tica:\s*([\d.]+)/i);
-  return m ? m[1] : null;
+function classificacao(raw){
+  const v = extrair(raw,/Cl[aá]ssifica[cç][aã]o:\s*(\d+)\s*Anos/i);
+  return v ? v+' Anos' : null;
 }
 
 /* ================= UI ================= */
@@ -241,59 +245,68 @@ desc.textContent   = item.descricao || '';
 
 const metas = [];
 
-if(item.categoria) metas.push(['🎬', item.categoria]);
-if(item.tipo) metas.push(['📺', item.tipo]);
-if(item.ano_lancamento) metas.push(['📅', item.ano_lancamento]);
+// PRINCIPAL
+if(item.categoria) metas.push(['🎬',item.categoria]);
+if(item.tipo) metas.push(['📺',item.tipo]);
+if(item.ano_lancamento) metas.push(['📅',item.ano_lancamento]);
 
-if(item.serie_nome) metas.push(['📀', item.serie_nome]);
-if(item.temporada) metas.push(['📦', 'Temporada ' + item.temporada]);
-if(item.episodio) metas.push(['▶️', 'Episódio ' + item.episodio]);
+// SÉRIE
+if(item.serie_nome) metas.push(['📀',item.serie_nome]);
+if(item.temporada) metas.push(['📦','Temporada '+item.temporada]);
+if(item.episodio) metas.push(['▶️','Episódio '+item.episodio]);
 
-const duracao =
-  item.duracao_minutos
-    ? item.duracao_minutos + ' min'
-    : extrairDuracao(item.raw_info);
-if(duracao) metas.push(['⏱️', duracao]);
+// DURAÇÃO
+const d = item.duracao_minutos ? item.duracao_minutos+' min' : duracao(item.raw_info);
+if(d) metas.push(['⏱️',d]);
 
-if(item.idioma) metas.push(['🌎', item.idioma]);
-if(item.audio) metas.push(['🔊', item.audio]);
+// IDIOMA / ÁUDIO
+if(item.idioma) metas.push(['🌎',item.idioma]);
+if(item.audio) metas.push(['🔊',item.audio]);
 
-const classif =
-  item.classificacao_indicativa ||
-  extrairClassificacao(item.raw_info);
-if(classif) metas.push(['🔞', classif]);
+// CLASSIFICAÇÃO / NOTA
+const c = item.classificacao_indicativa || classificacao(item.raw_info);
+if(c) metas.push(['🔞',c]);
+if(item.nota_critica) metas.push(['⭐',item.nota_critica]);
 
-const nota =
-  item.nota_critica ||
-  extrairNota(item.raw_info);
-if(nota) metas.push(['⭐', nota]);
+// TÉCNICO
+const qualidade = extrair(item.raw_info,/Qualidade:\s*([^\n]+)/i);
+const formato   = extrair(item.raw_info,/Formato:\s*([^\n]+)/i);
+const tamanho   = extrair(item.raw_info,/Tamanho:\s*([^\n]+)/i);
+const vNota     = extrair(item.raw_info,/Vídeo:\s*(\d+)/i);
+const aNota     = extrair(item.raw_info,/Áudio:\s*(\d+)/i);
+
+if(qualidade) metas.push(['🎞️',qualidade]);
+if(formato)   metas.push(['📦',formato]);
+if(tamanho)   metas.push(['💾',tamanho]);
+if(vNota)     metas.push(['🎥','Vídeo '+vNota]);
+if(aNota)     metas.push(['🔊','Áudio '+aNota]);
 
 meta.innerHTML = metas.map(
-  m => `<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`
+  m=>`<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`
 ).join('');
 
-/* ================= LER MAIS ================= */
+/* LER MAIS */
 setTimeout(()=>{
-  if(desc.scrollHeight > desc.clientHeight){
-    lerMais.style.display = 'inline';
+  if(desc.scrollHeight>desc.clientHeight){
+    lerMais.style.display='inline';
   }
 },50);
-lerMais.onclick = ()=> desc.classList.toggle('collapsed');
+lerMais.onclick=()=>desc.classList.toggle('collapsed');
 
-/* ================= CHAT ================= */
+/* CHAT */
 comentariosIframe.src =
   `comentarios.html?filme_id=${item.id}&tipo=${item.tipo}`;
 
-/* ================= PLAYER ================= */
+/* PLAYER */
 function tocar(src){
   if(!src) return;
   if(/\.m3u8$/i.test(src)){
     iframe.remove();
-    video.src = src;
+    video.src=src;
     video.play().catch(()=>{});
   }else{
     video.remove();
-    iframe.src = `https://iframe.mediadelivery.net/embed/569072/${src}`;
+    iframe.src=`https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
 }
 tocar(item.video_url);
