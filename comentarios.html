@@ -226,11 +226,15 @@ async function serializarComentario(txt){
 function renderizar(txt){
   return txt.replace(
     /\{\{filme:([a-f0-9\-]+)\|(.+?)\|(.+?)\}\}/g,
-    (m,id,t,c)=>`
-    <div class="filme-card" onclick="location.href='player.html?item=${encodeURIComponent(JSON.stringify({id}))}'">
-      <img src="${c}">
-      <div><strong>${t}</strong><div>Ver agora</div></div>
-    </div>`
+    (m,id,titulo,capa)=>`
+      <div class="filme-card" onclick="abrirModalFilme('${id}')">
+        <img src="${capa}">
+        <div>
+          <strong>${titulo}</strong>
+          <div style="opacity:.6;font-size:12px">Ver detalhes</div>
+        </div>
+      </div>
+    `
   );
 }
 
@@ -273,6 +277,91 @@ async function enviar(){
   txt.value="";
   carregar();
 }
+async function abrirModalFilme(id){
+  const modal = document.getElementById("modalFilme");
+  const box   = document.getElementById("modalBox");
+
+  modal.style.display = "flex";
+  box.innerHTML = `<div style="text-align:center;opacity:.6">Carregando...</div>`;
+
+  const { data, error } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if(error || !data){
+    box.innerHTML = `<p>Filme não encontrado</p>`;
+    return;
+  }
+
+  const itemEncoded = encodeURIComponent(JSON.stringify({
+    id: data.id,
+    titulo: data.titulo,
+    video_url: data.video_url,
+    tipo: data.tipo,
+    serie_nome: data.serie_nome,
+    temporada: data.temporada,
+    episodio: data.episodio
+  }));
+
+  box.innerHTML = `
+    <img src="${data.capa_url}" style="width:100%;border-radius:14px">
+
+    <h2 style="margin:14px 0 6px">${data.titulo}</h2>
+
+    <p style="font-size:13px;opacity:.75">${data.descricao || ""}</p>
+
+    <div style="
+      margin-top:12px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      font-size:13px;
+      opacity:.85
+    ">
+      <div><b>Gênero:</b> ${data.categoria || "-"}</div>
+      <div><b>Ano:</b> ${data.ano_lancamento || "-"}</div>
+      <div><b>Áudio:</b> ${data.audio || "-"}</div>
+      <div><b>Idioma:</b> ${data.idioma || "-"}</div>
+      <div><b>Classificação:</b> ${data.classificacao_indicativa || data.classificacao || "-"}</div>
+      <div><b>Nota:</b> ${data.nota_critica || "-"}</div>
+    </div>
+
+    <button onclick="location.href='player.html?item=${itemEncoded}'" style="
+      margin-top:14px;
+      width:100%;
+      padding:12px;
+      border-radius:14px;
+      border:none;
+      background:#e50914;
+      color:#fff;
+      font-size:15px;
+      font-weight:600;
+      cursor:pointer
+    ">
+      ▶ Assistir agora
+    </button>
+
+    <button onclick="fecharModalFilme()" style="
+      margin-top:10px;
+      width:100%;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.15);
+      background:transparent;
+      color:#aaa;
+      font-size:13px;
+      cursor:pointer
+    ">
+      Fechar
+    </button>
+  `;
+}
+
+function fecharModalFilme(){
+  document.getElementById("modalFilme").style.display = "none";
+}
 
 /* APAGAR */
 async function apagar(id){
@@ -310,6 +399,28 @@ function selecionar(t){
 
 init();
 </script>
+<div id="modalFilme" style="
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(14px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+">
+  <div id="modalBox" style="
+    width:360px;
+    max-height:85vh;
+    overflow:auto;
+    background:#0b0b0b;
+    border-radius:20px;
+    padding:18px;
+    border:1px solid rgba(255,255,255,.15);
+  ">
+    <!-- conteúdo dinâmico -->
+  </div>
+</div>
 
 </body>
 </html>
