@@ -213,6 +213,21 @@ button{
     0 0 0 1px var(--border),
     0 35px 90px rgba(0,0,0,.9);
 }
+.composer{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  padding:16px;
+  background:rgba(10,10,18,.85);
+  backdrop-filter:blur(18px);
+  border-top:1px solid var(--border);
+  box-shadow:0 -10px 30px rgba(0,0,0,.6);
+  z-index:30;
+}
+#lista{
+  padding:18px 16px 160px; /* espaço para o composer */
+}
 
 </style>
 </head>
@@ -224,11 +239,12 @@ button{
   <div class="hint">Toque para ver os comentários</div>
 </div>
 
-<div id="container" class="container faded">
+<div id="lista"></div>
+
+<div class="composer">
   <textarea id="txt" placeholder="Escreva um comentário... Use / para marcar filmes"></textarea>
   <div id="auto" class="autocomplete" style="display:none"></div>
   <button onclick="enviar()">Enviar</button>
-  <div id="lista"></div>
 </div>
 
 <script>
@@ -248,9 +264,11 @@ let filmesCache=[];
 
 /* TOGGLE */
 function toggle(){
-  aberto=!aberto;
-  container.classList.toggle("faded",!aberto);
+  aberto = !aberto;
+  document.getElementById("lista").style.display = aberto ? "block" : "none";
+  document.querySelector(".composer").style.display = aberto ? "block" : "none";
 }
+
 
 /* SLUG */
 function slugify(t){
@@ -412,7 +430,7 @@ async function abrirModalFilme(id){
       <div><b>Nota:</b> ${data.nota_critica || "-"}</div>
     </div>
 
-    <button onclick="location.href='player.html?item=${itemEncoded}'" style="
+    <button onclick="window.top.location.href='player.html?item=${itemEncoded}'" style="
       margin-top:14px;
       width:100%;
       padding:12px;
