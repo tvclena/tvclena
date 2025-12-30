@@ -2,16 +2,6 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-
-<!-- GA4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-T97MS35TJ6"></script>
-<script>
-window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config','G-T97MS35TJ6');
-</script>
-
 <title>Sessão • Player</title>
 
 <meta name="viewport" content="
@@ -29,8 +19,6 @@ html,body{
   background:#000;
   color:#fff;
   font-family:Inter,Arial,sans-serif;
-  touch-action:manipulation;
-  overscroll-behavior:none;
 }
 
 /* TOPO */
@@ -47,7 +35,6 @@ html,body{
   color:#fff;
   font-size:15px;
   cursor:pointer;
-  opacity:.85;
 }
 
 /* LAYOUT */
@@ -68,9 +55,7 @@ html,body{
   border-radius:26px;
   overflow:hidden;
   background:#000;
-  box-shadow:
-    0 0 70px rgba(220,38,38,.55),
-    inset 0 0 50px rgba(0,0,0,.7);
+  box-shadow:0 0 70px rgba(220,38,38,.55);
 }
 #player video,
 #player iframe{
@@ -131,89 +116,6 @@ html,body{
   align-self:flex-start;
 }
 
-/* CHAT */
-#chat{
-  margin-top:18px;
-  border-radius:26px;
-  background:#0b0b0b;
-  border:1px solid #2a0f0f;
-  box-shadow:0 0 35px rgba(220,38,38,.35);
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
-#chatTop{
-  padding:14px;
-  text-align:center;
-  font-weight:600;
-  background:linear-gradient(to bottom,#1a0b0b,#0b0b0b);
-  border-bottom:1px solid #2a0f0f;
-}
-#comentarios{
-  padding:14px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  max-height:520px;
-  overflow-y:auto;
-}
-.comment{
-  padding:14px;
-  border-radius:18px;
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.12);
-}
-.comment .user{
-  font-size:13px;
-  font-weight:600;
-  margin-bottom:6px;
-  opacity:.85;
-}
-.filme-card{
-  margin-top:10px;
-  display:flex;
-  gap:12px;
-  padding:10px;
-  border-radius:14px;
-  background:#000;
-  border:1px solid rgba(255,255,255,.15);
-  cursor:pointer;
-}
-.filme-card img{
-  width:50px;
-  height:70px;
-  object-fit:cover;
-  border-radius:8px;
-}
-.filme-card strong{color:#4da3ff}
-
-/* COMPOSER */
-#composer{
-  padding:14px;
-  border-top:1px solid rgba(255,255,255,.15);
-}
-#composer textarea{
-  width:100%;
-  min-height:52px;
-  background:#000;
-  border:1px solid rgba(255,255,255,.2);
-  border-radius:14px;
-  padding:12px;
-  color:#fff;
-  resize:none;
-}
-#composer button{
-  margin-top:10px;
-  width:100%;
-  padding:12px;
-  border-radius:14px;
-  border:none;
-  background:#e50914;
-  color:#fff;
-  font-weight:600;
-  cursor:pointer;
-}
-
 @media(max-width:900px){
   #layout{grid-template-columns:1fr}
   #player{position:relative;top:0}
@@ -242,18 +144,8 @@ html,body{
 
     <p id="desc" class="collapsed"></p>
     <button id="lerMais" style="display:none">Ler mais</button>
-
-    <!-- CHAT EMBUTIDO -->
-    <div id="chat">
-      <div id="chatTop">💬 Comentários</div>
-      <div id="comentarios"></div>
-      <div id="composer">
-        <textarea id="txt" placeholder="Escreva um comentário... use / para marcar filmes"></textarea>
-        <button onclick="enviar()">Enviar</button>
-      </div>
-    </div>
-
   </div>
+
 </div>
 
 <script>
@@ -263,110 +155,70 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ITEM */
+/* ITEM (vem do chat) */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get('item'))
 );
 
-const email = localStorage.getItem("usuario_email");
+/* BUSCAR FILME COMPLETO */
+async function carregarFilme(){
+  const { data, error } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("id", item.id)
+    .single();
 
-/* META */
-titulo.textContent = item.titulo || item.serie_nome || '';
-desc.textContent   = item.descricao || '';
+  if(error || !data){
+    titulo.textContent = "Conteúdo não encontrado";
+    return;
+  }
 
-const metas=[];
-if(item.categoria) metas.push(['🎬',item.categoria]);
-if(item.tipo) metas.push(['📺',item.tipo]);
-if(item.ano_lancamento) metas.push(['📅',item.ano_lancamento]);
-if(item.duracao_minutos) metas.push(['⏱️',item.duracao_minutos+' Min']);
-if(item.idioma) metas.push(['🌎',item.idioma]);
-if(item.audio) metas.push(['🔊',item.audio]);
-if(item.classificacao_indicativa || item.classificacao)
-  metas.push(['🔞',item.classificacao_indicativa||item.classificacao]);
-if(item.nota_critica) metas.push(['⭐',item.nota_critica]);
+  /* TÍTULO / DESCRIÇÃO */
+  titulo.textContent = data.titulo;
+  desc.textContent   = data.descricao || "";
 
-meta.innerHTML = metas.map(m =>
-  `<div class="meta-item">✔ ${m[0]} <span>${m[1]}</span></div>`
-).join('');
+  /* META */
+  const metas=[];
+  if(data.categoria) metas.push(['🎬',data.categoria]);
+  if(data.tipo) metas.push(['📺',data.tipo]);
+  if(data.ano_lancamento) metas.push(['📅',data.ano_lancamento]);
+  if(data.duracao_minutos) metas.push(['⏱️',data.duracao_minutos+' Min']);
+  if(data.idioma) metas.push(['🌎',data.idioma]);
+  if(data.audio) metas.push(['🔊',data.audio]);
+  if(data.classificacao_indicativa || data.classificacao)
+    metas.push(['🔞',data.classificacao_indicativa || data.classificacao]);
+  if(data.nota_critica) metas.push(['⭐',data.nota_critica]);
 
-/* LER MAIS */
-setTimeout(()=>{
-  if(desc.scrollHeight > desc.clientHeight)
-    lerMais.style.display='inline';
-},50);
-lerMais.onclick=()=>desc.classList.toggle('collapsed');
+  meta.innerHTML = metas
+    .map(m=>`<div class="meta-item">✔ ${m[0]} <span>${m[1]}</span></div>`)
+    .join('');
+
+  /* LER MAIS */
+  setTimeout(()=>{
+    if(desc.scrollHeight > desc.clientHeight)
+      lerMais.style.display='inline';
+  },50);
+
+  /* PLAYER */
+  tocar(data.video_url);
+}
 
 /* PLAYER */
 function tocar(src){
   if(!src) return;
   if(/\.m3u8$/i.test(src)){
     iframe.remove();
-    video.src=src;
+    video.src = src;
     video.play().catch(()=>{});
   }else{
     video.remove();
-    iframe.src=`https://iframe.mediadelivery.net/embed/569072/${src}`;
+    iframe.src = `https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
 }
-tocar(item.video_url);
 
-/* RENDER FILME NO CHAT */
-function renderizar(txt){
-  return txt.replace(
-    /\{\{filme:([a-f0-9\-]+)\|(.+?)\|(.+?)\}\}/g,
-    (m,id,titulo,capa)=>`
-      <div class="filme-card">
-        <img src="${capa}">
-        <div><strong>${titulo}</strong></div>
-      </div>
-    `
-  );
-}
+lerMais.onclick = ()=> desc.classList.toggle('collapsed');
 
-/* CARREGAR COMENTÁRIOS */
-async function carregar(){
-  const {data}=await sb
-    .from("comentarios")
-    .select("*")
-    .eq("filme_id",item.id)
-    .order("created_at",{ascending:false});
-
-  comentarios.innerHTML="";
-  data?.forEach(c=>{
-    comentarios.innerHTML+=`
-      <div class="comment">
-        <div class="user">@${c.arroba}</div>
-        <div>${renderizar(c.comentario)}</div>
-      </div>
-    `;
-  });
-}
-carregar();
-
-/* ENVIAR */
-async function enviar(){
-  const v=txt.value.trim();
-  if(!v) return;
-  await sb.from("comentarios").insert({
-    filme_id:item.id,
-    email,
-    arroba:email,
-    comentario:v
-  });
-  txt.value="";
-  carregar();
-}
-</script>
-
-<script>
-/* 🔒 BLOQUEIO TOTAL DE ZOOM */
-window.addEventListener('wheel',e=>{if(e.ctrlKey)e.preventDefault()},{passive:false});
-window.addEventListener('keydown',e=>{
-  if(e.ctrlKey && ['+','-','=','0'].includes(e.key)) e.preventDefault();
-});
-window.addEventListener('gesturestart',e=>e.preventDefault());
-window.addEventListener('gesturechange',e=>e.preventDefault());
-window.addEventListener('gestureend',e=>e.preventDefault());
+carregarFilme();
 </script>
 
 </body>
