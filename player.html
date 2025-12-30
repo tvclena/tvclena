@@ -91,11 +91,10 @@ html,body{
 }
 .meta-item span{opacity:.85}
 
-/* ESTRELAS (MÉDIA) */
+/* ESTRELAS MÉDIA */
 .stars{
   color:#facc15;
   font-size:15px;
-  letter-spacing:1px;
 }
 
 /* AVALIAR */
@@ -199,6 +198,14 @@ const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get('item'))
 );
 
+/* SESSÃO */
+let usuarioLogado = null;
+
+async function carregarSessao(){
+  const { data } = await sb.auth.getSession();
+  usuarioLogado = data.session?.user || null;
+}
+
 /* ⭐ ESTRELAS MÉDIA */
 function estrelasMedia(media){
   if(media === null) return '☆☆☆☆☆';
@@ -209,10 +216,7 @@ function estrelasMedia(media){
 }
 
 /* ⭐ ESTRELAS INTERATIVAS */
-let notaAtual = 0;
-
 function renderAvaliarStars(nota = 0){
-  notaAtual = nota;
   const box = document.getElementById('avaliarStars');
   box.innerHTML = '';
 
@@ -241,15 +245,14 @@ function pintar(qtd){
 
 /* SALVAR AVALIAÇÃO */
 async function salvarAvaliacao(nota){
-  const user = (await sb.auth.getUser()).data.user;
-  if(!user){
+  if(!usuarioLogado){
     alert("Faça login para avaliar");
     return;
   }
 
   await sb.from('avaliacoes').upsert({
     filme_id: item.id,
-    usuario_id: user.id,
+    usuario_id: usuarioLogado.id,
     nota
   }, { onConflict:'filme_id,usuario_id' });
 
@@ -272,7 +275,6 @@ function tocar(src){
 
 /* CARREGAR TUDO */
 async function carregar(){
-  /* FILME */
   const { data: filme } = await sb
     .from("filmes")
     .select("*")
@@ -296,13 +298,12 @@ async function carregar(){
   }
 
   /* AVALIAÇÃO DO USUÁRIO */
-  const user = (await sb.auth.getUser()).data.user;
-  if(user){
+  if(usuarioLogado){
     const { data: minha } = await sb
       .from("avaliacoes")
       .select("nota")
       .eq("filme_id", item.id)
-      .eq("usuario_id", user.id)
+      .eq("usuario_id", usuarioLogado.id)
       .single();
 
     renderAvaliarStars(minha?.nota || 0);
@@ -350,7 +351,11 @@ async function carregar(){
   tocar(filme.video_url);
 }
 
-carregar();
+/* INIT */
+(async ()=>{
+  await carregarSessao();
+  carregar();
+})();
 </script>
 
 </body>
