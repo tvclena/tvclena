@@ -98,6 +98,29 @@ html,body{
   letter-spacing:1px;
 }
 
+/* AVALIAR */
+#avaliarBox{
+  margin-top:6px;
+}
+.avaliar-label{
+  font-size:13px;
+  opacity:.7;
+  margin-bottom:6px;
+}
+.avaliar-stars{
+  display:flex;
+  gap:6px;
+  font-size:24px;
+  cursor:pointer;
+}
+.avaliar-stars span{
+  color:#444;
+  transition:.2s;
+}
+.avaliar-stars span.active{
+  color:#facc15;
+}
+
 /* DESCRIÇÃO */
 #desc{
   font-size:15px;
@@ -147,6 +170,12 @@ html,body{
     <h1 id="titulo"></h1>
     <div id="meta"></div>
 
+    <!-- AVALIAÇÃO DO USUÁRIO -->
+    <div id="avaliarBox">
+      <div class="avaliar-label">Avalie este conteúdo</div>
+      <div id="avaliarStars" class="avaliar-stars"></div>
+    </div>
+
     <p id="desc" class="collapsed"></p>
     <button id="lerMais" style="display:none">Ler mais</button>
   </div>
@@ -160,90 +189,50 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ITEM (vem do chat / listagem) */
+/* ITEM */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get('item'))
 );
 
-/* GERAR ESTRELAS (ASSINANTES) */
-function gerarEstrelas(media){
-  if(!media) return '☆☆☆☆☆';
-  const estrelas = Math.round(media / 2);
+/* ESTRELAS (ASSINANTES) */
+function estrelasMedia(media){
+  if(media === null) return '☆☆☆☆☆';
+  const q = Math.round(media / 2);
   let out='';
-  for(let i=1;i<=5;i++){
-    out += i<=estrelas ? '⭐' : '☆';
-  }
+  for(let i=1;i<=5;i++) out += i<=q ? '⭐' : '☆';
   return `<span class="stars">${out}</span>`;
 }
 
-/* CARREGAR FILME + AVALIAÇÕES */
-async function carregar(){
-  /* FILME */
-  const { data: filme } = await sb
-    .from("filmes")
-    .select("*")
-    .eq("id", item.id)
-    .single();
+/* RENDER ESTRELAS AVALIAÇÃO */
+function renderAvaliarStars(valor=0){
+  const box = document.getElementById('avaliarStars');
+  box.innerHTML = '';
+  const q = Math.round(valor / 2);
 
-  if(!filme){
-    titulo.textContent = "Conteúdo não encontrado";
+  for(let i=1;i<=5;i++){
+    const s = document.createElement('span');
+    s.textContent = '★';
+    if(i<=q) s.classList.add('active');
+    s.onclick = ()=> salvarAvaliacao(i*2);
+    box.appendChild(s);
+  }
+}
+
+/* SALVAR AVALIAÇÃO */
+async function salvarAvaliacao(nota){
+  const user = (await sb.auth.getUser()).data.user;
+  if(!user){
+    alert("Faça login para avaliar");
     return;
   }
 
-  /* MÉDIA DOS ASSINANTES */
-  const { data: avals } = await sb
-    .from("avaliacoes")
-    .select("nota")
-    .eq("filme_id", item.id);
+  await sb.from('avaliacoes').upsert({
+    filme_id: item.id,
+    usuario_id: user.id,
+    nota
+  }, { onConflict:'filme_id,usuario_id' });
 
-  let mediaAssinantes = null;
-  if(avals && avals.length){
-    const soma = avals.reduce((t,a)=>t+a.nota,0);
-    mediaAssinantes = soma / avals.length;
-  }
-
-  /* TÍTULO / DESCRIÇÃO */
-  titulo.textContent = filme.titulo;
-  desc.textContent   = filme.descricao || "";
-
-  /* META */
-  const metas = [];
-
-  if(filme.categoria) metas.push(['🎬', filme.categoria]);
-  if(filme.tipo) metas.push(['📺', filme.tipo]);
-  if(filme.ano_lancamento) metas.push(['📅', filme.ano_lancamento]);
-  if(filme.idioma) metas.push(['🌎', filme.idioma]);
-  if(filme.audio) metas.push(['🔊', filme.audio]);
-  if(filme.classificacao_indicativa || filme.classificacao)
-    metas.push(['🔞', filme.classificacao_indicativa || filme.classificacao]);
-
-  /* NOTA CRÍTICA (NÚMERO) */
-  if(filme.nota_critica)
-    metas.push(['⭐', filme.nota_critica + ' • Crítica']);
-
-  /* NOTA ASSINANTES (ESTRELAS) */
-  if(mediaAssinantes !== null)
-    metas.push(['👥', gerarEstrelas(mediaAssinantes) + ' • Assinantes']);
-
-  meta.innerHTML = metas
-    .map(m=>`<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`)
-    .join('');
-
-  /* LER MAIS / MENOS */
-  setTimeout(()=>{
-    if(desc.scrollHeight > desc.clientHeight){
-      lerMais.style.display = 'inline';
-      lerMais.textContent = 'Ler mais';
-    }
-  },50);
-
-  lerMais.onclick = ()=>{
-    const fechado = desc.classList.toggle('collapsed');
-    lerMais.textContent = fechado ? 'Ler mais' : 'Ler menos';
-  };
-
-  /* PLAYER */
-  tocar(filme.video_url);
+  carregar(); // atualiza média
 }
 
 /* PLAYER */
@@ -257,6 +246,84 @@ function tocar(src){
     video.remove();
     iframe.src = `https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
+}
+
+/* CARREGAR TUDO */
+async function carregar(){
+  /* FILME */
+  const { data: filme } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("id", item.id)
+    .single();
+
+  if(!filme){
+    titulo.textContent = "Conteúdo não encontrado";
+    return;
+  }
+
+  /* MÉDIA ASSINANTES */
+  const { data: avals } = await sb
+    .from("avaliacoes")
+    .select("nota")
+    .eq("filme_id", item.id);
+
+  let media = null;
+  if(avals?.length){
+    media = avals.reduce((t,a)=>t+a.nota,0)/avals.length;
+  }
+
+  /* AVALIAÇÃO DO USUÁRIO */
+  const user = (await sb.auth.getUser()).data.user;
+  if(user){
+    const { data: minha } = await sb
+      .from("avaliacoes")
+      .select("nota")
+      .eq("filme_id", item.id)
+      .eq("usuario_id", user.id)
+      .single();
+
+    renderAvaliarStars(minha?.nota || 0);
+  }
+
+  /* TÍTULO / DESCRIÇÃO */
+  titulo.textContent = filme.titulo;
+  desc.textContent   = filme.descricao || "";
+
+  /* META */
+  const metas=[];
+  if(filme.categoria) metas.push(['🎬',filme.categoria]);
+  if(filme.tipo) metas.push(['📺',filme.tipo]);
+  if(filme.ano_lancamento) metas.push(['📅',filme.ano_lancamento]);
+  if(filme.idioma) metas.push(['🌎',filme.idioma]);
+  if(filme.audio) metas.push(['🔊',filme.audio]);
+  if(filme.classificacao_indicativa || filme.classificacao)
+    metas.push(['🔞',filme.classificacao_indicativa || filme.classificacao]);
+
+  if(filme.nota_critica)
+    metas.push(['⭐',filme.nota_critica + ' • Crítica']);
+
+  if(media !== null)
+    metas.push(['👥',estrelasMedia(media) + ' • Assinantes']);
+
+  meta.innerHTML = metas.map(m =>
+    `<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`
+  ).join('');
+
+  /* LER MAIS */
+  setTimeout(()=>{
+    if(desc.scrollHeight > desc.clientHeight){
+      lerMais.style.display='inline';
+      lerMais.textContent='Ler mais';
+    }
+  },50);
+
+  lerMais.onclick = ()=>{
+    const fechado = desc.classList.toggle('collapsed');
+    lerMais.textContent = fechado ? 'Ler mais' : 'Ler menos';
+  };
+
+  tocar(filme.video_url);
 }
 
 carregar();
