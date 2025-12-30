@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <title>Sessão • Player</title>
 
-<meta name="viewport"
-  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -14,50 +13,124 @@
 html,body{background:#000;color:#fff;font-family:Inter,Arial}
 
 /* TOPO */
-#top{position:sticky;top:0;z-index:100;padding:16px 20px;
-background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0))}
-#top button{background:none;border:none;color:#fff;font-size:15px;cursor:pointer}
+#top{
+  position:sticky;
+  top:0;
+  z-index:100;
+  padding:16px 20px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0))
+}
+#top button{
+  background:none;
+  border:none;
+  color:#fff;
+  font-size:15px;
+  cursor:pointer
+}
 
 /* LAYOUT */
-#layout{display:grid;grid-template-columns:3fr 1.4fr;min-height:100vh}
+#layout{
+  display:grid;
+  grid-template-columns:3fr 1.4fr;
+  min-height:100vh
+}
+@media(max-width:900px){
+  #layout{grid-template-columns:1fr}
+}
 
 /* PLAYER */
 #playerArea{padding:16px}
-#player{position:sticky;top:80px;max-width:1120px;margin:auto;
-aspect-ratio:16/9;border-radius:26px;overflow:hidden;background:#000;
-box-shadow:0 0 70px rgba(220,38,38,.55)}
-#player video,#player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#player{
+  position:sticky;
+  top:80px;
+  max-width:1120px;
+  margin:auto;
+  aspect-ratio:16/9;
+  border-radius:26px;
+  overflow:hidden;
+  background:#000;
+  box-shadow:0 0 70px rgba(220,38,38,.55)
+}
+#player video,
+#player iframe{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0
+}
 
 /* SIDE */
-#side{padding:22px;display:flex;flex-direction:column;gap:14px}
+#side{
+  padding:22px;
+  display:flex;
+  flex-direction:column;
+  gap:14px
+}
 #titulo{font-size:28px;font-weight:700}
 
 /* META */
-#meta{display:flex;flex-wrap:wrap;gap:12px 22px;font-size:14px}
-.meta-item{display:flex;align-items:center;gap:6px;white-space:nowrap}
+#meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px 22px;
+  font-size:14px
+}
+.meta-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap
+}
 .meta-item span{opacity:.85}
 
 /* AVALIAÇÃO */
 #avaliarBox{margin-top:6px}
 .avaliar-label{font-size:13px;opacity:.7;margin-bottom:6px}
-.avaliar-stars{display:flex;gap:8px;font-size:26px;cursor:pointer}
-.avaliar-stars span{color:#333;transition:.2s}
+.avaliar-stars{
+  display:flex;
+  gap:8px;
+  font-size:26px;
+  cursor:pointer
+}
+.avaliar-stars span{
+  color:#333;
+  transition:.2s
+}
 .avaliar-stars span.active,
-.avaliar-stars span.hover{color:#facc15;transform:scale(1.08)}
-
-/* DESCRIÇÃO */
-#desc{font-size:15px;line-height:1.65;opacity:.9}
-#desc.collapsed{
-display:-webkit-box;-webkit-line-clamp:3;
--webkit-box-orient:vertical;overflow:hidden}
-#lerMais{background:none;border:none;color:#f87171;
-font-weight:600;cursor:pointer;align-self:flex-start}
-
-@media(max-width:900px){
-#layout{grid-template-columns:1fr}
-#player{position:relative;top:0}
+.avaliar-stars span.hover{
+  color:#facc15;
+  transform:scale(1.08)
 }
 
+/* DESCRIÇÃO */
+#desc{
+  font-size:15px;
+  line-height:1.65;
+  opacity:.9
+}
+#desc.collapsed{
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden
+}
+#lerMais{
+  background:none;
+  border:none;
+  color:#f87171;
+  font-weight:600;
+  cursor:pointer;
+  align-self:flex-start
+}
+
+/* CONTROLES DE SÉRIE */
+#controlesSerie{
+  display:none;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:8px
+}
 #controlesSerie select{
   background:#111;
   color:#fff;
@@ -65,77 +138,22 @@ font-weight:600;cursor:pointer;align-self:flex-start}
   padding:12px 14px;
   border-radius:12px;
   font-size:14px;
-  cursor:pointer;
-}
-#controlesSerie{
-  display:flex;
-}
-#btnFullscreen:hover{
-  filter:brightness(1.08);
-}
-/* ⛶ BOTÃO TELA CHEIA - DESKTOP */
-
-/* MOBILE */
-@media (max-width: 768px){
-  #btnFullscreen{
-    width:160px;
-    padding:9px 14px;
-    font-size:13px;
-    margin:12px auto 0;
-    border-radius:12px;
-  }
-}
-/* LINHA DO PLAYER + BOTÃO */
-.player-row{
-  display:flex;
-  align-items:flex-end;
-  gap:12px;
-  max-width:1120px;
-  margin:auto;
+  cursor:pointer
 }
 
-/* PLAYER */
-#player{
-  flex:1;
-}
-
-/* BOTÃO TELA CHEIA - DESKTOP */
-#btnFullscreen{
-  width:46px;
-  height:46px;
-  border-radius:14px;
+/* BOTÃO FULLSCREEN (PADRÃO SIMPLES E BOM) */
+#fullscreenBtn{
+  width:100%;
+  margin-top:14px;
+  padding:16px;
+  font-size:16px;
+  font-weight:600;
+  background:#fff;
+  color:#000;
   border:none;
-  background:#dc2626;
-  color:#fff;
-  font-size:18px;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:.2s;
+  border-radius:14px;
+  cursor:pointer
 }
-
-#btnFullscreen:hover{
-  filter:brightness(1.1);
-  transform:scale(1.05);
-}
-
-/* MOBILE */
-@media (max-width:768px){
-  .player-row{
-    flex-direction:column;
-    align-items:center;
-  }
-
-  #btnFullscreen{
-    width:160px;
-    height:auto;
-    padding:10px;
-    font-size:14px;
-    border-radius:14px;
-  }
-}
-
 </style>
 </head>
 
@@ -147,31 +165,15 @@ font-weight:600;cursor:pointer;align-self:flex-start}
 
 <div id="layout">
 
+  <!-- PLAYER -->
   <div id="playerArea">
-   <div class="player-row">
-  <div id="player">
-    <video id="video" controls playsinline></video>
-    <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
+    <div id="player">
+      <video id="video" controls playsinline></video>
+      <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
+    </div>
   </div>
 
-  <button id="btnFullscreen" title="Tela cheia">⛶</button>
-</div>
-
-    <!-- CONTROLES DE SÉRIE (APENAS SÉRIE) -->
-<div id="controlesSerie" style="display:none;gap:10px;flex-wrap:wrap;margin-top:14px">
-  <select id="selectTemporada"></select>
-  <select id="selectEpisodio"></select>
-</div>
-
-
-
-  </div>
-
-
-
-
-
-  
+  <!-- SIDE -->
   <div id="side">
     <h1 id="titulo"></h1>
     <div id="meta"></div>
@@ -183,6 +185,15 @@ font-weight:600;cursor:pointer;align-self:flex-start}
 
     <p id="desc" class="collapsed"></p>
     <button id="lerMais" style="display:none">Ler mais</button>
+
+    <!-- SÉRIE -->
+    <div id="controlesSerie">
+      <select id="selectTemporada"></select>
+      <select id="selectEpisodio"></select>
+    </div>
+
+    <!-- FULLSCREEN -->
+    <button id="fullscreenBtn">⛶ Assistir em tela cheia</button>
   </div>
 
 </div>
@@ -197,31 +208,27 @@ const item = JSON.parse(
  decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
 
-let usuario = null;
+let usuario=null;
 
-/* 🔐 VALIDAR LOGIN CUSTOM */
 async function carregarUsuario(){
-  const email = localStorage.getItem("usuario_email");
-  const token = localStorage.getItem("session_token");
+  const email=localStorage.getItem("usuario_email");
+  const token=localStorage.getItem("session_token");
+  if(!email||!token)return;
 
-  if(!email || !token) return;
-
-  const { data } = await sb
+  const {data}=await sb
     .from("usuarios")
     .select("id,email,session_token")
-    .eq("email", email)
-    .eq("session_token", token)
+    .eq("email",email)
+    .eq("session_token",token)
     .single();
 
-  if(data) usuario = data;
+  if(data)usuario=data;
 }
 
 /* ⭐ ESTRELAS */
 function renderAvaliarStars(nota=0){
-  const box = avaliarStars;
-  box.innerHTML="";
+  avaliarStars.innerHTML="";
   const fixas=Math.round(nota/2);
-
   for(let i=1;i<=5;i++){
     const s=document.createElement("span");
     s.textContent="★";
@@ -229,7 +236,7 @@ function renderAvaliarStars(nota=0){
     s.onmouseenter=()=>pintar(i);
     s.onmouseleave=()=>pintar(fixas);
     s.onclick=()=>salvarAvaliacao(i*2);
-    box.appendChild(s);
+    avaliarStars.appendChild(s);
   }
 }
 function pintar(q){
@@ -237,121 +244,86 @@ function pintar(q){
     s.classList.toggle("hover",i<q);
   });
 }
-
-/* 💾 SALVAR */
 async function salvarAvaliacao(nota){
-  if(!usuario){
-    alert("Faça login para avaliar");
-    return;
-  }
-
+  if(!usuario)return alert("Faça login para avaliar");
   await sb.from("avaliacoes").upsert({
     filme_id:item.id,
     usuario_id:usuario.id,
     nota
   },{onConflict:"filme_id,usuario_id"});
-
   renderAvaliarStars(nota);
-  carregar();
 }
 
-/* ▶ PLAYER */
+/* PLAYER */
 function tocar(src){
   if(!src)return;
   if(/\.m3u8$/i.test(src)){
-    iframe.remove();video.src=src;video.play().catch(()=>{});
+    iframe.remove();
+    video.src=src;
+    video.play().catch(()=>{});
   }else{
     video.remove();
     iframe.src=`https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
 }
 
-/* 📥 CARREGAR */
+/* FULLSCREEN */
+fullscreenBtn.onclick=()=>{
+  const alvo=video.isConnected?video:iframe;
+  if(alvo.requestFullscreen)alvo.requestFullscreen();
+};
+
+/* CARREGAR */
 async function carregar(){
-  const { data: filme } = await sb
+  const {data:filme}=await sb
     .from("filmes")
     .select("*")
-    .eq("id", item.id)
+    .eq("id",item.id)
     .single();
 
-  titulo.textContent = filme.titulo;
-  desc.textContent = filme.descricao || "";
-
-  const { data: avals } = await sb
-    .from("avaliacoes")
-    .select("nota")
-    .eq("filme_id", item.id);
-
-  let media=null;
-  if(avals?.length)
-    media=avals.reduce((t,a)=>t+a.nota,0)/avals.length;
+  titulo.textContent=filme.titulo;
+  desc.textContent=filme.descricao||"";
 
   const metas=[];
-  if(filme.categoria) metas.push(['🎬',filme.categoria]);
-  if(filme.tipo) metas.push(['📺',filme.tipo]);
-  if(filme.ano_lancamento) metas.push(['📅',filme.ano_lancamento]);
-  if(filme.idioma) metas.push(['🌎',filme.idioma]);
-  if(filme.audio) metas.push(['🔊',filme.audio]);
-  if(filme.classificacao) metas.push(['🔞',filme.classificacao]);
-  if(filme.nota_critica) metas.push(['⭐',filme.nota_critica+" • Crítica"]);
-  if(media!==null) metas.push(['👥',"⭐".repeat(Math.round(media/2))+" • Assinantes"]);
+  if(filme.categoria)metas.push(['🎬',filme.categoria]);
+  if(filme.tipo)metas.push(['📺',filme.tipo]);
+  if(filme.ano_lancamento)metas.push(['📅',filme.ano_lancamento]);
+  if(filme.idioma)metas.push(['🌎',filme.idioma]);
+  if(filme.audio)metas.push(['🔊',filme.audio]);
+  if(filme.classificacao)metas.push(['🔞',filme.classificacao]);
+  if(filme.nota_critica)metas.push(['⭐',filme.nota_critica+" • Crítica"]);
 
-  meta.innerHTML=metas.map(m=>
-    `<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`
-  ).join("");
-
-  if(usuario){
-    const { data:minha } = await sb
-      .from("avaliacoes")
-      .select("nota")
-      .eq("filme_id",item.id)
-      .eq("usuario_id",usuario.id)
-      .single();
-    renderAvaliarStars(minha?.nota||0);
-  }else{
-    renderAvaliarStars(0);
-  }
+  meta.innerHTML=metas.map(m=>`
+    <div class="meta-item">${m[0]} <span>${m[1]}</span></div>
+  `).join("");
 
   tocar(filme.video_url);
 
-/* 📺 CONTROLES APENAS PARA SÉRIE */
-if(filme.tipo?.toLowerCase() === "serie" || filme.tipo?.toLowerCase() === "série"){
-  controlesSerie.style.display = "flex";
-
-  selectTemporada.innerHTML = "";
-  selectEpisodio.innerHTML = "";
-
-  filme.temporadas?.forEach((t,i)=>{
-    const op = document.createElement("option");
-    op.value = i;
-    op.textContent = `Temporada ${t.temporada}`;
-    selectTemporada.appendChild(op);
-  });
-
-  function carregarEpisodios(tIndex){
-    selectEpisodio.innerHTML = "";
-    const eps = filme.temporadas[tIndex].episodios;
-
-    eps.forEach(e=>{
-      const op = document.createElement("option");
-      op.value = e.src;
-      op.textContent = `Episódio ${e.ep}`;
-      selectEpisodio.appendChild(op);
+  if(filme.tipo?.toLowerCase()==="serie"){
+    controlesSerie.style.display="flex";
+    selectTemporada.innerHTML="";
+    selectEpisodio.innerHTML="";
+    filme.temporadas?.forEach((t,i)=>{
+      const o=document.createElement("option");
+      o.value=i;
+      o.textContent=`Temporada ${t.temporada}`;
+      selectTemporada.appendChild(o);
     });
-
-    tocar(eps[0].src);
+    selectTemporada.onchange=e=>{
+      const eps=filme.temporadas[e.target.value].episodios;
+      selectEpisodio.innerHTML="";
+      eps.forEach(ep=>{
+        const o=document.createElement("option");
+        o.value=ep.src;
+        o.textContent=`Episódio ${ep.ep}`;
+        selectEpisodio.appendChild(o);
+      });
+      tocar(eps[0].src);
+    };
+    selectEpisodio.onchange=e=>tocar(e.target.value);
+    selectTemporada.onchange();
   }
 
-  selectTemporada.onchange = e => carregarEpisodios(e.target.value);
-  selectEpisodio.onchange = e => tocar(e.target.value);
-
-  carregarEpisodios(0);
-}else{
-  controlesSerie.style.display = "none";
-}
-
-
-  
   setTimeout(()=>{
     if(desc.scrollHeight>desc.clientHeight){
       lerMais.style.display="inline";
@@ -364,17 +336,6 @@ if(filme.tipo?.toLowerCase() === "serie" || filme.tipo?.toLowerCase() === "séri
   },50);
 }
 
-/* INIT */
-
-/* ⛶ TELA CHEIA */
-btnFullscreen.onclick = () => {
-  const alvo = video.isConnected ? video : iframe;
-  if(alvo.requestFullscreen) alvo.requestFullscreen();
-  else if(alvo.webkitRequestFullscreen) alvo.webkitRequestFullscreen();
-};
-
-
-  
 (async()=>{
   await carregarUsuario();
   carregar();
