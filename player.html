@@ -154,6 +154,27 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial}
   border-radius:14px;
   cursor:pointer
 }
+#downloadBtn{
+  margin-top:14px;
+  padding:14px 16px;
+  font-size:15px;
+  font-weight:700;
+  border-radius:14px;
+  border:1px solid #333;
+  background:#111;
+  color:#fff;
+  cursor:pointer;
+  transition:.25s;
+}
+#downloadBtn:hover{
+  background:#dc2626;
+  border-color:#dc2626;
+}
+#downloadBtn:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
 </style>
 </head>
 
@@ -185,6 +206,9 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial}
 
     <p id="desc" class="collapsed"></p>
     <button id="lerMais" style="display:none">Ler mais</button>
+<button id="downloadBtn" style="display:none">
+  ⬇️ Baixar
+</button>
 
     <!-- SÉRIE -->
     <div id="controlesSerie">
@@ -275,71 +299,137 @@ fullscreenBtn.onclick=()=>{
 
 /* CARREGAR */
 async function carregar(){
-  const {data:filme}=await sb
+  const { data: filme } = await sb
     .from("filmes")
     .select("*")
-    .eq("id",item.id)
+    .eq("id", item.id)
     .single();
 
-  titulo.textContent=filme.titulo;
-  desc.textContent=filme.descricao||"";
+  // ======= TÍTULO / DESCRIÇÃO =======
+  titulo.textContent = filme.titulo;
+  desc.textContent = filme.descricao || "";
 
-  const metas=[];
-  if(filme.categoria)metas.push(['🎬',filme.categoria]);
-  if(filme.tipo)metas.push(['📺',filme.tipo]);
-  if(filme.ano_lancamento)metas.push(['📅',filme.ano_lancamento]);
-  if(filme.idioma)metas.push(['🌎',filme.idioma]);
-  if(filme.audio)metas.push(['🔊',filme.audio]);
-  if(filme.classificacao)metas.push(['🔞',filme.classificacao]);
-  if(filme.nota_critica)metas.push(['⭐',filme.nota_critica+" • Crítica"]);
+  // ======= METAS =======
+  const metas = [];
+  if (filme.categoria) metas.push(['🎬', filme.categoria]);
+  if (filme.tipo) metas.push(['📺', filme.tipo]);
+  if (filme.ano_lancamento) metas.push(['📅', filme.ano_lancamento]);
+  if (filme.idioma) metas.push(['🌎', filme.idioma]);
+  if (filme.audio) metas.push(['🔊', filme.audio]);
+  if (filme.classificacao) metas.push(['🔞', filme.classificacao]);
+  if (filme.nota_critica)
+    metas.push(['⭐', filme.nota_critica + " • Crítica"]);
 
-  meta.innerHTML=metas.map(m=>`
+  meta.innerHTML = metas.map(m => `
     <div class="meta-item">${m[0]} <span>${m[1]}</span></div>
   `).join("");
 
+  // ======= PLAYER =======
   tocar(filme.video_url);
 
-  if(filme.tipo?.toLowerCase()==="serie"){
-    controlesSerie.style.display="flex";
-    selectTemporada.innerHTML="";
-    selectEpisodio.innerHTML="";
-    filme.temporadas?.forEach((t,i)=>{
-      const o=document.createElement("option");
-      o.value=i;
-      o.textContent=`Temporada ${t.temporada}`;
+  // ======= DOWNLOAD (APEX) =======
+  if (filme.permite_download && Number(filme.valor_apex) > 0) {
+    downloadBtn.style.display = "block";
+    downloadBtn.textContent = `⬇️ Baixar • ${filme.valor_apex} Apex`;
+
+    downloadBtn.onclick = async () => {
+      if (!usuario) {
+        alert("Faça login para baixar");
+        return;
+      }
+
+      const confirmar = confirm(
+        `Este download custa ${filme.valor_apex} Apex.\n\nDeseja confirmar a compra?`
+      );
+
+      if (!confirmar) return;
+
+      downloadBtn.disabled = true;
+      downloadBtn.textContent = "Processando compra...";
+
+      try {
+        const res = await fetch("/api/comprar-download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: usuario.email,
+            filme_id: filme.id
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.error || "Não foi possível concluir a compra");
+          return;
+        }
+
+        alert("Compra realizada com sucesso!");
+
+        // 🔜 PRÓXIMO PASSO (ainda não aqui):
+        // const r = await fetch("/api/download", {...})
+        // window.location.href = r.url;
+
+      } catch (e) {
+        alert("Erro de conexão");
+      } finally {
+        downloadBtn.disabled = false;
+        downloadBtn.textContent = `⬇️ Baixar • ${filme.valor_apex} Apex`;
+      }
+    };
+  }
+
+  // ======= SÉRIES =======
+  if (filme.tipo?.toLowerCase() === "serie") {
+    controlesSerie.style.display = "flex";
+    selectTemporada.innerHTML = "";
+    selectEpisodio.innerHTML = "";
+
+    filme.temporadas?.forEach((t, i) => {
+      const o = document.createElement("option");
+      o.value = i;
+      o.textContent = `Temporada ${t.temporada}`;
       selectTemporada.appendChild(o);
     });
-    selectTemporada.onchange=e=>{
-      const eps=filme.temporadas[e.target.value].episodios;
-      selectEpisodio.innerHTML="";
-      eps.forEach(ep=>{
-        const o=document.createElement("option");
-        o.value=ep.src;
-        o.textContent=`Episódio ${ep.ep}`;
+
+    selectTemporada.onchange = e => {
+      const eps = filme.temporadas[e.target.value].episodios;
+      selectEpisodio.innerHTML = "";
+
+      eps.forEach(ep => {
+        const o = document.createElement("option");
+        o.value = ep.src;
+        o.textContent = `Episódio ${ep.ep}`;
         selectEpisodio.appendChild(o);
       });
+
       tocar(eps[0].src);
     };
-    selectEpisodio.onchange=e=>tocar(e.target.value);
+
+    selectEpisodio.onchange = e => tocar(e.target.value);
     selectTemporada.onchange();
   }
 
-  setTimeout(()=>{
-    if(desc.scrollHeight>desc.clientHeight){
-      lerMais.style.display="inline";
-      lerMais.onclick=()=>{
+  // ======= LER MAIS =======
+  setTimeout(() => {
+    if (desc.scrollHeight > desc.clientHeight) {
+      lerMais.style.display = "inline";
+      lerMais.onclick = () => {
         desc.classList.toggle("collapsed");
-        lerMais.textContent=
-          desc.classList.contains("collapsed")?"Ler mais":"Ler menos";
+        lerMais.textContent =
+          desc.classList.contains("collapsed")
+            ? "Ler mais"
+            : "Ler menos";
       };
     }
-  },50);
+  }, 50);
 }
 
-(async()=>{
+(async () => {
   await carregarUsuario();
   carregar();
 })();
+
 </script>
 
 </body>
