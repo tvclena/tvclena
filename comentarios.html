@@ -238,23 +238,14 @@ arroba = user.username;
 
 
 function parseTexto(texto){
-  return texto.replace(/\/([a-zA-Z0-9\s]+)/g, (m, nome) => {
+  return texto.replace(/\/([a-zA-Z0-9\s]+)/g, (m,nome)=>{
     const filme = filmesCache.find(f =>
       f.titulo?.toLowerCase() === nome.toLowerCase()
     );
-
-    if (!filme) return m;
-
-    return `
-      <a href="player.html?item=${encodeURIComponent(
-        JSON.stringify(filme)
-      )}&filme_id=${filme.id}" target="_top">
-        /${nome}
-      </a>
-    `;
+    if(!filme) return m;
+    return `<a href="player.html?item=${encodeURIComponent(JSON.stringify(filme))}" target="_top">/${nome}</a>`;
   });
 }
-
 
 async function enviar(){
   const txt = document.getElementById("txt").value.trim();
@@ -307,25 +298,18 @@ async function carregar(){
   }, 50);
 }
 
+const lista = document.getElementById("lista");
+const btnScroll = document.getElementById("scrollBottomBtn");
 
-
-document.addEventListener("DOMContentLoaded", () => {
-  const lista = document.getElementById("lista");
-  const btnScroll = document.getElementById("scrollBottomBtn");
-
-  if (!lista || !btnScroll) return;
-
-  btnScroll.onclick = () => {
-    lista.scrollTop = lista.scrollHeight;
-  };
-
-  lista.addEventListener("scroll", () => {
-    const noFim =
-      lista.scrollHeight - lista.scrollTop - lista.clientHeight < 60;
-    btnScroll.style.display = noFim ? "none" : "flex";
-  });
+lista.addEventListener("scroll", () => {
+  const noFim =
+    lista.scrollHeight - lista.scrollTop - lista.clientHeight < 60;
+  btnScroll.style.display = noFim ? "none" : "block";
 });
 
+btnScroll.onclick = () => {
+  lista.scrollTop = lista.scrollHeight;
+};
 
   
 /* AUTOCOMPLETE /FILME */
