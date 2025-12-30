@@ -3,101 +3,130 @@
 <head>
 <meta charset="UTF-8">
 <title>Comentários</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
+:root{
+  --bg:#0b0b0b;
+  --glass:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.12);
+  --red:#e50914;
+  --blue:#4da3ff;
+}
+*{box-sizing:border-box}
 body{
   margin:0;
-  background:#0b0b0b;
+  background:var(--bg);
   color:#fff;
   font-family:Inter,Arial;
 }
 
+/* HEADER */
 .header{
+  height:58px;
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  padding:10px 14px;
-  border-bottom:1px solid #222;
+  justify-content:center;
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(12px);
 }
-
-.eye{
+.header .eye{
+  position:absolute;
+  left:14px;
   cursor:pointer;
-  font-size:18px;
 }
-
-.hint{
+.header .hint{
   font-size:12px;
   opacity:.6;
 }
 
+/* CONTAINER */
 .container{
-  padding:14px;
+  padding:16px;
   transition:.3s;
 }
-
 .container.faded{
   opacity:.25;
   pointer-events:none;
 }
 
+/* INPUT */
 textarea{
   width:100%;
-  background:#111;
-  color:#fff;
-  border:1px solid #333;
-  border-radius:12px;
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--border);
+  border-radius:14px;
   padding:12px;
+  color:#fff;
   resize:none;
 }
-
 button{
   margin-top:10px;
-  padding:10px 14px;
-  border-radius:10px;
+  width:100%;
+  padding:12px;
+  border-radius:14px;
   border:0;
-  background:#e50914;
+  background:var(--red);
   color:#fff;
   cursor:pointer;
 }
 
+/* COMENTÁRIO */
 .comment{
   margin-top:14px;
-  padding:12px;
-  background:#111;
-  border-radius:12px;
+  padding:14px;
+  border-radius:16px;
+  background:var(--glass);
+  border:1px solid var(--border);
+}
+.comment .user{
+  font-size:12px;
+  opacity:.7;
+  margin-bottom:6px;
 }
 
-.comment a{
-  color:#4da3ff;
-  text-decoration:none;
+/* FILME CARD */
+.filme-card{
+  margin-top:10px;
+  display:flex;
+  gap:10px;
+  padding:10px;
+  border-radius:12px;
+  background:rgba(0,0,0,.35);
+  border:1px solid var(--border);
+  cursor:pointer;
 }
+.filme-card img{
+  width:48px;
+  border-radius:8px;
+}
+.filme-card strong{color:var(--blue)}
 
 .actions{
-  margin-top:6px;
+  margin-top:8px;
 }
-
 .actions button{
   background:#222;
   font-size:12px;
 }
 
+/* AUTOCOMPLETE */
 .autocomplete{
   position:absolute;
   background:#111;
-  border:1px solid #333;
-  border-radius:10px;
-  margin-top:4px;
-  max-height:160px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  margin-top:6px;
+  max-height:180px;
   overflow:auto;
   z-index:99;
 }
-
 .autocomplete div{
-  padding:8px;
+  padding:10px;
   cursor:pointer;
 }
-
 .autocomplete div:hover{
   background:#222;
 }
@@ -119,6 +148,7 @@ button{
 </div>
 
 <script>
+/* SUPABASE */
 const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
@@ -128,121 +158,153 @@ const email = localStorage.getItem("usuario_email");
 const params = new URLSearchParams(location.search);
 const filme_id = params.get("filme_id");
 
-let aberto = false;
-let arroba = null;
-let filmesCache = [];
+let aberto=false;
+let arroba=null;
+let filmesCache=[];
 
+/* TOGGLE */
 function toggle(){
-  aberto = !aberto;
-  document.getElementById("container")
-    .classList.toggle("faded", !aberto);
+  aberto=!aberto;
+  container.classList.toggle("faded",!aberto);
 }
 
+/* SLUG */
+function slugify(t){
+  return t.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/(^-|-$)/g,"");
+}
+
+/* INIT */
 async function init(){
-  const { data:user } = await sb
-  .from("usuarios")
-  .select("username")
-  .eq("email", email)
-  .single();
+  const {data:user} = await sb
+    .from("usuarios")
+    .select("username")
+    .eq("email",email)
+    .single();
 
-if(!user?.username){
-  document.body.innerHTML = `
-    <div style="padding:20px;text-align:center">
-      Cadastre seu @ no perfil para comentar.<br><br>
-      <a href="/index.html?abrirPerfil=1" target="_top" style="color:#e50914">
-        Ir para o perfil
-      </a>
-    </div>
-  `;
-  return;
-}
+  if(!user?.username){
+    document.body.innerHTML = `
+      <div style="padding:20px;text-align:center">
+        Cadastre seu @ no perfil para comentar.<br><br>
+        <a href="/index.html?abrirPerfil=1" target="_top" style="color:#e50914">
+          Ir para o perfil
+        </a>
+      </div>`;
+    return;
+  }
 
-arroba = user.username;
+  arroba=user.username;
   carregar();
 }
 
+/* SERIALIZA (PERSISTENTE) */
+async function serializarComentario(txt){
+  let out=txt;
+  const matchs=[...txt.matchAll(/\/([^\n\r]+)/g)];
+  if(matchs.length===0) return out;
+
+  const {data:filmes}=await sb
+    .from("filmes")
+    .select("id,titulo,capa_url");
+
+  matchs.forEach(m=>{
+    const nome=m[1].trim();
+    const f=filmes.find(x=>slugify(x.titulo)===slugify(nome));
+    if(f){
+      out=out.replace(
+        m[0],
+        `{{filme:${f.id}|${f.titulo}|${f.capa_url}}}`
+      );
+    }
+  });
+  return out;
+}
+
+/* RENDER */
+function renderizar(txt){
+  return txt.replace(
+    /\{\{filme:([a-f0-9\-]+)\|(.+?)\|(.+?)\}\}/g,
+    (m,id,t,c)=>`
+    <div class="filme-card" onclick="location.href='player.html?item=${encodeURIComponent(JSON.stringify({id}))}'">
+      <img src="${c}">
+      <div><strong>${t}</strong><div>Ver agora</div></div>
+    </div>`
+  );
+}
+
+/* CARREGAR */
 async function carregar(){
-  const { data } = await sb
+  const {data}=await sb
     .from("comentarios")
     .select("*")
-    .eq("filme_id", filme_id)
+    .eq("filme_id",filme_id)
     .order("created_at",{ascending:false});
 
-  const lista = document.getElementById("lista");
-  lista.innerHTML = "";
-
+  lista.innerHTML="";
   data?.forEach(c=>{
-    lista.innerHTML += `
+    lista.innerHTML+=`
       <div class="comment">
-        <b>@${c.arroba}</b>
-        <div>${parseTexto(c.comentario)}</div>
-        ${c.email === email ? `
+        <div class="user">@${c.arroba}</div>
+        <div>${renderizar(c.comentario)}</div>
+        ${c.email===email?`
           <div class="actions">
             <button onclick="apagar('${c.id}')">Apagar</button>
-          </div>` : ""}
-      </div>
-    `;
+          </div>`:""}
+      </div>`;
   });
 }
 
-function parseTexto(texto){
-  return texto.replace(/\/([a-zA-Z0-9\s]+)/g, (m,nome)=>{
-    const filme = filmesCache.find(f =>
-      f.titulo?.toLowerCase() === nome.toLowerCase()
-    );
-    if(!filme) return m;
-    return `<a href="player.html?item=${encodeURIComponent(JSON.stringify(filme))}" target="_top">/${nome}</a>`;
-  });
-}
-
+/* ENVIAR */
 async function enviar(){
-  const txt = document.getElementById("txt").value.trim();
-  if(!txt) return;
+  const v=txt.value.trim();
+  if(!v) return;
+
+  const finalTxt=await serializarComentario(v);
 
   await sb.from("comentarios").insert({
     filme_id,
     email,
     arroba,
-    comentario: txt
+    comentario: finalTxt
   });
 
-  document.getElementById("txt").value="";
+  txt.value="";
   carregar();
 }
 
+/* APAGAR */
 async function apagar(id){
   await sb.from("comentarios")
     .delete()
-    .eq("id", id)
-    .eq("email", email);
+    .eq("id",id)
+    .eq("email",email);
   carregar();
 }
 
-/* AUTOCOMPLETE /FILME */
-document.getElementById("txt").addEventListener("input", async e=>{
-  const v = e.target.value;
-  const idx = v.lastIndexOf("/");
-  if(idx < 0) return auto.style.display="none";
+/* AUTOCOMPLETE */
+txt.addEventListener("input",async e=>{
+  const v=e.target.value;
+  const idx=v.lastIndexOf("/");
+  if(idx<0) return auto.style.display="none";
 
-  const termo = v.slice(idx+1).toLowerCase();
-  if(!termo) return;
-
-  const { data } = await sb
+  const termo=v.slice(idx+1);
+  const {data}=await sb
     .from("filmes")
-    .select("id,titulo,video_url,tipo")
-    .ilike("titulo", `%${termo}%`)
+    .select("id,titulo,capa_url")
+    .ilike("titulo",`%${termo}%`)
     .limit(5);
 
-  filmesCache = data || [];
-  auto.innerHTML = filmesCache.map(f =>
+  filmesCache=data||[];
+  auto.innerHTML=filmesCache.map(f=>
     `<div onclick="selecionar('${f.titulo}')">${f.titulo}</div>`
   ).join("");
-  auto.style.display = "block";
+  auto.style.display="block";
 });
 
 function selecionar(t){
-  const txt = document.getElementById("txt");
-  txt.value = txt.value.replace(/\/[^\/]*$/, "/"+t+" ");
+  txt.value=txt.value.replace(/\/[^\/]*$/,"/"+t+" ");
   auto.style.display="none";
 }
 
