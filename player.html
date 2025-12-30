@@ -9,7 +9,7 @@
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config','G-T97MS35TJ6',{debug_mode:true});
+gtag('config','G-T97MS35TJ6');
 </script>
 
 <title>Sessão • Player</title>
@@ -18,55 +18,55 @@ gtag('config','G-T97MS35TJ6',{debug_mode:true});
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
+/* ================= RESET ================= */
 *{margin:0;padding:0;box-sizing:border-box}
-body{
-  background:#000;
-  color:#fff;
-  font-family:Inter,Arial,sans-serif;
-}
+html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
-/* ===== TOPO ===== */
-#topActions{
+/* ================= TOPO ================= */
+#top{
   position:sticky;
   top:0;
-  z-index:50;
-  padding:14px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,0));
+  z-index:99;
+  padding:16px 20px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0));
 }
-.topBtn{
-  background:rgba(0,0,0,.6);
+#top button{
+  background:none;
   border:none;
   color:#fff;
-  padding:10px 16px;
-  border-radius:999px;
+  font-size:15px;
   cursor:pointer;
+  opacity:.8;
 }
+#top button:hover{opacity:1}
 
-/* ===== LAYOUT ===== */
+/* ================= LAYOUT ================= */
 #layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
   min-height:100vh;
 }
 
-/* ===== PLAYER ===== */
+/* ================= PLAYER ================= */
 #playerArea{
   padding:16px;
 }
-.playerWrapper{
+#player{
+  position:sticky;
+  top:80px;
   width:100%;
-  max-width:1100px;
+  max-width:1120px;
   margin:auto;
   aspect-ratio:16/9;
-  position:sticky;
-  top:70px;
-  border-radius:22px;
+  border-radius:26px;
   overflow:hidden;
   background:#000;
-  box-shadow:0 0 40px rgba(0,150,255,.25);
+  box-shadow:
+    0 0 60px rgba(0,140,255,.35),
+    inset 0 0 40px rgba(0,0,0,.6);
 }
-.playerWrapper video,
-.playerWrapper iframe{
+#player video,
+#player iframe{
   position:absolute;
   inset:0;
   width:100%;
@@ -74,119 +74,107 @@ body{
   border:0;
 }
 
-/* ===== SIDE ===== */
+/* ================= SIDE ================= */
 #side{
-  padding:16px;
+  padding:22px 22px 30px;
   display:flex;
   flex-direction:column;
-  gap:16px;
+  gap:14px;
 }
 
-/* ===== INFO CARDS ===== */
-.info-cards{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
-  gap:12px;
+/* ================= TITULO ================= */
+#titulo{
+  font-size:28px;
+  font-weight:700;
+  line-height:1.2;
 }
 
-.info-card{
-  background:linear-gradient(160deg,#141414,#0b0b0b);
-  border:1px solid #222;
-  border-radius:18px;
-  padding:12px;
+/* ================= META LINHA ================= */
+#meta{
   display:flex;
-  flex-direction:column;
+  flex-wrap:wrap;
+  gap:14px 20px;
+  font-size:14px;
+  opacity:.9;
+}
+.meta{
+  display:flex;
+  align-items:center;
   gap:6px;
-  box-shadow:0 6px 20px rgba(0,0,0,.5);
+  white-space:nowrap;
 }
+.meta span{opacity:.7}
 
-.info-card .icon{
-  font-size:18px;
-}
-
-.info-card span{
-  font-size:11px;
-  opacity:.6;
-}
-
-.info-card strong{
-  font-size:14px;
-  font-weight:600;
-}
-
-/* ===== DESCRIÇÃO ===== */
-.desc{
-  font-size:14px;
+/* ================= DESCRIÇÃO ================= */
+#desc{
+  font-size:15px;
+  line-height:1.65;
   opacity:.85;
-  line-height:1.6;
 }
-.desc.collapsed{
+#desc.collapsed{
   display:-webkit-box;
   -webkit-line-clamp:3;
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
-.ler-mais{
+#lerMais{
   background:none;
   border:none;
   color:#4da3ff;
   font-weight:600;
   cursor:pointer;
+  padding:0;
   align-self:flex-start;
 }
 
-/* ===== CHAT ===== */
-#chatContainer{
+/* ================= CHAT ================= */
+#chat{
+  margin-top:10px;
+  height:680px;
   border-radius:26px;
+  overflow:hidden;
   background:#0b0b0b;
   border:1px solid #1f1f1f;
-  box-shadow:0 0 30px rgba(0,140,255,.25);
-  overflow:hidden;
+  box-shadow:0 0 35px rgba(0,140,255,.25);
   display:flex;
   flex-direction:column;
-  height:680px; /* TAMANHO DE TELA DE CELULAR */
 }
-
-/* seta */
-#chatBack{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  padding:10px;
+#chatTop{
+  padding:14px;
+  text-align:center;
+  font-weight:600;
   cursor:pointer;
   background:linear-gradient(to bottom,#111,#0b0b0b);
   border-bottom:1px solid #222;
-  font-weight:600;
 }
-#chatBack:hover{opacity:.8}
-
-#comentariosIframe{
+#chatTop:hover{opacity:.85}
+#chat iframe{
   flex:1;
   border:0;
   background:#fff;
 }
 
-/* ===== MOBILE ===== */
+/* ================= MOBILE ================= */
 @media(max-width:900px){
   #layout{grid-template-columns:1fr}
-  .playerWrapper{position:relative;top:0}
-  #chatContainer{height:85vh}
+  #player{position:relative;top:0}
+  #chat{height:85vh}
 }
 </style>
 </head>
 
 <body>
 
-<div id="topActions">
-  <button class="topBtn" onclick="voltar()">← Voltar</button>
+<!-- TOPO -->
+<div id="top">
+  <button onclick="voltar()">← Voltar</button>
 </div>
 
 <div id="layout">
 
   <!-- PLAYER -->
   <div id="playerArea">
-    <div class="playerWrapper" id="playerTop">
+    <div id="player">
       <video id="video" controls playsinline></video>
       <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
     </div>
@@ -195,16 +183,18 @@ body{
   <!-- SIDE -->
   <div id="side">
 
-    <h2 id="titulo"></h2>
+    <h1 id="titulo"></h1>
 
-    <div id="infoCards" class="info-cards"></div>
+    <!-- META -->
+    <div id="meta"></div>
 
-    <p id="desc" class="desc collapsed"></p>
-    <button id="lerMaisBtn" class="ler-mais" style="display:none">Ler mais</button>
+    <!-- DESCRIÇÃO -->
+    <p id="desc" class="collapsed"></p>
+    <button id="lerMais" style="display:none">Ler mais</button>
 
     <!-- CHAT -->
-    <div id="chatContainer">
-      <div id="chatBack" onclick="subirPlayer()">⬆️ Voltar para o player</div>
+    <div id="chat">
+      <div id="chatTop" onclick="subir()">⬆️ Voltar para o player</div>
       <iframe id="comentariosIframe"></iframe>
     </div>
 
@@ -213,102 +203,68 @@ body{
 </div>
 
 <script>
-/* ===== VOLTAR ===== */
+/* ================= VOLTAR ================= */
 function voltar(){
   if(history.length>1) history.back();
   else location.href='index.html';
 }
 
-/* ===== SUBIR PARA PLAYER ===== */
-function subirPlayer(){
-  document.getElementById('playerTop')
-    .scrollIntoView({behavior:'smooth'});
+/* ================= SUBIR PLAYER ================= */
+function subir(){
+  document.getElementById('player').scrollIntoView({behavior:'smooth'});
 }
 
-/* ===== ITEM ===== */
+/* ================= ITEM ================= */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
 
-/* ===== UI ===== */
-titulo.textContent=item.titulo||item.serie_nome||'Conteúdo';
-desc.textContent=item.descricao||'';
+/* ================= UI ================= */
+titulo.textContent = item.titulo || item.serie_nome || 'Conteúdo';
+desc.textContent   = item.descricao || '';
 
-infoCards.innerHTML=`
-${item.categoria?`
-<div class="info-card">
-  <div class="icon">🎬</div>
-  <span>Categoria</span>
-  <strong>${item.categoria}</strong>
-</div>`:''}
-
-${item.tipo?`
-<div class="info-card">
-  <div class="icon">📺</div>
-  <span>Tipo</span>
-  <strong>${item.tipo}</strong>
-</div>`:''}
-
-${item.ano_lancamento?`
-<div class="info-card">
-  <div class="icon">📅</div>
-  <span>Ano</span>
-  <strong>${item.ano_lancamento}</strong>
-</div>`:''}
-
-${item.duracao_minutos?`
-<div class="info-card">
-  <div class="icon">⏱️</div>
-  <span>Duração</span>
-  <strong>${item.duracao_minutos} min</strong>
-</div>`:''}
-
-${item.classificacao_indicativa?`
-<div class="info-card">
-  <div class="icon">🔞</div>
-  <span>Classificação</span>
-  <strong>+${item.classificacao_indicativa}</strong>
-</div>`:''}
-
-${item.nota_critica?`
-<div class="info-card">
-  <div class="icon">⭐</div>
-  <span>Avaliação</span>
-  <strong>${item.nota_critica}</strong>
-</div>`:''}
+meta.innerHTML = `
+${item.categoria ? `<div class="meta">🎬 <span>${item.categoria}</span></div>` : ``}
+${item.tipo ? `<div class="meta">📺 <span>${item.tipo}</span></div>` : ``}
+${item.ano_lancamento ? `<div class="meta">📅 <span>${item.ano_lancamento}</span></div>` : ``}
+${item.duracao_minutos ? `<div class="meta">⏱️ <span>${item.duracao_minutos} min</span></div>` : ``}
+${item.classificacao_indicativa ? `<div class="meta">🔞 <span>+${item.classificacao_indicativa}</span></div>` : ``}
+${item.nota_critica ? `<div class="meta">⭐ <span>${item.nota_critica}</span></div>` : ``}
+${item.audio ? `<div class="meta">🔊 <span>${item.audio}</span></div>` : ``}
+${item.idioma ? `<div class="meta">🌎 <span>${item.idioma}</span></div>` : ``}
 `;
 
-/* Ler mais */
+/* ================= LER MAIS ================= */
 setTimeout(()=>{
-  if(desc.scrollHeight>desc.clientHeight){
-    lerMaisBtn.style.display='inline';
+  if(desc.scrollHeight > desc.clientHeight){
+    lerMais.style.display='inline';
   }
 },50);
 
-lerMaisBtn.onclick=()=>{
+lerMais.onclick=()=>{
   const aberto=!desc.classList.contains('collapsed');
   desc.classList.toggle('collapsed',aberto);
-  lerMaisBtn.textContent=aberto?'Ler mais':'Ler menos';
+  lerMais.textContent=aberto?'Ler mais':'Ler menos';
 };
 
-/* ===== CHAT ===== */
-comentariosIframe.src=
+/* ================= CHAT ================= */
+comentariosIframe.src =
   `comentarios.html?filme_id=${item.id||item.video_url}&tipo=${item.tipo}`;
 
-/* ===== PLAYER ===== */
-function tocarFonte(src){
+/* ================= PLAYER ================= */
+function tocar(src){
   if(/\.m3u8$/i.test(src)){
     iframe.remove();
     video.src=src;
     video.play().catch(()=>{});
   }else{
     video.remove();
-    iframe.src=src.includes('mediadelivery')
+    iframe.src = src.includes('mediadelivery')
       ? src
       : `https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
 }
-tocarFonte(item.video_url);
+tocar(item.video_url);
 </script>
 
 </body>
