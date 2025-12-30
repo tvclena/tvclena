@@ -36,20 +36,19 @@ body{
   position:sticky;
   top:0;
   z-index:20;
-  height:70px;
+  height:72px;
   display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  background:rgba(10,10,18,.75);
-  backdrop-filter:blur(16px);
+  background:rgba(10,10,18,.8);
+  backdrop-filter:blur(18px);
   border-bottom:1px solid var(--border);
   box-shadow:
-    inset 0 -1px 0 var(--border),
     0 10px 30px rgba(0,0,0,.6);
 }
 
-.header::before{
+.header::after{
   content:"";
   position:absolute;
   inset:0;
@@ -59,8 +58,8 @@ body{
 
 .header .eye{
   position:absolute;
-  left:16px;
-  top:22px;
+  left:18px;
+  top:24px;
   cursor:pointer;
   font-size:18px;
   opacity:.85;
@@ -85,8 +84,8 @@ body{
 /* INPUT */
 textarea{
   width:100%;
-  min-height:54px;
-  background:rgba(255,255,255,.04);
+  min-height:56px;
+  background:rgba(255,255,255,.05);
   border:1px solid var(--border);
   border-radius:18px;
   padding:14px 16px;
@@ -94,10 +93,10 @@ textarea{
   resize:none;
   outline:none;
   font-size:14px;
-  backdrop-filter:blur(8px);
+  backdrop-filter:blur(10px);
 }
 textarea::placeholder{
-  color:rgba(255,255,255,.4);
+  color:rgba(255,255,255,.45);
 }
 
 button{
@@ -111,30 +110,25 @@ button{
   font-size:15px;
   font-weight:600;
   cursor:pointer;
-  box-shadow:0 10px 30px rgba(229,9,20,.35);
-}
-button:active{
-  transform:scale(.98);
+  box-shadow:0 12px 30px rgba(229,9,20,.4);
 }
 
-/* COMMENT */
+/* COMMENT CARD */
 .comment{
   margin-top:18px;
   padding:16px;
   border-radius:22px;
   background:
-    linear-gradient(135deg,rgba(77,163,255,.08),rgba(229,9,20,.08));
-  border:1px solid rgba(255,255,255,.12);
+    linear-gradient(135deg,rgba(77,163,255,.08),rgba(229,9,20,.1));
+  border:1px solid rgba(255,255,255,.14);
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.06),
-    0 20px 40px rgba(0,0,0,.45);
+    0 20px 45px rgba(0,0,0,.5);
 }
 
 /* USER */
 .comment .user{
   font-size:13px;
   font-weight:600;
-  color:#fff;
   margin-bottom:6px;
   opacity:.9;
 }
@@ -151,20 +145,18 @@ button:active{
   border:1px solid var(--border);
   cursor:pointer;
   transition:.25s;
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.04),
-    0 10px 25px rgba(0,0,0,.5);
+  box-shadow:0 10px 25px rgba(0,0,0,.5);
 }
 
 .filme-card:hover{
-  transform:translateY(-1px);
+  transform:translateY(-2px);
   box-shadow:
     0 0 0 1px var(--blue-glow),
-    0 15px 40px rgba(77,163,255,.35);
+    0 18px 45px rgba(77,163,255,.35);
 }
 
 .filme-card img{
-  width:52px;
+  width:54px;
   height:78px;
   object-fit:cover;
   border-radius:10px;
@@ -180,7 +172,7 @@ button:active{
   margin-top:10px;
 }
 .actions button{
-  background:#151515;
+  background:#141414;
   border:1px solid var(--border);
   font-size:12px;
   padding:8px;
@@ -191,36 +183,53 @@ button:active{
 .autocomplete{
   position:absolute;
   background:rgba(10,10,18,.96);
-  backdrop-filter:blur(14px);
+  backdrop-filter:blur(16px);
   border:1px solid var(--border);
   border-radius:14px;
   margin-top:8px;
   max-height:200px;
   overflow:auto;
   z-index:99;
-  box-shadow:0 20px 40px rgba(0,0,0,.7);
+  box-shadow:0 25px 50px rgba(0,0,0,.8);
 }
+
 .autocomplete div{
   padding:12px 14px;
   cursor:pointer;
   font-size:14px;
 }
 .autocomplete div:hover{
-  background:rgba(77,163,255,.15);
+  background:rgba(77,163,255,.18);
 }
 
 /* MODAL */
 #modalFilme{
-  backdrop-filter:blur(18px);
+  backdrop-filter:blur(20px);
 }
 
 #modalBox{
-  background:
-    linear-gradient(180deg,#0b0c14,#07080c);
+  background:linear-gradient(180deg,#0b0c14,#07080c);
   box-shadow:
     0 0 0 1px var(--border),
-    0 30px 80px rgba(0,0,0,.85);
+    0 35px 90px rgba(0,0,0,.9);
 }
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="eye" onclick="toggle()">👁️‍🗨️</div>
+  <div class="hint">Toque para ver os comentários</div>
+</div>
+
+<div id="container" class="container faded">
+  <textarea id="txt" placeholder="Escreva um comentário... Use / para marcar filmes"></textarea>
+  <div id="auto" class="autocomplete" style="display:none"></div>
+  <button onclick="enviar()">Enviar</button>
+  <div id="lista"></div>
+</div>
 
 <script>
 /* SUPABASE */
