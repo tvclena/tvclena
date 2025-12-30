@@ -3,9 +3,6 @@
 <head>
 <meta charset="UTF-8">
 
-<!-- VIEWPORT CORRETO (REMOVE FAIXA PRETA) -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
 <!-- GA4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T97MS35TJ6"></script>
 <script>
@@ -16,6 +13,7 @@ gtag('config','G-T97MS35TJ6');
 </script>
 
 <title>Sessão • Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -23,16 +21,15 @@ html,body{
   background:#000;
   color:#fff;
   font-family:Inter,Arial,sans-serif;
-  min-height:100%;
 }
 
-/* ================= TOPO ================= */
+/* TOPO */
 #top{
   position:sticky;
   top:0;
   z-index:100;
-  padding:14px 20px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,0));
+  padding:16px 20px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0));
 }
 #top button{
   background:none;
@@ -43,19 +40,18 @@ html,body{
   opacity:.85;
 }
 
-/* ================= LAYOUT ================= */
+/* LAYOUT */
 #layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
   min-height:100vh;
 }
 
-/* ================= PLAYER ================= */
-#playerArea{padding:0}
+/* PLAYER */
+#playerArea{padding:16px}
 #player{
   position:sticky;
-  top:0;
-  width:100%;
+  top:80px;
   max-width:1120px;
   margin:auto;
   aspect-ratio:16/9;
@@ -84,7 +80,7 @@ html,body{
   border:0;
 }
 
-/* ================= SIDE ================= */
+/* SIDE */
 #side{
   padding:22px 22px 30px;
   display:flex;
@@ -92,13 +88,13 @@ html,body{
   gap:14px;
 }
 
-/* ================= TITULO ================= */
+/* TITULO */
 #titulo{
   font-size:28px;
   font-weight:700;
 }
 
-/* ================= META EM LINHA ================= */
+/* META EM LINHA */
 #meta{
   display:flex;
   flex-wrap:wrap;
@@ -114,7 +110,7 @@ html,body{
 }
 .meta-item span{opacity:.75}
 
-/* ================= DESCRIÇÃO ================= */
+/* DESCRIÇÃO */
 #desc{
   font-size:15px;
   line-height:1.65;
@@ -134,7 +130,7 @@ html,body{
   cursor:pointer;
 }
 
-/* ================= CHAT ================= */
+/* CHAT */
 #chat{
   margin-top:10px;
   height:680px;
@@ -160,24 +156,9 @@ html,body{
   background:#fff;
 }
 
-/* ================= MOBILE (CRÍTICO) ================= */
 @media(max-width:900px){
   #layout{grid-template-columns:1fr}
-
-  #top{
-    position:fixed;
-    top:env(safe-area-inset-top);
-    left:0;
-    right:0;
-    padding-top:calc(12px + env(safe-area-inset-top));
-  }
-
-  #player{
-    position:relative;
-    top:0;
-    border-radius:18px;
-  }
-
+  #player{position:relative;top:0}
   #chat{height:85vh}
 }
 </style>
@@ -219,12 +200,38 @@ html,body{
 </div>
 
 <script>
-/* ================= ITEM ================= */
-const item = JSON.parse(
-  decodeURIComponent(new URLSearchParams(location.search).get('item'))
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const id = new URLSearchParams(location.search).get('id');
+
+if(!id){
+  alert('ID não informado');
+  throw new Error('Sem ID');
+}
+
+const supabase = supabase.createClient(
+  'SUA_SUPABASE_URL',
+  'SUA_ANON_KEY'
 );
 
-/* ================= RAW INFO ================= */
+(async () => {
+  const { data:item, error } = await supabase
+    .from('conteudos') // nome real da sua tabela
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if(error || !item){
+    alert('Conteúdo não encontrado');
+    return;
+  }
+
+  // 👉 A PARTIR DAQUI tudo funciona
+  render(item);
+})();
+</script>
+
+/* EXTRATORES RAW_INFO */
 function extrair(raw, regex){
   if(!raw) return null;
   const m = raw.match(regex);
@@ -239,7 +246,7 @@ function classificacao(raw){
   return v ? v+' Anos' : null;
 }
 
-/* ================= UI ================= */
+/* UI */
 titulo.textContent = item.titulo || item.serie_nome || 'Conteúdo';
 desc.textContent   = item.descricao || '';
 
@@ -268,7 +275,7 @@ const c = item.classificacao_indicativa || classificacao(item.raw_info);
 if(c) metas.push(['🔞',c]);
 if(item.nota_critica) metas.push(['⭐',item.nota_critica]);
 
-// TÉCNICO
+// TÉCNICO (RAW)
 const qualidade = extrair(item.raw_info,/Qualidade:\s*([^\n]+)/i);
 const formato   = extrair(item.raw_info,/Formato:\s*([^\n]+)/i);
 const tamanho   = extrair(item.raw_info,/Tamanho:\s*([^\n]+)/i);
