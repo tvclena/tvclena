@@ -15,25 +15,21 @@ gtag('config','G-T97MS35TJ6');
 <title>Sessão • Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
 /* TOPO */
 #top{
-  position:sticky;
-  top:0;
-  z-index:100;
+  position:sticky;top:0;z-index:100;
   padding:16px 20px;
   background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0));
 }
 #top button{
-  background:none;
-  border:none;
-  color:#fff;
-  font-size:15px;
-  cursor:pointer;
-  opacity:.85;
+  background:none;border:none;color:#fff;
+  font-size:15px;cursor:pointer;opacity:.85;
 }
 
 /* LAYOUT */
@@ -46,17 +42,13 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 /* PLAYER */
 #playerArea{padding:16px}
 #player{
-  position:sticky;
-  top:80px;
-  max-width:1120px;
-  margin:auto;
+  position:sticky;top:80px;
+  max-width:1120px;margin:auto;
   aspect-ratio:16/9;
   border-radius:26px;
   overflow:hidden;
   background:#000;
-  box-shadow:
-    0 0 70px rgba(220,38,38,.55),
-    inset 0 0 50px rgba(0,0,0,.7);
+  box-shadow:0 0 70px rgba(220,38,38,.55), inset 0 0 50px rgba(0,0,0,.7);
 }
 #player::before{
   content:"";
@@ -65,13 +57,8 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   background:radial-gradient(circle,rgba(220,38,38,.35),rgba(0,0,0,0) 70%);
   z-index:-1;
 }
-#player video,
-#player iframe{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  border:0;
+#player video,#player iframe{
+  position:absolute;inset:0;width:100%;height:100%;border:0;
 }
 
 /* SIDE */
@@ -83,10 +70,7 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 }
 
 /* TITULO */
-#titulo{
-  font-size:28px;
-  font-weight:700;
-}
+#titulo{font-size:28px;font-weight:700}
 
 /* META */
 #meta{
@@ -94,7 +78,6 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   flex-wrap:wrap;
   gap:14px 22px;
   font-size:14px;
-  opacity:.95;
 }
 .meta-item{
   display:flex;
@@ -102,16 +85,10 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   gap:6px;
   white-space:nowrap;
 }
-.meta-item span{
-  opacity:.85;
-}
+.meta-item span{opacity:.85}
 
 /* DESCRIÇÃO */
-#desc{
-  font-size:15px;
-  line-height:1.65;
-  opacity:.9;
-}
+#desc{font-size:15px;line-height:1.65;opacity:.9}
 #desc.collapsed{
   display:-webkit-box;
   -webkit-line-clamp:3;
@@ -119,12 +96,8 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   overflow:hidden;
 }
 #lerMais{
-  background:none;
-  border:none;
-  color:#f87171;
-  font-weight:600;
-  cursor:pointer;
-  align-self:flex-start;
+  background:none;border:none;color:#f87171;
+  font-weight:600;cursor:pointer;
 }
 
 /* CHAT */
@@ -140,18 +113,12 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   flex-direction:column;
 }
 #chatTop{
-  padding:14px;
-  text-align:center;
-  font-weight:600;
-  cursor:pointer;
+  padding:14px;text-align:center;
+  font-weight:600;cursor:pointer;
   background:linear-gradient(to bottom,#1a0b0b,#0b0b0b);
   border-bottom:1px solid #2a0f0f;
 }
-#chat iframe{
-  flex:1;
-  border:0;
-  background:#fff;
-}
+#chat iframe{flex:1;border:0;background:#fff}
 
 @media(max-width:900px){
   #layout{grid-template-columns:1fr}
@@ -194,79 +161,65 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 </div>
 
 <script>
-/* ITEM */
-const item = JSON.parse(
-  decodeURIComponent(new URLSearchParams(location.search).get('item'))
+/* 🔗 SUPABASE */
+const supabase = supabase.createClient(
+  'https://dxkszikemntfusfyrzos.supabase.co',
+  'sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed'
 );
 
-/* NORMALIZA */
-function norm(v){
+const id = new URLSearchParams(location.search).get('id');
+
+function limpar(v){
   if(v === null || v === undefined) return null;
   if(typeof v === 'string'){
-    const s = v.replace(/\s+/g,' ').trim();
-    return s === '' ? null : s;
+    const t = v.trim();
+    return t === '' ? null : t;
   }
   return v;
 }
 
-/* EXTRAI DO RAW_INFO */
-function extract(raw, regex){
-  if(!raw) return null;
-  const m = raw.match(regex);
-  return m ? m[1].replace(/\s+/g,' ').trim() : null;
+async function carregar(){
+  const { data:item, error } = await supabase
+    .from('filmes')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if(error || !item){
+    alert('Erro ao carregar conteúdo');
+    return;
+  }
+
+  titulo.textContent = item.titulo;
+  desc.textContent   = item.descricao || '';
+
+  const metas = [];
+
+  if(limpar(item.categoria)) metas.push(['🎬', item.categoria]);
+  if(limpar(item.tipo)) metas.push(['📺', item.tipo]);
+  if(limpar(item.ano_lancamento)) metas.push(['📅', item.ano_lancamento]);
+  if(limpar(item.duracao_minutos)) metas.push(['⏱️', item.duracao_minutos + ' Min']);
+  if(limpar(item.idioma)) metas.push(['🌎', item.idioma]);
+  if(limpar(item.audio)) metas.push(['🔊', item.audio]);
+  if(limpar(item.classificacao_indicativa)) metas.push(['🔞', item.classificacao_indicativa]);
+  if(limpar(item.nota_critica)) metas.push(['⭐', item.nota_critica]);
+
+  meta.innerHTML = metas
+    .map(m => `<div class="meta-item">✔ ${m[0]} <span>${m[1]}</span></div>`)
+    .join('');
+
+  comentariosIframe.src = `comentarios.html?filme_id=${item.id}&tipo=${item.tipo}`;
+  tocar(item.video_url);
+
+  setTimeout(()=>{
+    if(desc.scrollHeight > desc.clientHeight){
+      lerMais.style.display = 'inline';
+    }
+  },50);
 }
 
-const raw = item.raw_info || '';
-
-const duracao = norm(item.duracao_minutos)
-  ? item.duracao_minutos + ' Min'
-  : extract(raw,/Duração:\s*([\dh\s]+Min)/i);
-
-const idioma = norm(item.idioma)
-  || extract(raw,/Idioma:\s*([^\n]+)/i);
-
-const audio = norm(item.audio)
-  || extract(raw,/Dublado.*|Dual Áudio/i);
-
-const idade = norm(item.classificacao_indicativa)
-  || extract(raw,/Cl[aá]ssifica[cç][aã]o:\s*([^\n]+)/i);
-
-const nota = norm(item.nota_critica)
-  || extract(raw,/Nota da Cr[ií]tica:\s*([\d.]+)/i);
-
-/* UI */
-titulo.textContent = item.titulo || item.serie_nome || 'Conteúdo';
-desc.textContent   = item.descricao || '';
-
-const metas = [];
-
-/* METAS (EMOJIS DEFINITIVOS) */
-if(norm(item.categoria)) metas.push(['🎬', item.categoria]);
-if(norm(item.tipo)) metas.push(['📺', item.tipo]);
-if(norm(item.ano_lancamento)) metas.push(['📅', item.ano_lancamento]);
-if(duracao) metas.push(['⏱️', duracao]);
-if(idioma) metas.push(['🌎', idioma]);
-if(audio) metas.push(['🔊', audio]);
-if(idade) metas.push(['🔞', idade]);
-if(nota) metas.push(['⭐', nota]);
-
-meta.innerHTML = metas.map(
-  m => `<div class="meta-item">✔ ${m[0]} <span>${m[1]}</span></div>`
-).join('');
-
-/* LER MAIS */
-setTimeout(()=>{
-  if(desc.scrollHeight > desc.clientHeight){
-    lerMais.style.display = 'inline';
-  }
-},50);
 lerMais.onclick = ()=> desc.classList.toggle('collapsed');
 
-/* CHAT */
-comentariosIframe.src =
-  `comentarios.html?filme_id=${item.id}&tipo=${item.tipo}`;
-
-/* PLAYER */
 function tocar(src){
   if(!src) return;
   if(/\.m3u8$/i.test(src)){
@@ -278,9 +231,9 @@ function tocar(src){
     iframe.src = `https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
 }
-tocar(item.video_url);
-</script>
 
+carregar();
+</script>
 
 </body>
 </html>
