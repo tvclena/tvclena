@@ -2,586 +2,239 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Login - CLENA TV</title>
+<title>Sessão • Player</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
-html,body{margin:0;height:100%;background:#0f0f10;color:#fff}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#000;color:#fff;font-family:Inter,Arial}
 
-:root{
-  --surface:#1b1b1e;
-  --accent:#e50914;
-  --muted:#b5b5b5;
-  --border:#2b2b2b;
-  --error:#f87171;
-  --success:#22c55e;
-}
+/* TOPO */
+#top{position:sticky;top:0;z-index:100;padding:16px 20px;
+background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0))}
+#top button{background:none;border:none;color:#fff;font-size:15px;cursor:pointer}
 
-body{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:radial-gradient(70% 60% at 50% 25%, #1a1a1a 0%, #0f0f10 60%);
-}
+/* LAYOUT */
+#layout{display:grid;grid-template-columns:3fr 1.4fr;min-height:100vh}
 
-.container{
-  position:relative;
-  width:420px;
-  max-width:92%;
-  background:rgba(27,27,30,.85);
-  backdrop-filter:blur(14px);
-  padding:42px;
-  border-radius:20px;
-  box-shadow:0 40px 90px rgba(0,0,0,.7);
-}
+/* PLAYER */
+#playerArea{padding:16px}
+#player{position:sticky;top:80px;max-width:1120px;margin:auto;
+aspect-ratio:16/9;border-radius:26px;overflow:hidden;background:#000;
+box-shadow:0 0 70px rgba(220,38,38,.55)}
+#player video,#player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 
-h1{
-  margin:0 0 32px;
-  font-size:36px;
-  font-weight:900;
-  text-align:center;
-}
-h1 span{color:var(--accent)}
+/* SIDE */
+#side{padding:22px;display:flex;flex-direction:column;gap:14px}
+#titulo{font-size:28px;font-weight:700}
 
-.group{margin-bottom:22px}
-label{font-size:14px;color:var(--muted);margin-bottom:6px;display:block}
+/* META */
+#meta{display:flex;flex-wrap:wrap;gap:12px 22px;font-size:14px}
+.meta-item{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.meta-item span{opacity:.85}
 
-input{
-  width:100%;
-  padding:14px 16px;
-  font-size:15px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:rgba(0,0,0,.45);
-  color:#fff;
-}
+/* AVALIAÇÃO */
+#avaliarBox{margin-top:6px}
+.avaliar-label{font-size:13px;opacity:.7;margin-bottom:6px}
+.avaliar-stars{display:flex;gap:8px;font-size:26px;cursor:pointer}
+.avaliar-stars span{color:#333;transition:.2s}
+.avaliar-stars span.active,
+.avaliar-stars span.hover{color:#facc15;transform:scale(1.08)}
 
-input:focus{outline:none;border-color:var(--accent)}
+/* DESCRIÇÃO */
+#desc{font-size:15px;line-height:1.65;opacity:.9}
+#desc.collapsed{
+display:-webkit-box;-webkit-line-clamp:3;
+-webkit-box-orient:vertical;overflow:hidden}
+#lerMais{background:none;border:none;color:#f87171;
+font-weight:600;cursor:pointer;align-self:flex-start}
 
-.btn{
-  width:100%;
-  padding:16px;
-  margin-top:12px;
-  border:none;
-  border-radius:14px;
-  background:var(--accent);
-  color:#fff;
-  font-size:16px;
-  font-weight:800;
-  cursor:pointer;
+@media(max-width:900px){
+#layout{grid-template-columns:1fr}
+#player{position:relative;top:0}
 }
-
-.link{
-  margin-top:18px;
-  text-align:center;
-  font-size:14px;
-  text-decoration:underline;
-  cursor:pointer;
-}
-
-.msg{margin-top:14px;min-height:20px;font-size:14px}
-.msg.error{color:var(--error)}
-.msg.success{color:var(--success)}
-
-.modal{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.85);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-
-.modal-box{
-  width:420px;
-  max-width:92%;
-  background:var(--surface);
-  padding:36px;
-  border-radius:20px;
-}
-
-/* ANIMAÇÃO SUCESSO */
-.success-anim{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:14px;
-  margin-top:20px;
-  animation:fadeUp .4s ease;
-}
-.check{
-  width:72px;
-  height:72px;
-  border-radius:50%;
-  background:var(--success);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:38px;
-  color:#fff;
-  animation:pop .5s ease;
-}
-@keyframes pop{
-  0%{transform:scale(.3);opacity:0}
-  80%{transform:scale(1.1)}
-  100%{transform:scale(1);opacity:1}
-}
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:translateY(0)}
-}
-
-/* POLÍTICAS */
-.politica-texto{
-  font-size:12px;
-  color:var(--muted);
-  text-align:center;
-  margin-top:14px;
-}
-
-.politica-texto button{
-  background:none;
-  border:none;
-  color:var(--accent);
-  cursor:pointer;
-  font-weight:600;
-  padding:0;
-}
-.whatsapp-float{
-  position:absolute;
-  bottom:18px;
-  right:18px;
-  width:46px;
-  height:46px;
-  background:#25D366; /* VERDE DO BOTÃO */
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow:0 8px 20px rgba(0,0,0,.4);
-  transition:.2s;
-}
-
-/* A LOGO PREENCHE O CÍRCULO */
-.whatsapp-float img{
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  padding:8px; /* controla o "respiro" interno */
-}
-
-.whatsapp-float:hover{
-  transform:scale(1.08);
-}
-.btn{
-  position:relative;
-  overflow:hidden;
-}
-
-/* overlay */
-.btn.loading{
-  pointer-events:none;
-  opacity:.85;
-}
-
-.btn.loading::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.35);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-/* spinner */
-.btn.loading::before{
-  content:"";
-  position:absolute;
-  width:22px;
-  height:22px;
-  border:3px solid rgba(255,255,255,.4);
-  border-top:3px solid #fff;
-  border-radius:50%;
-  animation:spin .8s linear infinite;
-  z-index:2;
-}
-
-@keyframes spin{
-  to{transform:rotate(360deg)}
-}
-
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div class="container">
-
-  <h1>CLENA <span>TV</span></h1>
-
-  <div class="group">
-    <label>Email</label>
-    <input id="email" type="email">
-  </div>
-
-  <div class="group">
-    <label>Senha</label>
-    <input id="senha" type="password">
-  </div>
-
-  <button id="btnLogin" class="btn">Entrar</button>
-
-  <div class="link" id="abrirCadastro">
-    Ainda não tenho uma conta
-  </div>
-
-  <div class="msg" id="msg"></div>
-
-  <!-- 🔰 BOTÃO WHATSAPP (APARECE SÓ QUANDO BLOQUEADO) -->
- <a
-  id="btnWhatsapp"
-  href="#"
-  target="_blank"
-  class="whatsapp-float"
-  title="Falar com o suporte no WhatsApp"
-  style="display:none"
->
-  <img src="whatsapp.png" alt="WhatsApp">
-</a>
-
-
+<div id="top">
+  <button onclick="history.back()">← Voltar</button>
 </div>
 
-<!-- CADASTRO -->
-<div class="modal" id="modal">
-  <div class="modal-box">
-    <h2>Criar conta</h2>
+<div id="layout">
 
-    <div class="group">
-      <label>Email</label>
-      <input id="c_email" type="email">
+  <div id="playerArea">
+    <div id="player">
+      <video id="video" controls playsinline></video>
+      <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
     </div>
-
-    <div class="group">
-      <label>CPF</label>
-      <input
-        id="c_cpf"
-        type="text"
-        inputmode="numeric"
-        pattern="[0-9]*"
-        placeholder="000.000.000-00"
-      >
-    </div>
-
-    <div class="group">
-      <label>WhatsApp</label>
-      <input
-        id="c_whats"
-        type="text"
-        inputmode="numeric"
-        pattern="[0-9]*"
-        placeholder="(99) 99999-9999"
-      >
-    </div>
-
-    <div class="group">
-      <label>Senha</label>
-      <input id="c_senha" type="password">
-    </div>
-
-    <div class="group">
-      <label>Confirmar senha</label>
-      <input id="c_confirma" type="password">
-    </div>
-
-    <button id="btnCadastro" class="btn">Cadastrar</button>
-
-    <!-- ✅ POLÍTICAS (APARECE SÓ NO CADASTRO) -->
-    <p class="politica-texto">
-      Ao se cadastrar você concorda com as
-      <button type="button" onclick="abrirPoliticas()">
-        políticas de privacidade
-      </button>
-    </p>
-
-    <div class="link" id="fecharCadastro">Cancelar</div>
-    <div class="msg" id="msgCadastro"></div>
   </div>
-</div>
 
+  <div id="side">
+    <h1 id="titulo"></h1>
+    <div id="meta"></div>
+
+    <div id="avaliarBox">
+      <div class="avaliar-label">Avalie este conteúdo</div>
+      <div id="avaliarStars" class="avaliar-stars"></div>
+    </div>
+
+    <p id="desc" class="collapsed"></p>
+    <button id="lerMais" style="display:none">Ler mais</button>
+  </div>
+
+</div>
 
 <script>
 const sb = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+ "https://dxkszikemntfusfyrzos.supabase.co",
+ "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
-const WHATSAPP_SUPORTE = "5575998112535"; // <-- coloque SEU número aqui
 
-/* MODAL */
-abrirCadastro.onclick = () => modal.style.display = "flex";
-fecharCadastro.onclick = () => modal.style.display = "none";
+const item = JSON.parse(
+ decodeURIComponent(new URLSearchParams(location.search).get("item"))
+);
 
-/* MÁSCARAS */
-c_cpf.oninput = e=>{
-  e.target.value=e.target.value
-    .replace(/\D/g,"")
-    .replace(/(\d{3})(\d)/,"$1.$2")
-    .replace(/(\d{3})(\d)/,"$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/,"$1-$2")
-    .slice(0,14);
-};
-c_whats.oninput = e=>{
-  e.target.value=e.target.value
-    .replace(/\D/g,"")
-    .replace(/^(\d{2})(\d)/,"($1) $2")
-    .replace(/(\d{5})(\d)/,"$1-$2")
-    .slice(0,15);
-};
+let usuario = null;
 
-function bloquearBotao(btn){
-  btn.classList.add("loading");
-}
+/* 🔐 VALIDAR LOGIN CUSTOM */
+async function carregarUsuario(){
+  const email = localStorage.getItem("usuario_email");
+  const token = localStorage.getItem("session_token");
 
-function liberarBotao(btn){
-  btn.classList.remove("loading");
-}
+  if(!email || !token) return;
 
-
-  
-btnLogin.onclick = async () => {
-  bloquearBotao(btnLogin); // 🔒 BLOQUEIA O BOTÃO
-
-  try {
-
-  msg.textContent = "";
-  msg.className = "msg";
-
-
-// permite cadastro livre
-// mas mantém regra de acesso depois
-
-
-  const emailInput = email.value.trim();
-  const senhaInput = senha.value;
-
-if (!emailInput || !senhaInput) {
-  msg.textContent = "Preencha email e senha";
-  msg.className = "msg error";
-  return;
-}
-
-  const { data, error } = await sb
+  const { data } = await sb
     .from("usuarios")
-.select(`
-  id,
-  email,
-  senha,
-  status,
-  trial_expires_at,
-  controle_sessao,
-  vencimento_assinatura
-`)
-    .eq("email", emailInput)
-    .maybeSingle();
+    .select("id,email,session_token")
+    .eq("email", email)
+    .eq("session_token", token)
+    .single();
 
-if (error || !data) {
-  msg.textContent = "Usuário não encontrado";
-  msg.className = "msg error";
-  return;
+  if(data) usuario = data;
 }
 
+/* ⭐ ESTRELAS */
+function renderAvaliarStars(nota=0){
+  const box = avaliarStars;
+  box.innerHTML="";
+  const fixas=Math.round(nota/2);
 
-
-if (data.senha !== senhaInput) {
-  msg.textContent = "Senha incorreta";
-  msg.className = "msg error";
-  return;
-}
-
-
-  // ⏳ TRIAL
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
-
-if (agora > expira && data.status !== "aprovado") {
-  msg.textContent = "Período de teste expirado";
-  msg.className = "msg error";
-  return;
-}
-
-
-  // 🔑 GERA TOKEN DE SESSÃO
-  const sessionToken = crypto.randomUUID();
-
-  // 💾 SALVA TOKEN NO USUÁRIO
-  await sb
-    .from("usuarios")
-    .update({ session_token: sessionToken })
-    .eq("id", data.id);
-
-  // 🧾 LOG DE LOGIN
-  await sb
-    .from("login_logs")
-    .insert({
-      user_id: data.id,
-      email: data.email,
-      ip: null,
-      user_agent: navigator.userAgent
-    });
-
-
-// 💾 SALVA LOCAL
-localStorage.setItem("usuario_email", data.email);
-localStorage.setItem("session_token", sessionToken);
-
-
-// 🔒 BLOQUEADO → comportamento controlado por vencimento
-if (data.status === "bloqueado") {
-
-  // sem data = considera vencido
-  if (!data.vencimento_assinatura) {
-    localStorage.setItem("redirect_after_login", "planos.html");
-    location.replace("planos.html");
-return;
+  for(let i=1;i<=5;i++){
+    const s=document.createElement("span");
+    s.textContent="★";
+    if(i<=fixas)s.classList.add("active");
+    s.onmouseenter=()=>pintar(i);
+    s.onmouseleave=()=>pintar(fixas);
+    s.onclick=()=>salvarAvaliacao(i*2);
+    box.appendChild(s);
   }
+}
+function pintar(q){
+  [...avaliarStars.children].forEach((s,i)=>{
+    s.classList.toggle("hover",i<q);
+  });
+}
 
-  const vencimento = new Date(data.vencimento_assinatura);
-  vencimento.setHours(23, 59, 59, 999); // válido até o fim do dia
-
-  // ❌ ASSINATURA VENCIDA → PAGAMENTO
-  if (agora > vencimento) {
-    localStorage.setItem("redirect_after_login", "planos.html");
-    location.replace("planos.html");
+/* 💾 SALVAR */
+async function salvarAvaliacao(nota){
+  if(!usuario){
+    alert("Faça login para avaliar");
     return;
   }
 
-// 🚫 BLOQUEADO, MAS AINDA DENTRO DO PERÍODO
-msg.textContent = "🚫 Acesso bloqueado. Entre em contato com o suporte.";
-msg.className = "msg error";
+  await sb.from("avaliacoes").upsert({
+    filme_id:item.id,
+    usuario_id:usuario.id,
+    nota
+  },{onConflict:"filme_id,usuario_id"});
 
-// monta mensagem com email do usuário
-const texto = encodeURIComponent(
-  `Olá, meu acesso está bloqueado.\n\nEmail: ${data.email}`
-);
-
-// aponta para o WhatsApp de suporte
-const whatsapp = document.getElementById("btnWhatsapp");
-whatsapp.href = `https://wa.me/${WHATSAPP_SUPORTE}?text=${texto}`;
-whatsapp.style.display = "flex";
-
-return;
-} // 🔴 FECHA O IF BLOQUEADO AQUI CORRETAMENTE
-
-// ✅ ACESSO NORMAL
-location.replace("index.html");
-return;
-
-} finally {
-  liberarBotao(btnLogin); // 🔥 GARANTE QUE SEMPRE DESBLOQUEIA
-}
-};
-
-btnCadastro.onclick = async ()=>{
-  bloquearBotao(btnCadastro);
-  msgCadastro.textContent="";
-
-  try {
-
-
-
-if(c_senha.value!==c_confirma.value){
-  msgCadastro.textContent="As senhas não conferem";
-  msgCadastro.className="msg error";
-  return;
+  renderAvaliarStars(nota);
+  carregar();
 }
 
-
-  const trial=new Date(Date.now()+10*24*60*60*1000);
-  const emailNovo=c_email.value.trim();
-  const senhaNova=c_senha.value;
-
-  const { error } = await sb.from("usuarios").insert({
-    email: emailNovo,
-    cpf: c_cpf.value.replace(/\D/g,""),
-    whatsapp: c_whats.value.replace(/\D/g,""),
-    senha: senhaNova,
-    status: "pendente",
-    trial_expires_at: trial.toISOString()
-  });
-
-if(error){
-  msgCadastro.textContent="Erro ao cadastrar";
-  msgCadastro.className="msg error";
-  return;
+/* ▶ PLAYER */
+function tocar(src){
+  if(!src)return;
+  if(/\.m3u8$/i.test(src)){
+    iframe.remove();video.src=src;video.play().catch(()=>{});
+  }else{
+    video.remove();
+    iframe.src=`https://iframe.mediadelivery.net/embed/569072/${src}`;
+  }
 }
 
+/* 📥 CARREGAR */
+async function carregar(){
+  const { data: filme } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("id", item.id)
+    .single();
 
-  msgCadastro.innerHTML=`
-    <div class="success-anim">
-      <div class="check">✓</div>
-      <strong>Teste liberado por 10 dias</strong>
-      <span>Voltando para login...</span>
-    </div>
-  `;
-  msgCadastro.className="msg success";
+  titulo.textContent = filme.titulo;
+  desc.textContent = filme.descricao || "";
+
+  const { data: avals } = await sb
+    .from("avaliacoes")
+    .select("nota")
+    .eq("filme_id", item.id);
+
+  let media=null;
+  if(avals?.length)
+    media=avals.reduce((t,a)=>t+a.nota,0)/avals.length;
+
+  const metas=[];
+  if(filme.categoria) metas.push(['🎬',filme.categoria]);
+  if(filme.tipo) metas.push(['📺',filme.tipo]);
+  if(filme.ano_lancamento) metas.push(['📅',filme.ano_lancamento]);
+  if(filme.idioma) metas.push(['🌎',filme.idioma]);
+  if(filme.audio) metas.push(['🔊',filme.audio]);
+  if(filme.classificacao) metas.push(['🔞',filme.classificacao]);
+  if(filme.nota_critica) metas.push(['⭐',filme.nota_critica+" • Crítica"]);
+  if(media!==null) metas.push(['👥',"⭐".repeat(Math.round(media/2))+" • Assinantes"]);
+
+  meta.innerHTML=metas.map(m=>
+    `<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`
+  ).join("");
+
+  if(usuario){
+    const { data:minha } = await sb
+      .from("avaliacoes")
+      .select("nota")
+      .eq("filme_id",item.id)
+      .eq("usuario_id",usuario.id)
+      .single();
+    renderAvaliarStars(minha?.nota||0);
+  }else{
+    renderAvaliarStars(0);
+  }
+
+  tocar(filme.video_url);
 
   setTimeout(()=>{
-    modal.style.display="none";
-    email.value=emailNovo;
-    senha.value=senhaNova;
-    msg.textContent="Conta criada! Clique em Entrar 🚀";
-    msg.className="msg success";
-  },2200);
-
-} finally {
-  liberarBotao(btnCadastro); // 🔥 SEMPRE DESBLOQUEIA
-}
-};
-
-
-function abrirPoliticas(){
-  document.getElementById("modalPoliticas").style.display = "flex";
+    if(desc.scrollHeight>desc.clientHeight){
+      lerMais.style.display="inline";
+      lerMais.onclick=()=>{
+        desc.classList.toggle("collapsed");
+        lerMais.textContent=
+          desc.classList.contains("collapsed")?"Ler mais":"Ler menos";
+      };
+    }
+  },50);
 }
 
-function fecharPoliticas(){
-  document.getElementById("modalPoliticas").style.display = "none";
-}
-
+/* INIT */
+(async()=>{
+  await carregarUsuario();
+  carregar();
+})();
 </script>
-<!-- MODAL POLÍTICAS -->
-<div class="modal" id="modalPoliticas">
-  <div class="modal-box" style="max-height:85vh;overflow:hidden;">
-    <h2>Políticas de Privacidade</h2>
-
-    <div style="max-height:60vh;overflow-y:auto;font-size:14px;line-height:1.6;color:#ddd;">
-      <p>
-        Esta Política de Privacidade descreve como coletamos, utilizamos e protegemos
-        os dados dos usuários da plataforma CLENA TV.
-      </p>
-
-      <h4>1. Coleta de Dados</h4>
-      <p>Coletamos informações fornecidas no cadastro, como e-mail, CPF e WhatsApp.</p>
-
-      <h4>2. Uso das Informações</h4>
-      <p>Os dados são utilizados para acesso à plataforma e comunicação.</p>
-
-      <h4>3. Compartilhamento</h4>
-      <p>Não compartilhamos dados pessoais com terceiros.</p>
-
-      <h4>4. Segurança</h4>
-      <p>Utilizamos medidas técnicas para proteger suas informações.</p>
-
-      <h4>5. Direitos do Usuário</h4>
-      <p>Você pode solicitar alteração ou exclusão dos seus dados.</p>
-    </div>
-
-    <div class="link" onclick="fecharPoliticas()">Fechar</div>
-  </div>
-</div>
 
 </body>
 </html>
