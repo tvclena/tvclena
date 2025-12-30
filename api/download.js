@@ -3,18 +3,16 @@ import crypto from "crypto";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // 🔐 backend only
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// ===== CONFIG BUNNY STREAM =====
-const BUNNY_STREAM_LIBRARY_ID = process.env.BUNNY_STREAM_LIBRARY_ID; // ex: 569072
-const BUNNY_STREAM_API_KEY = process.env.BUNNY_STREAM_API_KEY;       // Video API Key
-const BUNNY_CDN_HOST = process.env.BUNNY_CDN_HOST;                   // ex: sessao99.b-cdn.net
+// ===== BUNNY STREAM =====
+const BUNNY_STREAM_API_KEY = process.env.BUNNY_STREAM_API_KEY;
+const BUNNY_CDN_HOST = process.env.BUNNY_CDN_HOST;
 
 const EXPIRA_EM = 60 * 5; // 5 minutos
 
 function gerarToken(videoId, expires) {
-  // Bunny Stream usa esse padrão para download assinado
   const path = `/videos/${videoId}/download`;
   const hash = crypto
     .createHash("sha256")
@@ -47,10 +45,43 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Usuário não encontrado" });
     }
 
-    /* ========= 2️⃣ FILME ========= */
+    /* ========= 2️⃣ COMPRA DISPONÍVEL ========= */
+    const { data: compra } = await supabase
+      .from("movimentacoes_apex")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("filme_id", filme_id)
+      .eq("tipo", "compra_download")
+      .eq("download_usado", false)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (!compra) {
+      return res.status(403).json({
+        error: "Nenhum download disponível. É necessário comprar novamente."
+      });
+    }
+
+    /* ========= 3️⃣ MARCA COMO USADO ========= */
+    const { error: usoError } = await supabase
+      .from("movimentacoes_apex")
+      .update({
+        download_usado: true,
+        download_usado_em: new Date().toISOString()
+      })
+      .eq("id", compra.id);
+
+    if (usoError) {
+      return res.status(500).json({
+        error: "Erro ao registrar uso do download"
+      });
+    }
+
+    /* ========= 4️⃣ FILME ========= */
     const { data: filme } = await supabase
       .from("filmes")
-      .select("id, video_url, permite_download")
+      .select("video_url, permite_download")
       .eq("id", filme_id)
       .single();
 
@@ -58,23 +89,7 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "Download não permitido" });
     }
 
-    /* ========= 3️⃣ VALIDA COMPRA ========= */
-    const { data: compra } = await supabase
-      .from("movimentacoes_apex")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("filme_id", filme.id)
-      .eq("tipo", "compra_download")
-      .limit(1)
-      .maybeSingle();
-
-    if (!compra) {
-      return res.status(403).json({
-        error: "Este conteúdo não foi comprado"
-      });
-    }
-
-    /* ========= 4️⃣ GERA LINK BUNNY ========= */
+    /* ========= 5️⃣ LINK BUNNY ========= */
     const expires = Math.floor(Date.now() / 1000) + EXPIRA_EM;
     const token = gerarToken(filme.video_url, expires);
 
