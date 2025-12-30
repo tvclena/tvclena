@@ -11,87 +11,102 @@ body{
   background:#0b0b0b;
   color:#fff;
   font-family:Inter,Arial;
+  height:100vh;
+  overflow:hidden;
 }
 
 .header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:10px 14px;
+  padding:14px;
+  text-align:center;
   border-bottom:1px solid #222;
-}
-
-.eye{
-  cursor:pointer;
   font-size:18px;
-}
-
-.hint{
-  font-size:12px;
-  opacity:.6;
+  font-weight:600;
 }
 
 .container{
-  padding:14px;
-  transition:.3s;
+  height:100%;
+  display:flex;
+  flex-direction:column;
 }
 
-.container.faded{
-  opacity:.25;
-  pointer-events:none;
+#lista{
+  flex:1;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  overflow-y:auto;
+}
+
+.comment{
+  max-width:75%;
+  padding:12px;
+  border-radius:16px;
+  font-size:14px;
+}
+
+.comment.me{
+  background:#e50914;
+  align-self:flex-end;
+}
+
+.comment.other{
+  background:#111;
+  align-self:flex-start;
+}
+
+.comment .user{
+  font-size:11px;
+  opacity:.7;
+}
+
+.comment .time{
+  font-size:10px;
+  opacity:.5;
+  text-align:right;
+}
+
+.comment a{
+  color:#6fb7ff;
+  text-decoration:none;
+}
+
+.input{
+  padding:12px;
+  border-top:1px solid #222;
+  display:flex;
+  gap:10px;
 }
 
 textarea{
-  width:100%;
+  flex:1;
   background:#111;
-  color:#fff;
   border:1px solid #333;
-  border-radius:12px;
-  padding:12px;
+  border-radius:14px;
+  padding:10px;
+  color:#fff;
   resize:none;
 }
 
 button{
-  margin-top:10px;
-  padding:10px 14px;
-  border-radius:10px;
-  border:0;
   background:#e50914;
+  border:0;
+  border-radius:14px;
+  padding:10px 16px;
   color:#fff;
   cursor:pointer;
 }
 
-.comment{
-  margin-top:14px;
-  padding:12px;
-  background:#111;
-  border-radius:12px;
-}
-
-.comment a{
-  color:#4da3ff;
-  text-decoration:none;
-}
-
-.actions{
-  margin-top:6px;
-}
-
-.actions button{
-  background:#222;
-  font-size:12px;
-}
-
 .autocomplete{
   position:absolute;
+  bottom:80px;
+  left:14px;
+  right:14px;
   background:#111;
   border:1px solid #333;
-  border-radius:12px;
-  margin-top:6px;
-  width:50%;
-  max-height:220px;
+  border-radius:14px;
+  max-height:200px;
   overflow-y:auto;
-  z-index:99;
 }
 
 .autocomplete div{
@@ -103,138 +118,26 @@ button{
 }
 
 .autocomplete img{
-  width:44px;
-  height:64px;
-  object-fit:cover;
+  width:40px;
   border-radius:6px;
 }
-
-
-html, body {
-  height:100%;
-  overflow:hidden;
-}
-
-/* container geral */
-.container{
-  padding:14px;
-  transition:.3s;
-  height:100%;
-  display:flex;
-  flex-direction:column;
-}
-
-/* lista de comentários */
-#lista{
-  flex:1;
-  overflow-y:auto;
-  overflow-x:hidden;
-  scrollbar-width: none;       /* Firefox */
-  -ms-overflow-style: none;    /* IE */
-}
-
-#lista::-webkit-scrollbar{
-  width:0;
-  height:0;
-}
-
-#scrollBottomBtn{
-  position:fixed;
-  bottom:14px;
-  right:14px;
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  border:none;
-  background:#e50914;
-  color:#fff;
-  font-size:18px;
-  cursor:pointer;
-  display:none;
-  z-index:999;
-}
-#scrollBottomBtn{
-  margin:0 !important;
-  padding:0 !important;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-
-.container.hidden{
-  display:none;
-}
-/* ===== CHAT STYLE ===== */
-
-.comment{
-  max-width:75%;
-  padding:10px 12px;
-  border-radius:14px;
-  margin-top:10px;
-  font-size:14px;
-  line-height:1.4;
-  position:relative;
-}
-
-/* OUTROS */
-.comment.other{
-  background:#111;
-  align-self:flex-start;
-  border-top-left-radius:4px;
-}
-
-/* MEU */
-.comment.me{
-  background:#e50914;
-  align-self:flex-end;
-  border-top-right-radius:4px;
-}
-
-/* @usuario */
-.comment .user{
-  font-size:11px;
-  opacity:.7;
-  margin-bottom:4px;
-}
-
-/* TEXTO */
-.comment .text{
-  word-break:break-word;
-}
-
-/* DATA */
-.comment .time{
-  font-size:10px;
-  opacity:.6;
-  margin-top:4px;
-  text-align:right;
-}
-
-/* LISTA COMO CHAT */
-#lista{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-  
 </style>
 </head>
 
 <body>
 
-<div class="header" onclick="toggle()" style="cursor:pointer">
-<div class="hint" id="hintText">Toque para ver os comentários</div>
-</div>
+<div class="header">Comentários</div>
 
-
-<div id="container" class="container hidden">
-  <textarea id="txt" placeholder="Escreva um comentário... Use / para marcar filmes"></textarea>
-  <div id="auto" class="autocomplete" style="display:none"></div>
-  <button onclick="enviar()">Enviar</button>
+<div class="container">
   <div id="lista"></div>
+
+  <div class="input">
+    <textarea id="txt" placeholder="Use / para marcar filmes"></textarea>
+    <button onclick="enviar()">Enviar</button>
+  </div>
 </div>
+
+<div id="auto" class="autocomplete" style="display:none"></div>
 
 <script>
 const sb = supabase.createClient(
@@ -243,206 +146,106 @@ const sb = supabase.createClient(
 );
 
 const email = localStorage.getItem("usuario_email");
-const params = new URLSearchParams(location.search);
-const filme_id = params.get("filme_id");
-const auto = document.getElementById("auto");
-  
-
-if (!filme_id) {
-  document.body.innerHTML = `
-    <div style="padding:20px;text-align:center">
-      Filme inválido
-    </div>
-  `;
-  throw new Error("filme_id ausente");
-}
-
-
-let aberto = false;
-let arroba = null;
+const filme_id = new URLSearchParams(location.search).get("filme_id");
+let arroba = "";
 let filmesCache = [];
-
-function toggle(){
-  const c = document.getElementById("container");
-  const hint = document.getElementById("hintText");
-  const aberto = !c.classList.contains("hidden");
-
-  if (aberto) {
-    c.classList.add("hidden");
-    hint.textContent = "Toque para ver os comentários";
-  } else {
-    c.classList.remove("hidden");
-    hint.textContent = "Toque para ocultar os comentários";
-  }
-}
-
 
 async function init(){
   const { data:user } = await sb
-  .from("usuarios")
-  .select("username")
-  .eq("email", email)
-  .single();
+    .from("usuarios")
+    .select("username")
+    .eq("email", email)
+    .single();
 
-if(!user?.username){
-  document.body.innerHTML = `
-    <div style="padding:20px;text-align:center">
-      Cadastre seu @ no perfil para comentar.<br><br>
-      <a href="/index.html?abrirPerfil=1" target="_top" style="color:#e50914">
-        Ir para o perfil
-      </a>
-    </div>
-  `;
-  return;
-}
-
-arroba = user.username;
+  arroba = user.username;
   carregar();
 }
 
-
-function parseTexto(texto){
-  return texto.replace(/\/([a-zA-Z0-9\s]+)/g, (m, nome) => {
-    const filme = filmesCache.find(f =>
-      f.titulo?.toLowerCase() === nome.toLowerCase()
-    );
-
-    if (!filme) return m;
-
-    return `
-      <a href="player.html?item=${encodeURIComponent(
-        JSON.stringify(filme)
-      )}&filme_id=${filme.id}" target="_top">
-        /${nome}
-      </a>
-    `;
+function serializar(texto){
+  return texto.replace(/\/([^\s]+)/g, (m,nome)=>{
+    const f = filmesCache.find(x=>x.titulo===nome);
+    if(!f) return m;
+    return `{{filme:${f.id}|${f.titulo}}}`;
   });
 }
 
+function renderizar(texto){
+  return texto.replace(/\{\{filme:(\d+)\|(.+?)\}\}/g,(m,id,titulo)=>{
+    return `<a href="player.html?filme_id=${id}" target="_top">${titulo}</a>`;
+  });
+}
 
 async function enviar(){
-  const txt = document.getElementById("txt").value.trim();
-  if(!txt) return;
+  const txt = document.getElementById("txt");
+  const bruto = txt.value.trim();
+  if(!bruto) return;
 
   await sb.from("comentarios").insert({
     filme_id,
     email,
     arroba,
-    comentario: txt
+    comentario: serializar(bruto)
   });
 
-  document.getElementById("txt").value="";
+  txt.value="";
   carregar();
 }
 
-async function apagar(id){
-  await sb.from("comentarios")
-    .delete()
-    .eq("id", id)
-    .eq("email", email);
-  carregar();
-}
-
-function formatarData(data){
-  const d = new Date(data);
-  return d.toLocaleDateString("pt-BR", {
-    day:"2-digit",
-    month:"2-digit"
-  }) + " " + d.toLocaleTimeString("pt-BR", {
-    hour:"2-digit",
-    minute:"2-digit"
-  });
-}
-
-
-
-
-  
 async function carregar(){
   const { data } = await sb
     .from("comentarios")
     .select("*")
     .eq("filme_id", filme_id)
-    .order("created_at",{ascending:true}); // ATENÇÃO: agora ASC
+    .order("created_at");
 
   const lista = document.getElementById("lista");
-  lista.innerHTML = "";
+  lista.innerHTML="";
 
- data?.forEach(c=>{
-  const isMe = c.email === email;
+  data.forEach(c=>{
+    lista.innerHTML += `
+      <div class="comment ${c.email===email?"me":"other"}">
+        <div class="user">@${c.arroba}</div>
+        <div>${renderizar(c.comentario)}</div>
+        <div class="time">${new Date(c.created_at).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</div>
+      </div>
+    `;
+  });
 
-  lista.innerHTML += `
-    <div class="comment ${isMe ? "me" : "other"}">
-      <div class="user">@${c.arroba}</div>
-      <div class="text">${parseTexto(c.comentario)}</div>
-      <div class="time">${formatarData(c.created_at)}</div>
-    </div>
-  `;
-});
-
-
-  // 👇 sempre desce pro fim
-  setTimeout(() => {
-    lista.scrollTop = lista.scrollHeight;
-  }, 50);
+  lista.scrollTop = lista.scrollHeight;
 }
 
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  const lista = document.getElementById("lista");
-  const btnScroll = document.getElementById("scrollBottomBtn");
-
-  if (!lista || !btnScroll) return;
-
-  btnScroll.onclick = () => {
-    lista.scrollTop = lista.scrollHeight;
-  };
-
-  lista.addEventListener("scroll", () => {
-    const noFim =
-      lista.scrollHeight - lista.scrollTop - lista.clientHeight < 60;
-    btnScroll.style.display = noFim ? "none" : "flex";
-  });
-});
-
-
-  
-/* AUTOCOMPLETE /FILME */
+/* AUTOCOMPLETE */
 document.getElementById("txt").addEventListener("input", async e=>{
   const v = e.target.value;
   const idx = v.lastIndexOf("/");
   if(idx < 0) return auto.style.display="none";
 
-  const termo = v.slice(idx+1).toLowerCase();
-  if(!termo) return;
-
+  const termo = v.slice(idx+1);
   const { data } = await sb
     .from("filmes")
-.select("id,titulo,video_url,tipo,capa_url")
+    .select("id,titulo,capa_url")
     .ilike("titulo", `%${termo}%`)
     .limit(5);
 
   filmesCache = data || [];
- auto.innerHTML = filmesCache.map(f => `
-  <div onclick="selecionar('${f.titulo}')">
-    <img src="${f.capa_url || ''}">
-    <span>${f.titulo}</span>
-  </div>
-`).join("");
+  auto.innerHTML = filmesCache.map(f=>`
+    <div onclick="sel('${f.titulo}')">
+      <img src="${f.capa_url}">
+      ${f.titulo}
+    </div>
+  `).join("");
 
-  auto.style.display = "block";
+  auto.style.display="block";
 });
 
-function selecionar(t){
+function sel(t){
   const txt = document.getElementById("txt");
-  txt.value = txt.value.replace(/\/[^\/]*$/, "/"+t+" ");
+  txt.value = txt.value.replace(/\/[^\s]*$/, "/"+t+" ");
   auto.style.display="none";
 }
 
 init();
 </script>
-<button id="scrollBottomBtn">⬇</button>
 
 </body>
 </html>
