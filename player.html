@@ -23,21 +23,35 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
+/* RESET */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+/* BODY */
 body{
   background:#000;
   color:#fff;
   font-family:Inter,Arial,sans-serif;
-  overflow:hidden;
+  overflow-x:hidden;
+  overflow-y:auto;
 }
 
-#player{position:fixed;inset:0;background:#000}
+/* CONTAINER PRINCIPAL */
+#player{
+  position:fixed;
+  inset:0;
+  background:#000;
+}
 
-/* TOPO */
+/* ===== TOPO ===== */
 #topActions{
   position:absolute;
-  top:14px;left:14px;
-  z-index:99
+  top:14px;
+  left:14px;
+  z-index:99;
 }
 
 .topBtn{
@@ -50,17 +64,14 @@ body{
   cursor:pointer;
 }
 
-/* LAYOUT */
+/* ===== LAYOUT ===== */
 #layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
   height:100%;
 }
-@media(max-width:900px){
-  #layout{grid-template-columns:1fr}
-}
 
-/* PLAYER */
+/* ===== PLAYER ===== */
 #playerArea{
   display:flex;
   align-items:center;
@@ -72,7 +83,7 @@ body{
 .playerWrapper{
   width:100%;
   max-width:1200px;
-  aspect-ratio:16/9;
+  aspect-ratio:16 / 9;
   position:relative;
 }
 
@@ -86,18 +97,20 @@ body{
   background:#000;
 }
 
-/* SIDE */
+/* ===== SIDE ===== */
 #side{
   background:#111;
   padding:22px;
   display:flex;
   flex-direction:column;
-  overflow:hidden;
+  overflow-y:auto;
 }
+
+/* ===== COMENTÁRIOS ===== */
 #comentariosBox{
   margin-top:20px;
   flex:1;
-  min-height:0;
+  min-height:260px;
 }
 
 #comentariosIframe{
@@ -108,10 +121,7 @@ body{
   background:#0b0b0b;
 }
 
-@media(max-width:900px){
-  #side{max-height:45vh}
-}
-
+/* ===== BADGES ===== */
 .badge{
   display:inline-block;
   padding:4px 10px;
@@ -120,8 +130,11 @@ body{
   background:#222;
   margin-right:6px;
 }
-.badge.tipo{background:#e50914}
+.badge.tipo{
+  background:#e50914;
+}
 
+/* ===== SELECT ===== */
 select{
   width:100%;
   padding:14px;
@@ -133,6 +146,7 @@ select{
   font-size:15px;
 }
 
+/* ===== BOTÃO FULLSCREEN ===== */
 #fullscreenBtn{
   width:100%;
   margin-top:16px;
@@ -146,7 +160,7 @@ select{
   cursor:pointer;
 }
 
-/* ===== META INFO PLAYER ===== */
+/* ===== META INFO ===== */
 .meta-box{
   display:flex;
   flex-wrap:wrap;
@@ -188,48 +202,39 @@ select{
   background:#111;
   color:#cfcfcf;
 }
-@media (max-width: 900px) {
 
-  body {
-    overflow: hidden;
+/* ===== MOBILE ===== */
+@media (max-width:900px){
+
+  #layout{
+    grid-template-columns:1fr;
+    grid-template-rows:auto 1fr;
   }
 
-  #layout {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  #playerArea{
+    padding:10px;
   }
 
-  /* PLAYER FICA MENOR */
-  #playerArea {
-    padding: 10px;
+  .playerWrapper{
+    max-width:100%;
   }
 
-  .playerWrapper {
-    max-width: 100%;
-    aspect-ratio: 16 / 9;
+  #side{
+    padding:16px;
+    overflow-y:auto;
   }
 
-  /* SIDE GANHA MAIS ALTURA */
-  #side {
-    flex: 1;
-    max-height: none;
-    padding: 16px;
+  #comentariosBox{
+    margin-top:14px;
+    min-height:260px;
   }
 
-  /* COMENTÁRIOS GANHAM PRIORIDADE */
-  #comentariosBox {
-    flex: 1;
-    margin-top: 14px;
-  }
-
-  #comentariosIframe {
-    height: 100%;
-    min-height: 260px; /* 🔥 espaço garantido */
+  #comentariosIframe{
+    height:100%;
   }
 }
-
 </style>
+
 </head>
 
 <body>
