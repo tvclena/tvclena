@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Comentários</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -13,178 +14,113 @@
   --red:#e50914;
   --blue:#2da8ff;
 }
-
-  
 *{box-sizing:border-box}
-
 html,body{
-  margin:0;
-  height:100%;
+  margin:0;height:100%;
   background:var(--bg);
   font-family:Inter,Arial;
   color:#fff;
   overflow:hidden;
 }
-
-/* GLOW */
 body::before,body::after{
-  content:"";
-  position:fixed;
-  top:0;bottom:0;
-  width:6px;
-  filter:blur(14px);
+  content:"";position:fixed;top:0;bottom:0;width:6px;filter:blur(14px)
 }
 body::before{left:0;background:#2da8ff}
 body::after{right:0;background:#e50914}
 
-/* HEADER */
 .header{
-  height:64px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  backdrop-filter:blur(18px);
+  height:64px;display:flex;align-items:center;justify-content:center;
+  position:relative;backdrop-filter:blur(18px);
   background:rgba(0,0,0,.45);
   border-bottom:1px solid var(--border);
-  cursor:pointer;
+  cursor:pointer
 }
 .header .title{font-size:18px;font-weight:600}
 .header .hint{
-  position:absolute;
-  bottom:6px;
-  font-size:11px;
-  opacity:.5;
+  position:absolute;bottom:6px;font-size:11px;opacity:.5
 }
 
-/* CONTAINER */
-.container{
-  height:calc(100% - 64px);
-  display:flex;
-  flex-direction:column;
-}
+.container{height:calc(100% - 64px);display:flex;flex-direction:column}
 .container.hidden{display:none}
 
-/* LISTA */
 #lista{
-  flex:1;
-  padding:18px;
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-  overflow-y:auto;
+  flex:1;padding:18px;
+  display:flex;flex-direction:column;gap:14px;
+  overflow-y:auto
 }
 
-/* MSG */
 .msg{
   max-width:78%;
-  padding:14px;
-  border-radius:18px;
+  padding:14px;border-radius:18px;
   background:var(--glass);
   border:1px solid var(--border);
-  backdrop-filter:blur(14px);
+  backdrop-filter:blur(14px)
 }
 .msg.me{
   align-self:flex-end;
-  background:linear-gradient(135deg,#e50914aa,#a30008aa);
+  background:linear-gradient(135deg,#e50914aa,#a30008aa)
 }
 .msg .user{font-size:12px;opacity:.7;margin-bottom:6px}
 .msg .time{font-size:10px;opacity:.5;margin-top:6px;text-align:right}
 
-/* FILME */
 .filme-card{
-  margin-top:10px;
-  display:flex;
-  gap:10px;
-  padding:10px;
-  border-radius:14px;
+  margin-top:10px;display:flex;gap:10px;
+  padding:10px;border-radius:14px;
   background:rgba(0,0,0,.35);
   border:1px solid var(--border);
-  cursor:pointer;
+  cursor:pointer
 }
 .filme-card img{width:52px;border-radius:8px}
 .filme-card strong{color:var(--blue)}
 
-/* INPUT */
 .input{
-  padding:14px;
-  display:flex;
-  gap:10px;
+  padding:14px;display:flex;gap:10px;
   backdrop-filter:blur(16px);
   background:rgba(0,0,0,.55);
-  border-top:1px solid var(--border);
+  border-top:1px solid var(--border)
 }
 textarea{
-  flex:1;
-  background:rgba(255,255,255,.08);
+  flex:1;background:rgba(255,255,255,.08);
   border:1px solid var(--border);
-  border-radius:16px;
-  padding:12px;
-  color:#fff;
-  resize:none;
+  border-radius:16px;padding:12px;
+  color:#fff;resize:none
 }
 button{
-  background:var(--red);
-  border:none;
-  border-radius:16px;
-  padding:0 18px;
-  color:#fff;
-  cursor:pointer;
+  background:var(--red);border:none;
+  border-radius:16px;padding:0 18px;
+  color:#fff;cursor:pointer
 }
 
-/* AUTOCOMPLETE */
 .autocomplete{
-  position:absolute;
-  bottom:90px;
-  left:18px;
-  right:18px;
-  background:#111;
-  border:1px solid var(--border);
-  border-radius:16px;
-  max-height:220px;
-  overflow-y:auto;
+  position:absolute;bottom:90px;left:18px;right:18px;
+  background:#111;border:1px solid var(--border);
+  border-radius:16px;max-height:220px;overflow-y:auto
 }
 .autocomplete div{
-  display:flex;
-  gap:10px;
-  padding:10px;
-  cursor:pointer;
+  display:flex;gap:10px;padding:10px;cursor:pointer
 }
 .autocomplete img{width:42px;border-radius:6px}
 
-/* MODAL */
 #modalArroba{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.65);
+  position:fixed;inset:0;background:rgba(0,0,0,.65);
   backdrop-filter:blur(14px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
+  display:none;align-items:center;justify-content:center;
+  z-index:9999
 }
 #modalArroba .box{
-  width:320px;
-  padding:20px;
-  border-radius:18px;
+  width:320px;padding:20px;border-radius:18px;
   background:rgba(20,20,20,.9);
   border:1px solid rgba(255,255,255,.15);
-  text-align:center;
+  text-align:center
 }
 #modalArroba input{
-  width:100%;
-  margin-top:10px;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.2);
-  background:#111;
-  color:#fff;
+  width:100%;margin-top:10px;padding:12px;
+  border-radius:12px;border:1px solid rgba(255,255,255,.2);
+  background:#111;color:#fff
 }
 #erroArroba{
-  margin-top:8px;
-  font-size:12px;
-  color:#ff6b6b;
-  display:none;
+  margin-top:8px;font-size:12px;
+  color:#ff6b6b;display:none
 }
 </style>
 </head>
@@ -206,11 +142,9 @@ button{
 
 <div id="auto" class="autocomplete" style="display:none"></div>
 
-<!-- MODAL ARROBA -->
 <div id="modalArroba">
   <div class="box">
     <h3>Escolha seu @</h3>
-    <p style="font-size:13px;opacity:.7">Esse nome será exibido nos comentários</p>
     <input id="novoArroba" placeholder="@seunome">
     <div id="erroArroba"></div>
     <button onclick="salvarArroba()" style="margin-top:14px;width:100%;padding:12px">Salvar</button>
@@ -219,18 +153,141 @@ button{
 
 <script>
 const sb = supabase.createClient(
- "https://dxkszikemntfusfyrzos.supabase.co",
- "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
 const email = localStorage.getItem("usuario_email");
-const filme_id = new URLSearchParams(location.search).get("filme_id");
-let arroba="", cache=[], aberto=false, usuarioId=null;
+let arroba="", usuarioId=null, cache=[], filmeAtual=null, aberto=false;
+
+function slugify(t){
+  return t.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/(^-|-$)/g,"");
+}
 
 function toggle(){
   aberto=!aberto;
   container.classList.toggle("hidden",!aberto);
-  hint.textContent=aberto?"Toque para ocultar os comentários":"Toque para ver os comentários";
+  hint.textContent = aberto
+    ? "Toque para ocultar os comentários"
+    : "Toque para ver os comentários";
+}
+
+async function detectarFilmePorURL(){
+  const slug = location.pathname.replace("/","").trim();
+  if(!slug) return;
+
+  const {data} = await sb
+    .from("filmes")
+    .select("*")
+    .eq("slug",slug)
+    .maybeSingle();
+
+  if(data){
+    filmeAtual=data;
+    abrirPopupFilme(data);
+    carregar();
+  }
+}
+
+function abrirPopupFilme(f){
+  const html=`
+  <div id="popupFilme" style="
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.7);
+    backdrop-filter:blur(14px);
+    display:flex;align-items:center;justify-content:center;
+    z-index:99999">
+    <div style="
+      width:340px;background:#111;
+      border-radius:20px;padding:18px;
+      border:1px solid rgba(255,255,255,.15)">
+      <img src="${f.capa_url}" style="width:100%;border-radius:14px">
+      <h2 style="margin:14px 0 6px">${f.titulo}</h2>
+      <p style="font-size:13px;opacity:.7">${f.descricao||""}</p>
+      <button onclick="location.href='player.html?filme_id=${f.id}'"
+        style="margin-top:14px;width:100%;padding:14px;
+        border-radius:14px;border:none;
+        background:#e50914;color:#fff">
+        ▶ Assistir
+      </button>
+      <button onclick="popupFilme.remove()"
+        style="margin-top:10px;width:100%;background:none;color:#aaa;border:none">
+        Fechar
+      </button>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML("beforeend",html);
+}
+
+function serializar(t){
+  return t.replace(/\/([^\s]+)/g,(m,n)=>{
+    const f=cache.find(x=>slugify(x.titulo)===slugify(n));
+    return f?`{{filme:${f.id}|${f.titulo}|${f.capa_url}}}`:m;
+  });
+}
+
+function renderizar(t){
+  return t.replace(/\{\{filme:(\d+)\|(.+?)\|(.+?)\}\}/g,
+    (m,id,t,c)=>`
+    <div class="filme-card" onclick="location.href='/${slugify(t)}'">
+      <img src="${c}">
+      <div><strong>${t}</strong><div>Ver agora</div></div>
+    </div>`);
+}
+
+async function enviar(){
+  const v=txt.value.trim();
+  if(!v||!filmeAtual) return;
+  await sb.from("comentarios").insert({
+    filme_id:filmeAtual.id,
+    email,arroba,
+    comentario:serializar(v)
+  });
+  txt.value="";
+  carregar();
+}
+
+async function carregar(){
+  if(!filmeAtual) return;
+  const {data}=await sb.from("comentarios")
+    .select("*")
+    .eq("filme_id",filmeAtual.id)
+    .order("created_at");
+  lista.innerHTML="";
+  data.forEach(c=>{
+    lista.innerHTML+=`
+    <div class="msg ${c.email===email?"me":""}">
+      <div class="user">@${c.arroba}</div>
+      <div>${renderizar(c.comentario)}</div>
+      <div class="time">
+        ${new Date(c.created_at).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
+      </div>
+    </div>`;
+  });
+  lista.scrollTop=lista.scrollHeight;
+}
+
+txt.addEventListener("input",async e=>{
+  const i=e.target.value.lastIndexOf("/");
+  if(i<0) return auto.style.display="none";
+  const t=e.target.value.slice(i+1);
+  const {data}=await sb.from("filmes")
+    .select("id,titulo,capa_url")
+    .ilike("titulo",`%${t}%`).limit(5);
+  cache=data||[];
+  auto.innerHTML=cache.map(f=>`
+    <div onclick="sel('${f.titulo}')">
+      <img src="${f.capa_url}">${f.titulo}
+    </div>`).join("");
+  auto.style.display="block";
+});
+
+function sel(t){
+  txt.value=txt.value.replace(/\/[^\s]*$/,"/"+t+" ");
+  auto.style.display="none";
 }
 
 async function init(){
@@ -238,99 +295,33 @@ async function init(){
     .select("id,username")
     .eq("email",email)
     .single();
-
   usuarioId=user.id;
-
   if(!user.username){
     modalArroba.style.display="flex";
     return;
   }
-
   arroba=user.username;
-  carregar();
-}
-
-function serializar(t){
- return t.replace(/\/([^\s]+)/g,(m,n)=>{
-  const f=cache.find(x=>x.titulo===n);
-  return f?`{{filme:${f.id}|${f.titulo}|${f.capa_url}}}`:m;
- });
-}
-
-function renderizar(t){
- return t.replace(/\{\{filme:(\d+)\|(.+?)\|(.+?)\}\}/g,
-  (m,id,t,c)=>`
-   <div class="filme-card" onclick="location.href='player.html?filme_id=${id}'">
-    <img src="${c}">
-    <div><strong>${t}</strong><div>Ver agora</div></div>
-   </div>`);
-}
-
-async function enviar(){
- const v=txt.value.trim();
- if(!v)return;
- await sb.from("comentarios").insert({
-  filme_id,email,arroba,comentario:serializar(v)
- });
- txt.value="";
- carregar();
-}
-
-async function carregar(){
- const {data}=await sb.from("comentarios")
-  .select("*").eq("filme_id",filme_id).order("created_at");
- lista.innerHTML="";
- data.forEach(c=>{
-  lista.innerHTML+=`
-   <div class="msg ${c.email===email?"me":""}">
-    <div class="user">@${c.arroba}</div>
-    <div>${renderizar(c.comentario)}</div>
-    <div class="time">${new Date(c.created_at).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</div>
-   </div>`;
- });
- lista.scrollTop=lista.scrollHeight;
-}
-
-/* AUTOCOMPLETE */
-txt.addEventListener("input",async e=>{
- const i=e.target.value.lastIndexOf("/");
- if(i<0)return auto.style.display="none";
- const t=e.target.value.slice(i+1);
- const {data}=await sb.from("filmes")
-  .select("id,titulo,capa_url")
-  .ilike("titulo",`%${t}%`).limit(5);
- cache=data||[];
- auto.innerHTML=cache.map(f=>`
-  <div onclick="sel('${f.titulo}')">
-   <img src="${f.capa_url}">${f.titulo}
-  </div>`).join("");
- auto.style.display="block";
-});
-
-function sel(t){
- txt.value=txt.value.replace(/\/[^\s]*$/,"/"+t+" ");
- auto.style.display="none";
 }
 
 async function salvarArroba(){
- const v=novoArroba.value.replace("@","").trim();
- if(!/^[a-zA-Z0-9_.]{3,20}$/.test(v)){
-  erroArroba.textContent="Use 3 a 20 caracteres (letras, números, _ ou .)";
-  erroArroba.style.display="block";return;
- }
- const {data:existe}=await sb.from("usuarios")
-  .select("id").eq("username",v).maybeSingle();
- if(existe){
-  erroArroba.textContent="Esse @ já está em uso";
-  erroArroba.style.display="block";return;
- }
- await sb.from("usuarios").update({username:v}).eq("id",usuarioId);
- arroba=v;
- modalArroba.style.display="none";
- carregar();
+  const v=novoArroba.value.replace("@","").trim();
+  if(!/^[a-zA-Z0-9_.]{3,20}$/.test(v)){
+    erroArroba.textContent="Use 3 a 20 caracteres";
+    erroArroba.style.display="block";return;
+  }
+  const {data:existe}=await sb.from("usuarios")
+    .select("id").eq("username",v).maybeSingle();
+  if(existe){
+    erroArroba.textContent="Esse @ já está em uso";
+    erroArroba.style.display="block";return;
+  }
+  await sb.from("usuarios").update({username:v}).eq("id",usuarioId);
+  arroba=v;
+  modalArroba.style.display="none";
 }
 
 init();
+detectarFilmePorURL();
 </script>
 
 </body>
