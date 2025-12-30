@@ -9,216 +9,218 @@
 
 <style>
 :root{
-  --bg:#07080d;
-  --card:rgba(255,255,255,.06);
-  --border:rgba(255,255,255,.12);
-  --blue:#3ea6ff;
+  --bg:#07080c;
+  --glass:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.14);
   --red:#e50914;
+  --red-glow:rgba(229,9,20,.55);
+  --blue:#4da3ff;
+  --blue-glow:rgba(77,163,255,.55);
 }
+
 *{box-sizing:border-box}
+
 body{
   margin:0;
-  background:radial-gradient(circle at top,#0d1020,#07080d 60%);
+  min-height:100vh;
+  background:
+    radial-gradient(circle at left, rgba(77,163,255,.12), transparent 40%),
+    radial-gradient(circle at right, rgba(229,9,20,.14), transparent 40%),
+    linear-gradient(#05060a,#090a12);
   color:#fff;
   font-family:Inter,Arial;
 }
 
 /* HEADER */
 .header{
-  height:64px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
   position:sticky;
   top:0;
-  z-index:10;
-  backdrop-filter:blur(18px);
-  background:rgba(5,5,10,.6);
+  z-index:20;
+  height:70px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background:rgba(10,10,18,.75);
+  backdrop-filter:blur(16px);
   border-bottom:1px solid var(--border);
+  box-shadow:
+    inset 0 -1px 0 var(--border),
+    0 10px 30px rgba(0,0,0,.6);
 }
+
+.header::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-bottom:1px solid var(--red-glow);
+  pointer-events:none;
+}
+
 .header .eye{
   position:absolute;
   left:16px;
-  font-size:18px;
+  top:22px;
   cursor:pointer;
-}
-.header .title{
   font-size:18px;
-  font-weight:600;
+  opacity:.85;
 }
+
 .header .hint{
-  position:absolute;
-  bottom:6px;
-  font-size:11px;
-  opacity:.6;
+  margin-top:6px;
+  font-size:12px;
+  opacity:.55;
 }
 
 /* CONTAINER */
 .container{
-  padding:16px;
-  transition:.3s;
+  padding:18px 16px 120px;
+  transition:.35s;
 }
 .container.faded{
-  opacity:.2;
+  opacity:.25;
   pointer-events:none;
 }
 
 /* INPUT */
-.input-box{
-  position:sticky;
-  bottom:0;
-  padding:14px;
-  background:linear-gradient(to top,#07080d 70%,transparent);
-}
 textarea{
   width:100%;
-  background:rgba(255,255,255,.08);
+  min-height:54px;
+  background:rgba(255,255,255,.04);
   border:1px solid var(--border);
   border-radius:18px;
-  padding:14px;
+  padding:14px 16px;
   color:#fff;
   resize:none;
+  outline:none;
+  font-size:14px;
+  backdrop-filter:blur(8px);
 }
-button.send{
-  margin-top:10px;
+textarea::placeholder{
+  color:rgba(255,255,255,.4);
+}
+
+button{
+  margin-top:14px;
   width:100%;
   padding:14px;
   border-radius:18px;
   border:none;
-  background:linear-gradient(135deg,#e50914,#b00610);
+  background:linear-gradient(135deg,#e50914,#b20710);
   color:#fff;
+  font-size:15px;
   font-weight:600;
   cursor:pointer;
+  box-shadow:0 10px 30px rgba(229,9,20,.35);
 }
-
-/* LISTA */
-#lista{
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  margin-top:10px;
+button:active{
+  transform:scale(.98);
 }
 
 /* COMMENT */
 .comment{
-  display:flex;
-  gap:12px;
-  padding:14px;
-  border-radius:20px;
-  background:var(--card);
-  border:1px solid var(--border);
-  backdrop-filter:blur(14px);
-}
-.comment.me{
-  background:linear-gradient(135deg,rgba(229,9,20,.35),rgba(229,9,20,.08));
-  border-color:#e50914;
+  margin-top:18px;
+  padding:16px;
+  border-radius:22px;
+  background:
+    linear-gradient(135deg,rgba(77,163,255,.08),rgba(229,9,20,.08));
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.06),
+    0 20px 40px rgba(0,0,0,.45);
 }
 
-/* AVATAR */
-.avatar{
-  width:44px;
-  height:44px;
-  border-radius:50%;
-  background:linear-gradient(135deg,#3ea6ff,#8b5cf6);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:700;
-  flex-shrink:0;
-  overflow:hidden;
-}
-.avatar img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-/* BODY */
-.comment-body{flex:1}
-.comment-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.comment-header .user{
-  font-size:14px;
+/* USER */
+.comment .user{
+  font-size:13px;
   font-weight:600;
-}
-.comment-header .time{
-  font-size:11px;
-  opacity:.6;
-}
-.comment-text{
-  margin-top:6px;
-  font-size:14px;
-  line-height:1.4;
+  color:#fff;
+  margin-bottom:6px;
+  opacity:.9;
 }
 
 /* FILME CARD */
 .filme-card{
-  margin-top:10px;
+  margin-top:12px;
   display:flex;
+  align-items:center;
   gap:12px;
   padding:12px;
   border-radius:16px;
-  background:rgba(0,0,0,.35);
+  background:rgba(0,0,0,.45);
   border:1px solid var(--border);
   cursor:pointer;
-  align-items:center;
+  transition:.25s;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.04),
+    0 10px 25px rgba(0,0,0,.5);
 }
+
+.filme-card:hover{
+  transform:translateY(-1px);
+  box-shadow:
+    0 0 0 1px var(--blue-glow),
+    0 15px 40px rgba(77,163,255,.35);
+}
+
 .filme-card img{
-  width:56px;
+  width:52px;
   height:78px;
   object-fit:cover;
-  border-radius:12px;
+  border-radius:10px;
 }
+
 .filme-card strong{
-  display:block;
   color:var(--blue);
+  font-size:14px;
 }
-.filme-card span{
+
+/* ACTIONS */
+.actions{
+  margin-top:10px;
+}
+.actions button{
+  background:#151515;
+  border:1px solid var(--border);
   font-size:12px;
-  opacity:.6;
+  padding:8px;
+  box-shadow:none;
 }
 
 /* AUTOCOMPLETE */
 .autocomplete{
   position:absolute;
-  background:#0c0d14;
+  background:rgba(10,10,18,.96);
+  backdrop-filter:blur(14px);
   border:1px solid var(--border);
   border-radius:14px;
-  margin-top:6px;
-  max-height:180px;
+  margin-top:8px;
+  max-height:200px;
   overflow:auto;
   z-index:99;
+  box-shadow:0 20px 40px rgba(0,0,0,.7);
 }
 .autocomplete div{
-  padding:12px;
+  padding:12px 14px;
   cursor:pointer;
+  font-size:14px;
 }
 .autocomplete div:hover{
-  background:#151622;
+  background:rgba(77,163,255,.15);
 }
-</style>
-</head>
 
-<body>
+/* MODAL */
+#modalFilme{
+  backdrop-filter:blur(18px);
+}
 
-<div class="header">
-  <div class="eye" onclick="toggle()">←</div>
-  <div class="title">Comentários</div>
-  <div class="hint">Toque para ocultar os comentários</div>
-</div>
-
-<div id="container" class="container faded">
-  <div id="lista"></div>
-
-  <div class="input-box">
-    <textarea id="txt" placeholder="Escreva um comentário... Use / para marcar filmes"></textarea>
-    <div id="auto" class="autocomplete" style="display:none"></div>
-    <button class="send" onclick="enviar()">Enviar</button>
-  </div>
-</div>
+#modalBox{
+  background:
+    linear-gradient(180deg,#0b0c14,#07080c);
+  box-shadow:
+    0 0 0 1px var(--border),
+    0 30px 80px rgba(0,0,0,.85);
+}
 
 <script>
 /* SUPABASE */
@@ -228,9 +230,12 @@ const sb = supabase.createClient(
 );
 
 const email = localStorage.getItem("usuario_email");
-const filme_id = new URLSearchParams(location.search).get("filme_id");
+const params = new URLSearchParams(location.search);
+const filme_id = params.get("filme_id");
 
-let aberto=false, arroba=null;
+let aberto=false;
+let arroba=null;
+let filmesCache=[];
 
 /* TOGGLE */
 function toggle(){
@@ -240,42 +245,53 @@ function toggle(){
 
 /* SLUG */
 function slugify(t){
-  return t.toLowerCase().normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
-    .replace(/[^a-z0-9]+/g,"-");
+  return t.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/(^-|-$)/g,"");
 }
 
 /* INIT */
 async function init(){
-  const {data:user}=await sb
+  const {data:user} = await sb
     .from("usuarios")
     .select("username")
     .eq("email",email)
     .single();
 
   if(!user?.username){
-    document.body.innerHTML=`
-      <div style="padding:30px;text-align:center">
-        Cadastre seu @ para comentar<br><br>
-        <a href="/index.html?abrirPerfil=1" style="color:#e50914">Ir para o perfil</a>
+    document.body.innerHTML = `
+      <div style="padding:20px;text-align:center">
+        Cadastre seu @ no perfil para comentar.<br><br>
+        <a href="/index.html?abrirPerfil=1" target="_top" style="color:#e50914">
+          Ir para o perfil
+        </a>
       </div>`;
     return;
   }
+
   arroba=user.username;
   carregar();
 }
 
-/* SERIALIZA */
+/* SERIALIZA (PERSISTENTE) */
 async function serializarComentario(txt){
   let out=txt;
   const matchs=[...txt.matchAll(/\/([^\n\r]+)/g)];
-  if(!matchs.length) return out;
+  if(matchs.length===0) return out;
 
-  const {data:filmes}=await sb.from("filmes").select("id,titulo,capa_url");
+  const {data:filmes}=await sb
+    .from("filmes")
+    .select("id,titulo,capa_url");
+
   matchs.forEach(m=>{
-    const f=filmes.find(x=>slugify(x.titulo)===slugify(m[1]));
+    const nome=m[1].trim();
+    const f=filmes.find(x=>slugify(x.titulo)===slugify(nome));
     if(f){
-      out=out.replace(m[0],`{{filme:${f.id}|${f.titulo}|${f.capa_url}}}`);
+      out=out.replace(
+        m[0],
+        `{{filme:${f.id}|${f.titulo}|${f.capa_url}}}`
+      );
     }
   });
   return out;
@@ -283,15 +299,18 @@ async function serializarComentario(txt){
 
 /* RENDER */
 function renderizar(txt){
-  return txt.replace(/\{\{filme:([a-f0-9\-]+)\|(.+?)\|(.+?)\}\}/g,
-    (m,id,t,c)=>`
-    <div class="filme-card" onclick="abrirModalFilme('${id}')">
-      <img src="${c}">
-      <div>
-        <strong>${t}</strong>
-        <span>Ver detalhes</span>
+  return txt.replace(
+    /\{\{filme:([a-f0-9\-]+)\|(.+?)\|(.+?)\}\}/g,
+    (m,id,titulo,capa)=>`
+      <div class="filme-card" onclick="abrirModalFilme('${id}')">
+        <img src="${capa}">
+        <div>
+          <strong>${titulo}</strong>
+          <div style="opacity:.6;font-size:12px">Ver detalhes</div>
+        </div>
       </div>
-    </div>`);
+    `
+  );
 }
 
 /* CARREGAR */
@@ -303,19 +322,15 @@ async function carregar(){
     .order("created_at",{ascending:false});
 
   lista.innerHTML="";
-  data.forEach(c=>{
-    const letra=c.arroba[0].toUpperCase();
-    const hora=new Date(c.created_at).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  data?.forEach(c=>{
     lista.innerHTML+=`
-      <div class="comment ${c.email===email?"me":""}">
-        <div class="avatar">${letra}</div>
-        <div class="comment-body">
-          <div class="comment-header">
-            <div class="user">@${c.arroba}</div>
-            <div class="time">${hora}</div>
-          </div>
-          <div class="comment-text">${renderizar(c.comentario)}</div>
-        </div>
+      <div class="comment">
+        <div class="user">@${c.arroba}</div>
+        <div>${renderizar(c.comentario)}</div>
+        ${c.email===email?`
+          <div class="actions">
+            <button onclick="apagar('${c.id}')">Apagar</button>
+          </div>`:""}
       </div>`;
   });
 }
@@ -324,17 +339,163 @@ async function carregar(){
 async function enviar(){
   const v=txt.value.trim();
   if(!v) return;
+
   const finalTxt=await serializarComentario(v);
-  await sb.from("comentarios").insert({filme_id,email,arroba,comentario:finalTxt});
+
+  await sb.from("comentarios").insert({
+    filme_id,
+    email,
+    arroba,
+    comentario: finalTxt
+  });
+
   txt.value="";
   carregar();
+}
+async function abrirModalFilme(id){
+  const modal = document.getElementById("modalFilme");
+  const box   = document.getElementById("modalBox");
+
+  modal.style.display = "flex";
+  box.innerHTML = `<div style="text-align:center;opacity:.6">Carregando...</div>`;
+
+  const { data, error } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if(error || !data){
+    box.innerHTML = `<p>Filme não encontrado</p>`;
+    return;
+  }
+
+  const itemEncoded = encodeURIComponent(JSON.stringify({
+    id: data.id,
+    titulo: data.titulo,
+    video_url: data.video_url,
+    tipo: data.tipo,
+    serie_nome: data.serie_nome,
+    temporada: data.temporada,
+    episodio: data.episodio
+  }));
+
+  box.innerHTML = `
+    <img src="${data.capa_url}" style="width:100%;border-radius:14px">
+
+    <h2 style="margin:14px 0 6px">${data.titulo}</h2>
+
+    <p style="font-size:13px;opacity:.75">${data.descricao || ""}</p>
+
+    <div style="
+      margin-top:12px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      font-size:13px;
+      opacity:.85
+    ">
+      <div><b>Gênero:</b> ${data.categoria || "-"}</div>
+      <div><b>Ano:</b> ${data.ano_lancamento || "-"}</div>
+      <div><b>Áudio:</b> ${data.audio || "-"}</div>
+      <div><b>Idioma:</b> ${data.idioma || "-"}</div>
+      <div><b>Classificação:</b> ${data.classificacao_indicativa || data.classificacao || "-"}</div>
+      <div><b>Nota:</b> ${data.nota_critica || "-"}</div>
+    </div>
+
+    <button onclick="location.href='player.html?item=${itemEncoded}'" style="
+      margin-top:14px;
+      width:100%;
+      padding:12px;
+      border-radius:14px;
+      border:none;
+      background:#e50914;
+      color:#fff;
+      font-size:15px;
+      font-weight:600;
+      cursor:pointer
+    ">
+      ▶ Assistir agora
+    </button>
+
+    <button onclick="fecharModalFilme()" style="
+      margin-top:10px;
+      width:100%;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.15);
+      background:transparent;
+      color:#aaa;
+      font-size:13px;
+      cursor:pointer
+    ">
+      Fechar
+    </button>
+  `;
+}
+
+function fecharModalFilme(){
+  document.getElementById("modalFilme").style.display = "none";
+}
+
+/* APAGAR */
+async function apagar(id){
+  await sb.from("comentarios")
+    .delete()
+    .eq("id",id)
+    .eq("email",email);
+  carregar();
+}
+
+/* AUTOCOMPLETE */
+txt.addEventListener("input",async e=>{
+  const v=e.target.value;
+  const idx=v.lastIndexOf("/");
+  if(idx<0) return auto.style.display="none";
+
+  const termo=v.slice(idx+1);
+  const {data}=await sb
+    .from("filmes")
+    .select("id,titulo,capa_url")
+    .ilike("titulo",`%${termo}%`)
+    .limit(5);
+
+  filmesCache=data||[];
+  auto.innerHTML=filmesCache.map(f=>
+    `<div onclick="selecionar('${f.titulo}')">${f.titulo}</div>`
+  ).join("");
+  auto.style.display="block";
+});
+
+function selecionar(t){
+  txt.value=txt.value.replace(/\/[^\/]*$/,"/"+t+" ");
+  auto.style.display="none";
 }
 
 init();
 </script>
-
-<!-- MODAL FILME (inalterado, já funcional) -->
-<div id="modalFilme" style="position:fixed;inset:0;display:none"></div>
+<div id="modalFilme" style="
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(14px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+">
+  <div id="modalBox" style="
+    width:360px;
+    max-height:85vh;
+    overflow:auto;
+    background:#0b0b0b;
+    border-radius:20px;
+    padding:18px;
+    border:1px solid rgba(255,255,255,.15);
+  ">
+    <!-- conteúdo dinâmico -->
+  </div>
+</div>
 
 </body>
 </html>
