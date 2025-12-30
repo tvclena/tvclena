@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 
-<!-- GA4 -->
+<!-- ================= GA4 ================= -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T97MS35TJ6"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config','G-T97MS35TJ6');
+gtag('config','G-T97MS35TJ6',{debug_mode:true});
 </script>
 
 <title>Sessão • Player</title>
@@ -18,143 +18,87 @@ gtag('config','G-T97MS35TJ6');
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-/* ================= RESET ================= */
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
-/* ================= TOPO ================= */
+/* ===== TOPO ===== */
 #top{
-  position:sticky;
-  top:0;
-  z-index:99;
+  position:sticky;top:0;z-index:100;
   padding:16px 20px;
   background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0));
 }
 #top button{
-  background:none;
-  border:none;
-  color:#fff;
-  font-size:15px;
-  cursor:pointer;
-  opacity:.8;
+  background:none;border:none;color:#fff;
+  font-size:15px;cursor:pointer;opacity:.85;
 }
 #top button:hover{opacity:1}
 
-/* ================= LAYOUT ================= */
+/* ===== LAYOUT ===== */
 #layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
   min-height:100vh;
 }
 
-/* ================= PLAYER ================= */
-#playerArea{
-  padding:16px;
-}
+/* ===== PLAYER ===== */
+#playerArea{padding:16px}
 #player{
-  position:sticky;
-  top:80px;
-  width:100%;
-  max-width:1120px;
-  margin:auto;
+  position:sticky;top:80px;
+  max-width:1120px;margin:auto;
   aspect-ratio:16/9;
   border-radius:26px;
-  overflow:hidden;
-  background:#000;
-  box-shadow:
-    0 0 60px rgba(0,140,255,.35),
-    inset 0 0 40px rgba(0,0,0,.6);
+  overflow:hidden;background:#000;
+  box-shadow:0 0 60px rgba(0,140,255,.35);
 }
-#player video,
-#player iframe{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  border:0;
+#player video,#player iframe{
+  position:absolute;inset:0;width:100%;height:100%;border:0;
 }
 
-/* ================= SIDE ================= */
+/* ===== SIDE ===== */
 #side{
-  padding:22px 22px 30px;
+  padding:22px;
   display:flex;
   flex-direction:column;
   gap:14px;
 }
 
-/* ================= TITULO ================= */
-#titulo{
-  font-size:28px;
-  font-weight:700;
-  line-height:1.2;
-}
+/* ===== TITULO ===== */
+#titulo{font-size:28px;font-weight:700}
 
-/* ================= META LINHA ================= */
+/* ===== META EM LINHA ===== */
 #meta{
-  display:flex;
-  flex-wrap:wrap;
-  gap:14px 20px;
-  font-size:14px;
-  opacity:.9;
+  display:flex;flex-wrap:wrap;
+  gap:14px 22px;font-size:14px;opacity:.9;
 }
-.meta{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  white-space:nowrap;
-}
-.meta span{opacity:.7}
+.meta-item{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.meta-item span{opacity:.7}
 
-/* ================= DESCRIÇÃO ================= */
-#desc{
-  font-size:15px;
-  line-height:1.65;
-  opacity:.85;
-}
+/* ===== DESCRIÇÃO ===== */
+#desc{font-size:15px;line-height:1.65;opacity:.85}
 #desc.collapsed{
-  display:-webkit-box;
-  -webkit-line-clamp:3;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:3;
+  -webkit-box-orient:vertical;overflow:hidden;
 }
 #lerMais{
-  background:none;
-  border:none;
-  color:#4da3ff;
-  font-weight:600;
-  cursor:pointer;
-  padding:0;
-  align-self:flex-start;
+  background:none;border:none;color:#4da3ff;
+  font-weight:600;cursor:pointer;
 }
 
-/* ================= CHAT ================= */
+/* ===== CHAT ===== */
 #chat{
-  margin-top:10px;
-  height:680px;
-  border-radius:26px;
-  overflow:hidden;
-  background:#0b0b0b;
-  border:1px solid #1f1f1f;
-  box-shadow:0 0 35px rgba(0,140,255,.25);
-  display:flex;
-  flex-direction:column;
+  margin-top:10px;height:680px;
+  border-radius:26px;overflow:hidden;
+  background:#0b0b0b;border:1px solid #1f1f1f;
+  display:flex;flex-direction:column;
 }
 #chatTop{
-  padding:14px;
-  text-align:center;
-  font-weight:600;
-  cursor:pointer;
-  background:linear-gradient(to bottom,#111,#0b0b0b);
-  border-bottom:1px solid #222;
+  padding:14px;text-align:center;
+  font-weight:600;cursor:pointer;
+  background:#111;border-bottom:1px solid #222;
 }
-#chatTop:hover{opacity:.85}
-#chat iframe{
-  flex:1;
-  border:0;
-  background:#fff;
-}
+#chat iframe{flex:1;border:0;background:#fff}
 
-/* ================= MOBILE ================= */
+/* ===== MOBILE ===== */
 @media(max-width:900px){
   #layout{grid-template-columns:1fr}
   #player{position:relative;top:0}
@@ -165,7 +109,6 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
 <body>
 
-<!-- TOPO -->
 <div id="top">
   <button onclick="voltar()">← Voltar</button>
 </div>
@@ -184,87 +127,96 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   <div id="side">
 
     <h1 id="titulo"></h1>
-
-    <!-- META -->
     <div id="meta"></div>
 
-    <!-- DESCRIÇÃO -->
     <p id="desc" class="collapsed"></p>
     <button id="lerMais" style="display:none">Ler mais</button>
 
-    <!-- CHAT -->
     <div id="chat">
       <div id="chatTop" onclick="subir()">⬆️ Voltar para o player</div>
       <iframe id="comentariosIframe"></iframe>
     </div>
 
   </div>
-
 </div>
 
 <script>
-/* ================= VOLTAR ================= */
-function voltar(){
-  if(history.length>1) history.back();
-  else location.href='index.html';
-}
-
-/* ================= SUBIR PLAYER ================= */
-function subir(){
-  document.getElementById('player').scrollIntoView({behavior:'smooth'});
-}
-
-/* ================= ITEM ================= */
+/* ===== ITEM ===== */
 const item = JSON.parse(
-  decodeURIComponent(new URLSearchParams(location.search).get("item"))
+  decodeURIComponent(new URLSearchParams(location.search).get('item'))
 );
 
-/* ================= UI ================= */
+/* ===== HELPERS ===== */
+function meta(icon,value){
+  return value?`<div class="meta-item">${icon} <span>${value}</span></div>`:'';
+}
+
+/* ===== UI ===== */
 titulo.textContent = item.titulo || item.serie_nome || 'Conteúdo';
 desc.textContent   = item.descricao || '';
 
 meta.innerHTML = `
-${item.categoria ? `<div class="meta">🎬 <span>${item.categoria}</span></div>` : ``}
-${item.tipo ? `<div class="meta">📺 <span>${item.tipo}</span></div>` : ``}
-${item.ano_lancamento ? `<div class="meta">📅 <span>${item.ano_lancamento}</span></div>` : ``}
-${item.duracao_minutos ? `<div class="meta">⏱️ <span>${item.duracao_minutos} min</span></div>` : ``}
-${item.classificacao_indicativa ? `<div class="meta">🔞 <span>+${item.classificacao_indicativa}</span></div>` : ``}
-${item.nota_critica ? `<div class="meta">⭐ <span>${item.nota_critica}</span></div>` : ``}
-${item.audio ? `<div class="meta">🔊 <span>${item.audio}</span></div>` : ``}
-${item.idioma ? `<div class="meta">🌎 <span>${item.idioma}</span></div>` : ``}
+${meta('🎬',item.categoria)}
+${meta('📺',item.tipo)}
+${meta('📅',item.ano_lancamento)}
+${meta('📀',item.serie_nome)}
+${meta('📦',item.temporada && 'Temporada '+item.temporada)}
+${meta('▶️',item.episodio && 'Episódio '+item.episodio)}
+${meta('⏱️',item.duracao_minutos && item.duracao_minutos+' min')}
+${meta('🌎',item.idioma)}
+${meta('🔊',item.audio)}
+${meta('🔞',item.classificacao_indicativa)}
+${meta('⭐',item.nota_critica)}
 `;
 
-/* ================= LER MAIS ================= */
+/* ===== GA4 VIEW CONTENT ===== */
+gtag('event','view_content',{
+  content_type:item.tipo,
+  item_id:item.id,
+  item_name:titulo.textContent,
+  category:item.categoria,
+  year:item.ano_lancamento
+});
+
+/* ===== LER MAIS ===== */
 setTimeout(()=>{
-  if(desc.scrollHeight > desc.clientHeight){
+  if(desc.scrollHeight>desc.clientHeight){
     lerMais.style.display='inline';
   }
 },50);
-
 lerMais.onclick=()=>{
-  const aberto=!desc.classList.contains('collapsed');
-  desc.classList.toggle('collapsed',aberto);
-  lerMais.textContent=aberto?'Ler mais':'Ler menos';
+  desc.classList.toggle('collapsed');
 };
 
-/* ================= CHAT ================= */
+/* ===== CHAT ===== */
 comentariosIframe.src =
-  `comentarios.html?filme_id=${item.id||item.video_url}&tipo=${item.tipo}`;
+  `comentarios.html?filme_id=${item.id}&tipo=${item.tipo}`;
 
-/* ================= PLAYER ================= */
+/* ===== PLAYER ===== */
 function tocar(src){
   if(/\.m3u8$/i.test(src)){
     iframe.remove();
     video.src=src;
+    video.addEventListener('play',()=> {
+      gtag('event','play',{
+        item_name:titulo.textContent,
+        item_type:item.tipo
+      });
+    },{once:true});
     video.play().catch(()=>{});
   }else{
     video.remove();
-    iframe.src = src.includes('mediadelivery')
-      ? src
-      : `https://iframe.mediadelivery.net/embed/569072/${src}`;
+    iframe.src=`https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
 }
 tocar(item.video_url);
+
+/* ===== NAV ===== */
+function voltar(){history.back()}
+function subir(){
+  document.getElementById('player')
+    .scrollIntoView({behavior:'smooth'});
+}
 </script>
 
 </body>
