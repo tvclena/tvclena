@@ -2,296 +2,379 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Sessão • Player</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Comentários</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{box-sizing:border-box}
-html,body{
-  margin:0;height:100%;
-  background:#000;
+body{
+  margin:0;
+  background:#0b0b0b;
   color:#fff;
   font-family:Inter,Arial;
-  overflow:hidden
 }
 
-/* TOPO */
-#top{
-  position:sticky;
-  top:0;
-  z-index:100;
-  padding:16px 20px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0));
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 14px;
+  border-bottom:1px solid #222;
 }
-#top button{
-  background:none;
-  border:none;
+
+.eye{
+  cursor:pointer;
+  font-size:18px;
+}
+
+.hint{
+  font-size:12px;
+  opacity:.6;
+}
+
+.container{
+  padding:14px;
+  transition:.3s;
+}
+
+.container.faded{
+  opacity:.25;
+  pointer-events:none;
+}
+
+textarea{
+  width:100%;
+  background:#111;
   color:#fff;
-  font-size:14px;
-  cursor:pointer
+  border:1px solid #333;
+  border-radius:12px;
+  padding:12px;
+  resize:none;
 }
 
-/* LAYOUT */
-#wrap{
-  display:grid;
-  grid-template-columns:1fr 380px;
-  height:100%
+button{
+  margin-top:10px;
+  padding:10px 14px;
+  border-radius:10px;
+  border:0;
+  background:#e50914;
+  color:#fff;
+  cursor:pointer;
 }
 
-/* PLAYER */
-#player{
+.comment{
+  margin-top:14px;
+  padding:12px;
+  background:#111;
+  border-radius:12px;
+}
+
+.comment a{
+  color:#4da3ff;
+  text-decoration:none;
+}
+
+.actions{
+  margin-top:6px;
+}
+
+.actions button{
+  background:#222;
+  font-size:12px;
+}
+
+.autocomplete{
+  position:absolute;
+  background:#111;
+  border:1px solid #333;
+  border-radius:12px;
+  margin-top:6px;
+  width:50%;
+  max-height:220px;
+  overflow-y:auto;
+  z-index:99;
+}
+
+.autocomplete div{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px;
+  cursor:pointer;
+}
+
+.autocomplete img{
+  width:44px;
+  height:64px;
+  object-fit:cover;
+  border-radius:6px;
+}
+
+
+html, body {
+  height:100%;
+  overflow:hidden;
+}
+
+/* container geral */
+.container{
+  padding:14px;
+  transition:.3s;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+
+/* lista de comentários */
+#lista{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* IE */
+}
+
+#lista::-webkit-scrollbar{
+  width:0;
+  height:0;
+}
+
+#scrollBottomBtn{
+  position:fixed;
+  bottom:14px;
+  right:14px;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:none;
+  background:#e50914;
+  color:#fff;
+  font-size:18px;
+  cursor:pointer;
+  display:none;
+  z-index:999;
+}
+#scrollBottomBtn{
+  margin:0 !important;
+  padding:0 !important;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:#000
-}
-video{
-  width:100%;
-  height:100%;
-  object-fit:contain;
 }
 
-/* CHAT */
-#chat{
-  display:flex;
-  flex-direction:column;
-  background:linear-gradient(to bottom,#0b0b0b,#000);
-  border-left:1px solid rgba(255,255,255,.12)
-}
-#chatHeader{
-  padding:14px;
-  text-align:center;
-  font-weight:600;
-  border-bottom:1px solid rgba(255,255,255,.12)
-}
-#lista{
-  flex:1;
-  padding:14px;
-  overflow-y:auto;
-  display:flex;
-  flex-direction:column;
-  gap:10px
-}
-.msg{
-  max-width:80%;
-  padding:12px;
-  border-radius:14px;
-  background:rgba(255,255,255,.08);
-  font-size:14px
-}
-.msg.me{
-  align-self:flex-end;
-  background:#e50914
-}
-.msg .user{
-  font-size:11px;
-  opacity:.7;
-  margin-bottom:4px
-}
-.msg .time{
-  font-size:10px;
-  opacity:.5;
-  margin-top:6px;
-  text-align:right
+
+.container.hidden{
+  display:none;
 }
 
-/* CARD FILME */
-.filme-card{
-  margin-top:8px;
-  display:flex;
-  gap:10px;
-  padding:10px;
-  border-radius:12px;
-  background:rgba(0,0,0,.4);
-  border:1px solid rgba(255,255,255,.12);
-  cursor:pointer
-}
-.filme-card img{
-  width:46px;
-  border-radius:6px
-}
-
-/* INPUT */
-#input{
-  display:flex;
-  gap:10px;
-  padding:12px;
-  border-top:1px solid rgba(255,255,255,.12)
-}
-textarea{
-  flex:1;
-  resize:none;
-  padding:10px;
-  border-radius:12px;
-  border:none;
-  background:#111;
-  color:#fff
-}
-button.send{
-  background:#e50914;
-  border:none;
-  border-radius:12px;
-  padding:0 16px;
-  color:#fff;
-  cursor:pointer
-}
+  
 </style>
 </head>
 
 <body>
 
-<div id="top">
-  <button onclick="history.back()">← Voltar</button>
+<div class="header" onclick="toggle()" style="cursor:pointer">
+<div class="hint" id="hintText">Toque para ver os comentários</div>
 </div>
 
-<div id="wrap">
 
-  <div id="player">
-    <video id="video" controls autoplay></video>
-  </div>
-
-  <div id="chat">
-    <div id="chatHeader">Comentários</div>
-    <div id="lista"></div>
-    <div id="input">
-      <textarea id="txt" placeholder="Use /Nome do Filme"></textarea>
-      <button class="send" onclick="enviar()">Enviar</button>
-    </div>
-  </div>
-
+<div id="container" class="container hidden">
+  <textarea id="txt" placeholder="Escreva um comentário... Use / para marcar filmes"></textarea>
+  <div id="auto" class="autocomplete" style="display:none"></div>
+  <button onclick="enviar()">Enviar</button>
+  <div id="lista"></div>
 </div>
 
 <script>
-/* ================= SUPABASE ================= */
 const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ================= USUÁRIO ================= */
-const email = localStorage.getItem("usuario_email") || "anonimo@clena";
-const arroba = email.split("@")[0];
-
-/* ================= FILME ================= */
+const email = localStorage.getItem("usuario_email");
 const params = new URLSearchParams(location.search);
-if(!params.get("item")){
-  alert("Filme inválido");
-  throw new Error("Item não informado");
+const filme_id = params.get("filme_id");
+const auto = document.getElementById("auto");
+  
+
+if (!filme_id) {
+  document.body.innerHTML = `
+    <div style="padding:20px;text-align:center">
+      Filme inválido
+    </div>
+  `;
+  throw new Error("filme_id ausente");
 }
 
-const item = JSON.parse(decodeURIComponent(params.get("item")));
-const filmeId = item.id;
 
-/* ================= PLAYER ================= */
-video.src = item.video_url.startsWith("http")
-  ? item.video_url
-  : `https://sessao99.b-cdn.net/videos/${item.video_url}.m3u8`;
+let aberto = false;
+let arroba = null;
+let filmesCache = [];
 
-/* ================= UTIL ================= */
-function slugify(t){
-  return t.toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-    .replace(/[^a-z0-9]+/g,"-")
-    .replace(/(^-|-$)/g,"");
-}
+function toggle(){
+  const c = document.getElementById("container");
+  const hint = document.getElementById("hintText");
+  const aberto = !c.classList.contains("hidden");
 
-/* ================= RENDER ================= */
-function renderizar(txt){
-  return txt.replace(
-    /\{\{filme:([a-f0-9\-]+)\|(.+?)\|(.+?)\}\}/g,
-    (m,id,titulo,capa)=>`
-      <div class="filme-card" onclick="location.href='/${slugify(titulo)}'">
-        <img src="${capa}">
-        <div>
-          <strong>${titulo}</strong>
-          <div>Ver agora</div>
-        </div>
-      </div>`
-  );
-}
-
-/* ================= CARREGAR ================= */
-async function carregar(){
-  const {data,error} = await sb
-    .from("comentarios")
-    .select("*")
-    .eq("filme_id", filmeId)
-    .order("created_at");
-
-  if(error){
-    console.error("Erro comentários:", error);
-    return;
+  if (aberto) {
+    c.classList.add("hidden");
+    hint.textContent = "Toque para ver os comentários";
+  } else {
+    c.classList.remove("hidden");
+    hint.textContent = "Toque para ocultar os comentários";
   }
-
-  lista.innerHTML="";
-  data.forEach(c=>{
-    lista.innerHTML+=`
-      <div class="msg ${c.email===email?"me":""}">
-        <div class="user">@${c.arroba || arroba}</div>
-        <div>${renderizar(c.comentario)}</div>
-        <div class="time">
-          ${new Date(c.created_at).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
-        </div>
-      </div>`;
-  });
-
-  lista.scrollTop = lista.scrollHeight;
 }
 
-/* ================= SERIALIZAR /FILME ================= */
-async function serializarComentario(txt){
-  let out = txt;
-  const matches = [...txt.matchAll(/\/([^\n\r]+)/g)];
 
-  if(matches.length === 0) return out;
+async function init(){
+  const { data:user } = await sb
+  .from("usuarios")
+  .select("username")
+  .eq("email", email)
+  .single();
 
-  const {data:filmes} = await sb
-    .from("filmes")
-    .select("id,titulo,capa_url");
-
-  for(const m of matches){
-    const nome = m[1].trim();
-    const slug = slugify(nome);
-    const f = filmes.find(x=>slugify(x.titulo)===slug);
-    if(f){
-      out = out.replace(
-        m[0],
-        `{{filme:${f.id}|${f.titulo}|${f.capa_url}}}`
-      );
-    }
-  }
-  return out;
+if(!user?.username){
+  document.body.innerHTML = `
+    <div style="padding:20px;text-align:center">
+      Cadastre seu @ no perfil para comentar.<br><br>
+      <a href="/index.html?abrirPerfil=1" target="_top" style="color:#e50914">
+        Ir para o perfil
+      </a>
+    </div>
+  `;
+  return;
 }
 
-/* ================= ENVIAR ================= */
-async function enviar(){
-  const v = txt.value.trim();
-  if(!v) return;
-
-  const comentarioFinal = await serializarComentario(v);
-
-  const {error} = await sb.from("comentarios").insert({
-    filme_id: filmeId,
-    email,
-    arroba,
-    comentario: comentarioFinal
-  });
-
-  if(error){
-    alert("Erro ao enviar comentário");
-    console.error(error);
-    return;
-  }
-
-  txt.value="";
+arroba = user.username;
   carregar();
 }
 
-/* ================= INIT ================= */
-carregar();
+
+function parseTexto(texto){
+  return texto.replace(/\/([a-zA-Z0-9\s]+)/g, (m, nome) => {
+    const filme = filmesCache.find(f =>
+      f.titulo?.toLowerCase() === nome.toLowerCase()
+    );
+
+    if (!filme) return m;
+
+    return `
+      <a href="player.html?item=${encodeURIComponent(
+        JSON.stringify(filme)
+      )}&filme_id=${filme.id}" target="_top">
+        /${nome}
+      </a>
+    `;
+  });
+}
+
+
+async function enviar(){
+  const txt = document.getElementById("txt").value.trim();
+  if(!txt) return;
+
+  await sb.from("comentarios").insert({
+    filme_id,
+    email,
+    arroba,
+    comentario: txt
+  });
+
+  document.getElementById("txt").value="";
+  carregar();
+}
+
+async function apagar(id){
+  await sb.from("comentarios")
+    .delete()
+    .eq("id", id)
+    .eq("email", email);
+  carregar();
+}
+async function carregar(){
+  const { data } = await sb
+    .from("comentarios")
+    .select("*")
+    .eq("filme_id", filme_id)
+    .order("created_at",{ascending:true}); // ATENÇÃO: agora ASC
+
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  data?.forEach(c=>{
+    lista.innerHTML += `
+      <div class="comment">
+        <b>@${c.arroba}</b>
+        <div>${parseTexto(c.comentario)}</div>
+        ${c.email === email ? `
+          <div class="actions">
+            <button onclick="apagar('${c.id}')">Apagar</button>
+          </div>` : ""}
+      </div>
+    `;
+  });
+
+  // 👇 sempre desce pro fim
+  setTimeout(() => {
+    lista.scrollTop = lista.scrollHeight;
+  }, 50);
+}
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const lista = document.getElementById("lista");
+  const btnScroll = document.getElementById("scrollBottomBtn");
+
+  if (!lista || !btnScroll) return;
+
+  btnScroll.onclick = () => {
+    lista.scrollTop = lista.scrollHeight;
+  };
+
+  lista.addEventListener("scroll", () => {
+    const noFim =
+      lista.scrollHeight - lista.scrollTop - lista.clientHeight < 60;
+    btnScroll.style.display = noFim ? "none" : "flex";
+  });
+});
+
+
+  
+/* AUTOCOMPLETE /FILME */
+document.getElementById("txt").addEventListener("input", async e=>{
+  const v = e.target.value;
+  const idx = v.lastIndexOf("/");
+  if(idx < 0) return auto.style.display="none";
+
+  const termo = v.slice(idx+1).toLowerCase();
+  if(!termo) return;
+
+  const { data } = await sb
+    .from("filmes")
+.select("id,titulo,video_url,tipo,capa_url")
+    .ilike("titulo", `%${termo}%`)
+    .limit(5);
+
+  filmesCache = data || [];
+ auto.innerHTML = filmesCache.map(f => `
+  <div onclick="selecionar('${f.titulo}')">
+    <img src="${f.capa_url || ''}">
+    <span>${f.titulo}</span>
+  </div>
+`).join("");
+
+  auto.style.display = "block";
+});
+
+function selecionar(t){
+  const txt = document.getElementById("txt");
+  txt.value = txt.value.replace(/\/[^\/]*$/, "/"+t+" ");
+  auto.style.display="none";
+}
+
+init();
 </script>
+<button id="scrollBottomBtn">⬇</button>
 
 </body>
 </html>
