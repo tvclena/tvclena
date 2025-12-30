@@ -200,27 +200,39 @@ const item = JSON.parse(
 );
 
 /* NORMALIZA */
-function valor(v){
+function norm(v){
   if(v === null || v === undefined) return null;
   if(typeof v === 'string'){
-    const limpo = v.replace(/\s+/g,' ').trim();
-    return limpo === '' ? null : limpo;
+    const s = v.replace(/\s+/g,' ').trim();
+    return s === '' ? null : s;
   }
   return v;
 }
 
-
-/* EXTRATORES RAW_INFO */
-const extract = (raw, regex) => {
+/* EXTRAI DO RAW_INFO */
+function extract(raw, regex){
   if(!raw) return null;
   const m = raw.match(regex);
-  return m ? m[1].trim() : null;
-};
+  return m ? m[1].replace(/\s+/g,' ').trim() : null;
+}
 
-const duracaoRaw = extract(item.raw_info,/Duração:\s*([\dh\sMinutos]+)/i);
-const idiomaRaw  = extract(item.raw_info,/Idioma:\s*([^\n]+)/i);
-const idadeRaw   = extract(item.raw_info,/Cl[aá]ssifica[cç][aã]o:\s*([^\n]+)/i);
-const notaRaw    = extract(item.raw_info,/Nota da Cr[ií]tica:\s*([\d.]+)/i);
+const raw = item.raw_info || '';
+
+const duracao = norm(item.duracao_minutos)
+  ? item.duracao_minutos + ' Min'
+  : extract(raw,/Duração:\s*([\dh\s]+Min)/i);
+
+const idioma = norm(item.idioma)
+  || extract(raw,/Idioma:\s*([^\n]+)/i);
+
+const audio = norm(item.audio)
+  || extract(raw,/Dublado.*|Dual Áudio/i);
+
+const idade = norm(item.classificacao_indicativa)
+  || extract(raw,/Cl[aá]ssifica[cç][aã]o:\s*([^\n]+)/i);
+
+const nota = norm(item.nota_critica)
+  || extract(raw,/Nota da Cr[ií]tica:\s*([\d.]+)/i);
 
 /* UI */
 titulo.textContent = item.titulo || item.serie_nome || 'Conteúdo';
@@ -228,48 +240,24 @@ desc.textContent   = item.descricao || '';
 
 const metas = [];
 
-/* ✔ 🎬 CATEGORIA */
-if(valor(item.categoria)) metas.push(['🎬', item.categoria]);
-
-/* ✔ 📺 TIPO */
-if(valor(item.tipo)) metas.push(['📺', item.tipo]);
-
-/* ✔ 📅 ANO */
-if(valor(item.ano_lancamento)) metas.push(['📅', item.ano_lancamento]);
-
-/* ✔ ⏱️ DURAÇÃO */
-const duracao =
-  valor(item.duracao_minutos)
-    ? item.duracao_minutos + ' Min'
-    : duracaoRaw;
+/* METAS (EMOJIS DEFINITIVOS) */
+if(norm(item.categoria)) metas.push(['🎬', item.categoria]);
+if(norm(item.tipo)) metas.push(['📺', item.tipo]);
+if(norm(item.ano_lancamento)) metas.push(['📅', item.ano_lancamento]);
 if(duracao) metas.push(['⏱️', duracao]);
-
-/* ✔ 🌎 IDIOMA */
-const idioma = valor(item.idioma) || idiomaRaw;
 if(idioma) metas.push(['🌎', idioma]);
-
-/* ✔ 🔊 ÁUDIO */
-if(valor(item.audio)) metas.push(['🔊', item.audio]);
-
-/* ✔ 🔞 CLASSIFICAÇÃO */
-const idade =
-  valor(item.classificacao_indicativa) ||
-  valor(item.classificacao) ||
-  idadeRaw;
+if(audio) metas.push(['🔊', audio]);
 if(idade) metas.push(['🔞', idade]);
-
-/* ✔ ⭐ NOTA */
-const nota = valor(item.nota_critica) || notaRaw;
 if(nota) metas.push(['⭐', nota]);
 
-meta.innerHTML = metas
-  .map(m => `<div class="meta-item">✔ ${m[0]} <span>${m[1]}</span></div>`)
-  .join('');
+meta.innerHTML = metas.map(
+  m => `<div class="meta-item">✔ ${m[0]} <span>${m[1]}</span></div>`
+).join('');
 
 /* LER MAIS */
 setTimeout(()=>{
   if(desc.scrollHeight > desc.clientHeight){
-    lerMais.style.display='inline';
+    lerMais.style.display = 'inline';
   }
 },50);
 lerMais.onclick = ()=> desc.classList.toggle('collapsed');
@@ -292,6 +280,7 @@ function tocar(src){
 }
 tocar(item.video_url);
 </script>
+
 
 </body>
 </html>
