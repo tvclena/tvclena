@@ -364,7 +364,24 @@ async function carregar(){
           return;
         }
 
-        alert("Compra realizada com sucesso!");
+const r = await fetch("/api/download", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email: usuario.email,
+    filme_id: filme.id
+  })
+});
+
+const d = await r.json();
+
+if (!r.ok || !d.url) {
+  alert("Erro ao gerar link de download");
+  return;
+}
+
+// 🚀 dispara o download
+window.location.href = d.url;
 
         // 🔜 PRÓXIMO PASSO (ainda não aqui):
         // const r = await fetch("/api/download", {...})
