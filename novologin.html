@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Login • CLENA TV</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -12,92 +12,71 @@
 html,body{margin:0;height:100%;background:#0f0f10;color:#fff}
 
 :root{
-  --surface:#1b1b1e;
   --accent:#e50914;
-  --muted:#b5b5b5;
   --border:#2b2b2b;
   --error:#f87171;
-  --success:#22c55e;
 }
 
 body{
   display:flex;
   align-items:center;
   justify-content:center;
-  background:radial-gradient(70% 60% at 50% 25%, #1a1a1a 0%, #0f0f10 60%);
 }
 
 .container{
-  width:420px;
-  max-width:92%;
-  background:rgba(27,27,30,.9);
-  backdrop-filter:blur(14px);
-  padding:42px;
-  border-radius:20px;
-  box-shadow:0 40px 90px rgba(0,0,0,.7);
+  width:380px;
+  background:#151515;
+  padding:36px;
+  border-radius:18px;
+  box-shadow:0 40px 80px rgba(0,0,0,.8);
 }
 
 h1{
-  margin:0 0 32px;
-  font-size:36px;
-  font-weight:900;
   text-align:center;
+  margin-bottom:26px;
 }
 h1 span{color:var(--accent)}
 
-.group{margin-bottom:22px}
-label{font-size:14px;color:var(--muted);margin-bottom:6px;display:block}
+label{
+  font-size:14px;
+  opacity:.8;
+}
 
 input{
   width:100%;
-  padding:14px 16px;
-  font-size:15px;
-  border-radius:12px;
+  margin-top:6px;
+  margin-bottom:18px;
+  padding:12px 14px;
+  background:#0b0b0b;
   border:1px solid var(--border);
-  background:rgba(0,0,0,.45);
+  border-radius:10px;
   color:#fff;
 }
-input:focus{outline:none;border-color:var(--accent)}
 
-.btn{
+button{
   width:100%;
-  padding:16px;
+  padding:14px;
   border:none;
-  border-radius:14px;
+  border-radius:12px;
   background:var(--accent);
   color:#fff;
-  font-size:16px;
-  font-weight:800;
+  font-weight:700;
   cursor:pointer;
-  margin-top:10px;
 }
+
+.msg{
+  margin-top:14px;
+  font-size:14px;
+  min-height:18px;
+}
+.msg.error{color:var(--error)}
 
 .link{
   margin-top:18px;
   text-align:center;
-  font-size:14px;
+  font-size:13px;
   text-decoration:underline;
   cursor:pointer;
-}
-
-.msg{margin-top:14px;min-height:20px;font-size:14px}
-.msg.error{color:var(--error)}
-.msg.success{color:var(--success)}
-
-.modal{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.85);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-
-.modal-box{
-  width:420px;
-  max-width:92%;
-  background:var(--surface);
-  padding:36px;
-  border-radius:20px;
 }
 </style>
 </head>
@@ -107,124 +86,49 @@ input:focus{outline:none;border-color:var(--accent)}
 <div class="container">
   <h1>CLENA <span>TV</span></h1>
 
-  <div class="group">
-    <label>Email</label>
-    <input id="email" type="email">
-  </div>
+  <label>Email</label>
+  <input id="email" type="email">
 
-  <div class="group">
-    <label>Senha</label>
-    <input id="senha" type="password">
-  </div>
+  <label>Senha</label>
+  <input id="senha" type="password">
 
-  <button id="btnLogin" class="btn">Entrar</button>
+  <button id="btnLogin">Entrar</button>
 
-  <div class="link" id="abrirCadastro">Ainda não tenho uma conta</div>
   <div class="msg" id="msg"></div>
-</div>
-
-<!-- CADASTRO -->
-<div class="modal" id="modal">
-  <div class="modal-box">
-    <h2>Criar conta</h2>
-
-    <div class="group">
-      <label>Email</label>
-      <input id="c_email" type="email">
-    </div>
-
-    <div class="group">
-      <label>Senha</label>
-      <input id="c_senha" type="password">
-    </div>
-
-    <div class="group">
-      <label>Confirmar senha</label>
-      <input id="c_confirma" type="password">
-    </div>
-
-    <button id="btnCadastro" class="btn">Cadastrar</button>
-    <div class="link" id="fecharCadastro">Cancelar</div>
-    <div class="msg" id="msgCadastro"></div>
-  </div>
+  <div class="link" id="abrirCadastro">Ainda não tenho conta</div>
 </div>
 
 <script>
-const supabase = window.supabase.createClient(
+/* 🔹 CRIA CLIENTE UMA ÚNICA VEZ */
+const sb = window.supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* MODAL */
-abrirCadastro.onclick = ()=> modal.style.display="flex";
-fecharCadastro.onclick = ()=> modal.style.display="none";
-
 /* LOGIN */
-btnLogin.onclick = async ()=>{
-  msg.textContent="";
-  msg.className="msg";
+btnLogin.onclick = async () => {
+  msg.textContent = "";
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await sb.auth.signInWithPassword({
     email: email.value.trim(),
     password: senha.value
   });
 
-  if(error){
-    msg.textContent="Email ou senha inválidos";
-    msg.className="msg error";
+  if (error) {
+    msg.textContent = "Email ou senha inválidos";
+    msg.className = "msg error";
     return;
   }
-
-  const user = data.user;
 
   /* 🔐 CONTROLE DE SESSÃO ÚNICA */
   const versao = Date.now();
-
-  await supabase
-    .from("usuarios")
+  await sb.from("usuarios")
     .update({ session_version: versao })
-    .eq("id", user.id);
+    .eq("id", data.user.id);
 
   localStorage.setItem("session_version", versao);
 
-  location.replace("index.html");
-};
-
-/* CADASTRO */
-btnCadastro.onclick = async ()=>{
-  msgCadastro.textContent="";
-  msgCadastro.className="msg";
-
-  if(c_senha.value !== c_confirma.value){
-    msgCadastro.textContent="As senhas não conferem";
-    msgCadastro.className="msg error";
-    return;
-  }
-
-  const { data, error } = await supabase.auth.signUp({
-    email: c_email.value.trim(),
-    password: c_senha.value
-  });
-
-  if(error){
-    msgCadastro.textContent="Erro ao criar conta";
-    msgCadastro.className="msg error";
-    return;
-  }
-
-  // cria perfil básico (opcional por enquanto)
-  await supabase.from("usuarios").insert({
-    id: data.user.id,
-    email: c_email.value.trim(),
-    session_version: 0
-  });
-
-  msgCadastro.textContent="Conta criada! Faça login.";
-  msgCadastro.className="msg success";
-
-  setTimeout(()=>{
-    modal.style.display="none";
-  },1500);
+  location.href = "index.html";
 };
 </script>
 
