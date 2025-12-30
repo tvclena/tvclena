@@ -3,25 +3,23 @@
 <head>
 <meta charset="UTF-8">
 
-<!-- ================= GA4 ================= -->
+<!-- GA4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T97MS35TJ6"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config','G-T97MS35TJ6',{debug_mode:true});
+gtag('config','G-T97MS35TJ6');
 </script>
 
 <title>Sessão • Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
-/* ===== TOPO ===== */
+/* TOPO */
 #top{
   position:sticky;top:0;z-index:100;
   padding:16px 20px;
@@ -31,16 +29,15 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   background:none;border:none;color:#fff;
   font-size:15px;cursor:pointer;opacity:.85;
 }
-#top button:hover{opacity:1}
 
-/* ===== LAYOUT ===== */
+/* LAYOUT */
 #layout{
   display:grid;
   grid-template-columns:3fr 1.4fr;
   min-height:100vh;
 }
 
-/* ===== PLAYER ===== */
+/* PLAYER */
 #playerArea{padding:16px}
 #player{
   position:sticky;top:80px;
@@ -54,7 +51,7 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   position:absolute;inset:0;width:100%;height:100%;border:0;
 }
 
-/* ===== SIDE ===== */
+/* SIDE */
 #side{
   padding:22px;
   display:flex;
@@ -62,29 +59,39 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
   gap:14px;
 }
 
-/* ===== TITULO ===== */
+/* TITULO */
 #titulo{font-size:28px;font-weight:700}
 
-/* ===== META EM LINHA ===== */
+/* META */
 #meta{
-  display:flex;flex-wrap:wrap;
-  gap:14px 22px;font-size:14px;opacity:.9;
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px 22px;
+  font-size:14px;
+  opacity:.9;
 }
-.meta-item{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.meta-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
 .meta-item span{opacity:.7}
 
-/* ===== DESCRIÇÃO ===== */
+/* DESCRIÇÃO */
 #desc{font-size:15px;line-height:1.65;opacity:.85}
 #desc.collapsed{
-  display:-webkit-box;-webkit-line-clamp:3;
-  -webkit-box-orient:vertical;overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
 }
 #lerMais{
   background:none;border:none;color:#4da3ff;
   font-weight:600;cursor:pointer;
 }
 
-/* ===== CHAT ===== */
+/* CHAT */
 #chat{
   margin-top:10px;height:680px;
   border-radius:26px;overflow:hidden;
@@ -98,7 +105,6 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 }
 #chat iframe{flex:1;border:0;background:#fff}
 
-/* ===== MOBILE ===== */
 @media(max-width:900px){
   #layout{grid-template-columns:1fr}
   #player{position:relative;top:0}
@@ -110,12 +116,11 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 <body>
 
 <div id="top">
-  <button onclick="voltar()">← Voltar</button>
+  <button onclick="history.back()">← Voltar</button>
 </div>
 
 <div id="layout">
 
-  <!-- PLAYER -->
   <div id="playerArea">
     <div id="player">
       <video id="video" controls playsinline></video>
@@ -123,100 +128,85 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
     </div>
   </div>
 
-  <!-- SIDE -->
   <div id="side">
 
     <h1 id="titulo"></h1>
+
     <div id="meta"></div>
 
     <p id="desc" class="collapsed"></p>
     <button id="lerMais" style="display:none">Ler mais</button>
 
     <div id="chat">
-      <div id="chatTop" onclick="subir()">⬆️ Voltar para o player</div>
+      <div id="chatTop" onclick="document.getElementById('player').scrollIntoView({behavior:'smooth'})">
+        ⬆️ Voltar para o player
+      </div>
       <iframe id="comentariosIframe"></iframe>
     </div>
 
   </div>
+
 </div>
 
 <script>
-/* ===== ITEM ===== */
+/* ITEM */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get('item'))
 );
 
-/* ===== HELPERS ===== */
-function meta(icon,value){
-  return value?`<div class="meta-item">${icon} <span>${value}</span></div>`:'';
-}
-
-/* ===== UI ===== */
+/* UI */
 titulo.textContent = item.titulo || item.serie_nome || 'Conteúdo';
 desc.textContent   = item.descricao || '';
 
-meta.innerHTML = `
-${meta('🎬',item.categoria)}
-${meta('📺',item.tipo)}
-${meta('📅',item.ano_lancamento)}
-${meta('📀',item.serie_nome)}
-${meta('📦',item.temporada && 'Temporada '+item.temporada)}
-${meta('▶️',item.episodio && 'Episódio '+item.episodio)}
-${meta('⏱️',item.duracao_minutos && item.duracao_minutos+' min')}
-${meta('🌎',item.idioma)}
-${meta('🔊',item.audio)}
-${meta('🔞',item.classificacao_indicativa)}
-${meta('⭐',item.nota_critica)}
-`;
+/* META – ROBUSTO */
+const metas = [];
 
-/* ===== GA4 VIEW CONTENT ===== */
-gtag('event','view_content',{
-  content_type:item.tipo,
-  item_id:item.id,
-  item_name:titulo.textContent,
-  category:item.categoria,
-  year:item.ano_lancamento
-});
+if(item.categoria) metas.push(['🎬', item.categoria]);
+if(item.tipo) metas.push(['📺', item.tipo]);
+if(item.ano_lancamento) metas.push(['📅', item.ano_lancamento]);
 
-/* ===== LER MAIS ===== */
+if(item.serie_nome) metas.push(['📀', item.serie_nome]);
+if(item.temporada) metas.push(['📦', 'Temporada ' + item.temporada]);
+if(item.episodio) metas.push(['▶️', 'Episódio ' + item.episodio]);
+
+if(item.duracao_minutos) metas.push(['⏱️', item.duracao_minutos + ' min']);
+else if(item.duracao) metas.push(['⏱️', item.duracao]);
+
+if(item.idioma) metas.push(['🌎', item.idioma]);
+if(item.audio) metas.push(['🔊', item.audio]);
+
+if(item.classificacao_indicativa) metas.push(['🔞', item.classificacao_indicativa]);
+if(item.nota_critica) metas.push(['⭐', item.nota_critica]);
+
+meta.innerHTML = metas.map(
+  m => `<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`
+).join('');
+
+/* LER MAIS */
 setTimeout(()=>{
-  if(desc.scrollHeight>desc.clientHeight){
+  if(desc.scrollHeight > desc.clientHeight){
     lerMais.style.display='inline';
   }
 },50);
-lerMais.onclick=()=>{
-  desc.classList.toggle('collapsed');
-};
+lerMais.onclick=()=>desc.classList.toggle('collapsed');
 
-/* ===== CHAT ===== */
+/* CHAT */
 comentariosIframe.src =
   `comentarios.html?filme_id=${item.id}&tipo=${item.tipo}`;
 
-/* ===== PLAYER ===== */
+/* PLAYER */
 function tocar(src){
+  if(!src) return;
   if(/\.m3u8$/i.test(src)){
     iframe.remove();
-    video.src=src;
-    video.addEventListener('play',()=> {
-      gtag('event','play',{
-        item_name:titulo.textContent,
-        item_type:item.tipo
-      });
-    },{once:true});
+    video.src = src;
     video.play().catch(()=>{});
   }else{
     video.remove();
-    iframe.src=`https://iframe.mediadelivery.net/embed/569072/${src}`;
+    iframe.src = `https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
 }
 tocar(item.video_url);
-
-/* ===== NAV ===== */
-function voltar(){history.back()}
-function subir(){
-  document.getElementById('player')
-    .scrollIntoView({behavior:'smooth'});
-}
 </script>
 
 </body>
