@@ -204,12 +204,12 @@ async function carregar(){
   ).join("");
 
   if(usuario){
-    const { data:minha } = await sb
-      .from("avaliacoes")
-      .select("nota")
-      .eq("filme_id",item.id)
-      .eq("usuario_id",usuario.id)
-      .single();
+   const { data:minha } = await sb
+  .from("avaliacoes")
+  .select("nota")
+  .eq("filme_id", item.id)
+  .eq("usuario_id", usuario.id)
+  .maybeSingle();
     renderAvaliarStars(minha?.nota||0);
   }else{
     renderAvaliarStars(0);
