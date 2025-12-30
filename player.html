@@ -23,7 +23,6 @@ body{
   background:#000;
   color:#fff;
   font-family:Inter,Arial,sans-serif;
-  overflow-y:auto;
 }
 
 /* ===== TOPO ===== */
@@ -32,7 +31,7 @@ body{
   top:0;
   z-index:50;
   padding:14px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.85),rgba(0,0,0,0));
+  background:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,0));
 }
 .topBtn{
   background:rgba(0,0,0,.6);
@@ -60,10 +59,11 @@ body{
   margin:auto;
   aspect-ratio:16/9;
   position:sticky;
-  top:60px;
-  border-radius:18px;
+  top:70px;
+  border-radius:22px;
   overflow:hidden;
   background:#000;
+  box-shadow:0 0 40px rgba(0,150,255,.25);
 }
 .playerWrapper video,
 .playerWrapper iframe{
@@ -79,27 +79,38 @@ body{
   padding:16px;
   display:flex;
   flex-direction:column;
-  gap:14px;
+  gap:16px;
 }
 
 /* ===== INFO CARDS ===== */
 .info-cards{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
-  gap:10px;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:12px;
 }
+
 .info-card{
-  background:#121212;
-  border:1px solid #2a2a2a;
-  border-radius:14px;
-  padding:10px;
+  background:linear-gradient(160deg,#141414,#0b0b0b);
+  border:1px solid #222;
+  border-radius:18px;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  box-shadow:0 6px 20px rgba(0,0,0,.5);
 }
+
+.info-card .icon{
+  font-size:18px;
+}
+
 .info-card span{
   font-size:11px;
   opacity:.6;
 }
+
 .info-card strong{
-  font-size:13px;
+  font-size:14px;
   font-weight:600;
 }
 
@@ -107,7 +118,7 @@ body{
 .desc{
   font-size:14px;
   opacity:.85;
-  line-height:1.5;
+  line-height:1.6;
 }
 .desc.collapsed{
   display:-webkit-box;
@@ -118,7 +129,7 @@ body{
 .ler-mais{
   background:none;
   border:none;
-  color:#e50914;
+  color:#4da3ff;
   font-weight:600;
   cursor:pointer;
   align-self:flex-start;
@@ -126,23 +137,33 @@ body{
 
 /* ===== CHAT ===== */
 #chatContainer{
-  border:2px solid #e50914;
-  border-radius:22px;
-  padding:10px;
-  height:420px;
+  border-radius:26px;
   background:#0b0b0b;
+  border:1px solid #1f1f1f;
+  box-shadow:0 0 30px rgba(0,140,255,.25);
+  overflow:hidden;
   display:flex;
   flex-direction:column;
+  height:680px; /* TAMANHO DE TELA DE CELULAR */
 }
-#chatHeader{
-  font-size:14px;
+
+/* seta */
+#chatBack{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px;
+  cursor:pointer;
+  background:linear-gradient(to bottom,#111,#0b0b0b);
+  border-bottom:1px solid #222;
   font-weight:600;
-  margin-bottom:6px;
 }
+#chatBack:hover{opacity:.8}
+
 #comentariosIframe{
   flex:1;
   border:0;
-  border-radius:16px;
   background:#fff;
 }
 
@@ -150,7 +171,7 @@ body{
 @media(max-width:900px){
   #layout{grid-template-columns:1fr}
   .playerWrapper{position:relative;top:0}
-  #chatContainer{height:360px}
+  #chatContainer{height:85vh}
 }
 </style>
 </head>
@@ -165,7 +186,7 @@ body{
 
   <!-- PLAYER -->
   <div id="playerArea">
-    <div class="playerWrapper">
+    <div class="playerWrapper" id="playerTop">
       <video id="video" controls playsinline></video>
       <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
     </div>
@@ -183,7 +204,7 @@ body{
 
     <!-- CHAT -->
     <div id="chatContainer">
-      <div id="chatHeader">💬 Chat</div>
+      <div id="chatBack" onclick="subirPlayer()">⬆️ Voltar para o player</div>
       <iframe id="comentariosIframe"></iframe>
     </div>
 
@@ -198,15 +219,11 @@ function voltar(){
   else location.href='index.html';
 }
 
-/* ===== PAUSAR AO SUBIR ===== */
-let lastScroll=0;
-window.addEventListener('scroll',()=>{
-  const atual=window.scrollY;
-  if(atual < lastScroll && video && !video.paused){
-    video.pause();
-  }
-  lastScroll=atual;
-});
+/* ===== SUBIR PARA PLAYER ===== */
+function subirPlayer(){
+  document.getElementById('playerTop')
+    .scrollIntoView({behavior:'smooth'});
+}
 
 /* ===== ITEM ===== */
 const item = JSON.parse(
@@ -218,14 +235,47 @@ titulo.textContent=item.titulo||item.serie_nome||'Conteúdo';
 desc.textContent=item.descricao||'';
 
 infoCards.innerHTML=`
-${item.categoria?`<div class="info-card"><span>Categoria</span><strong>${item.categoria}</strong></div>`:''}
-${item.tipo?`<div class="info-card"><span>Tipo</span><strong>${item.tipo}</strong></div>`:''}
-${item.ano_lancamento?`<div class="info-card"><span>Ano</span><strong>${item.ano_lancamento}</strong></div>`:''}
-${item.duracao_minutos?`<div class="info-card"><span>Duração</span><strong>${item.duracao_minutos} min</strong></div>`:''}
-${item.idioma?`<div class="info-card"><span>Idioma</span><strong>${item.idioma}</strong></div>`:''}
-${item.audio?`<div class="info-card"><span>Áudio</span><strong>${item.audio}</strong></div>`:''}
-${item.classificacao_indicativa?`<div class="info-card"><span>Classificação</span><strong>+${item.classificacao_indicativa}</strong></div>`:''}
-${item.nota_critica?`<div class="info-card"><span>Nota</span><strong>⭐ ${item.nota_critica}</strong></div>`:''}
+${item.categoria?`
+<div class="info-card">
+  <div class="icon">🎬</div>
+  <span>Categoria</span>
+  <strong>${item.categoria}</strong>
+</div>`:''}
+
+${item.tipo?`
+<div class="info-card">
+  <div class="icon">📺</div>
+  <span>Tipo</span>
+  <strong>${item.tipo}</strong>
+</div>`:''}
+
+${item.ano_lancamento?`
+<div class="info-card">
+  <div class="icon">📅</div>
+  <span>Ano</span>
+  <strong>${item.ano_lancamento}</strong>
+</div>`:''}
+
+${item.duracao_minutos?`
+<div class="info-card">
+  <div class="icon">⏱️</div>
+  <span>Duração</span>
+  <strong>${item.duracao_minutos} min</strong>
+</div>`:''}
+
+${item.classificacao_indicativa?`
+<div class="info-card">
+  <div class="icon">🔞</div>
+  <span>Classificação</span>
+  <strong>+${item.classificacao_indicativa}</strong>
+</div>`:''}
+
+${item.nota_critica?`
+<div class="info-card">
+  <div class="icon">⭐</div>
+  <span>Avaliação</span>
+  <strong>${item.nota_critica}</strong>
+</div>`:''}
 `;
 
 /* Ler mais */
