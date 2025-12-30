@@ -11,146 +11,51 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{
-  background:#000;
-  color:#fff;
-  font-family:Inter,Arial,sans-serif;
-}
+html,body{background:#000;color:#fff;font-family:Inter,Arial}
 
 /* TOPO */
-#top{
-  position:sticky;
-  top:0;
-  z-index:100;
-  padding:16px 20px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0));
-}
-#top button{
-  background:none;
-  border:none;
-  color:#fff;
-  font-size:15px;
-  cursor:pointer;
-}
+#top{position:sticky;top:0;z-index:100;padding:16px 20px;
+background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0))}
+#top button{background:none;border:none;color:#fff;font-size:15px;cursor:pointer}
 
 /* LAYOUT */
-#layout{
-  display:grid;
-  grid-template-columns:3fr 1.4fr;
-  min-height:100vh;
-}
+#layout{display:grid;grid-template-columns:3fr 1.4fr;min-height:100vh}
 
 /* PLAYER */
 #playerArea{padding:16px}
-#player{
-  position:sticky;
-  top:80px;
-  max-width:1120px;
-  margin:auto;
-  aspect-ratio:16/9;
-  border-radius:26px;
-  overflow:hidden;
-  background:#000;
-  box-shadow:0 0 70px rgba(220,38,38,.55);
-}
-#player video,
-#player iframe{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  border:0;
-}
+#player{position:sticky;top:80px;max-width:1120px;margin:auto;
+aspect-ratio:16/9;border-radius:26px;overflow:hidden;background:#000;
+box-shadow:0 0 70px rgba(220,38,38,.55)}
+#player video,#player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 
 /* SIDE */
-#side{
-  padding:22px;
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-}
-
-/* TITULO */
-#titulo{
-  font-size:28px;
-  font-weight:700;
-}
+#side{padding:22px;display:flex;flex-direction:column;gap:14px}
+#titulo{font-size:28px;font-weight:700}
 
 /* META */
-#meta{
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px 22px;
-  font-size:14px;
-}
-.meta-item{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  white-space:nowrap;
-}
+#meta{display:flex;flex-wrap:wrap;gap:12px 22px;font-size:14px}
+.meta-item{display:flex;align-items:center;gap:6px;white-space:nowrap}
 .meta-item span{opacity:.85}
 
-/* ESTRELAS MÉDIA */
-.stars{
-  color:#facc15;
-  font-size:15px;
-}
-
-/* AVALIAR */
-#avaliarBox{
-  margin-top:6px;
-}
-.avaliar-label{
-  font-size:13px;
-  opacity:.7;
-  margin-bottom:6px;
-}
-
-/* ⭐ ESTRELAS INTERATIVAS */
-.avaliar-stars{
-  display:flex;
-  gap:8px;
-  font-size:26px;
-  cursor:pointer;
-  user-select:none;
-}
-.avaliar-stars span{
-  color:#333;
-  transition:color .2s, transform .15s;
-}
-.avaliar-stars span.hover,
-.avaliar-stars span.active{
-  color:#facc15;
-  transform:scale(1.08);
-}
+/* AVALIAÇÃO */
+#avaliarBox{margin-top:6px}
+.avaliar-label{font-size:13px;opacity:.7;margin-bottom:6px}
+.avaliar-stars{display:flex;gap:8px;font-size:26px;cursor:pointer}
+.avaliar-stars span{color:#333;transition:.2s}
+.avaliar-stars span.active,
+.avaliar-stars span.hover{color:#facc15;transform:scale(1.08)}
 
 /* DESCRIÇÃO */
-#desc{
-  font-size:15px;
-  line-height:1.65;
-  opacity:.9;
-}
+#desc{font-size:15px;line-height:1.65;opacity:.9}
 #desc.collapsed{
-  display:-webkit-box;
-  -webkit-line-clamp:3;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
-}
-
-/* LER MAIS */
-#lerMais{
-  background:none;
-  border:none;
-  color:#f87171;
-  font-weight:600;
-  cursor:pointer;
-  align-self:flex-start;
-}
+display:-webkit-box;-webkit-line-clamp:3;
+-webkit-box-orient:vertical;overflow:hidden}
+#lerMais{background:none;border:none;color:#f87171;
+font-weight:600;cursor:pointer;align-self:flex-start}
 
 @media(max-width:900px){
-  #layout{grid-template-columns:1fr}
-  #player{position:relative;top:0}
+#layout{grid-template-columns:1fr}
+#player{position:relative;top:0}
 }
 </style>
 </head>
@@ -174,7 +79,6 @@ html,body{
     <h1 id="titulo"></h1>
     <div id="meta"></div>
 
-    <!-- AVALIAÇÃO -->
     <div id="avaliarBox">
       <div class="avaliar-label">Avalie este conteúdo</div>
       <div id="avaliarStars" class="avaliar-stars"></div>
@@ -187,93 +91,85 @@ html,body{
 </div>
 
 <script>
-/* SUPABASE */
 const sb = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+ "https://dxkszikemntfusfyrzos.supabase.co",
+ "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ITEM */
 const item = JSON.parse(
-  decodeURIComponent(new URLSearchParams(location.search).get('item'))
+ decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
 
-/* SESSÃO */
-let usuarioLogado = null;
+let usuario = null;
 
-async function carregarSessao(){
-  const { data } = await sb.auth.getSession();
-  usuarioLogado = data.session?.user || null;
+/* 🔐 VALIDAR LOGIN CUSTOM */
+async function carregarUsuario(){
+  const email = localStorage.getItem("usuario_email");
+  const token = localStorage.getItem("session_token");
+
+  if(!email || !token) return;
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("id,email,session_token")
+    .eq("email", email)
+    .eq("session_token", token)
+    .single();
+
+  if(data) usuario = data;
 }
 
-/* ⭐ ESTRELAS MÉDIA */
-function estrelasMedia(media){
-  if(media === null) return '☆☆☆☆☆';
-  const q = Math.round(media / 2);
-  let out='';
-  for(let i=1;i<=5;i++) out += i<=q ? '⭐' : '☆';
-  return `<span class="stars">${out}</span>`;
-}
-
-/* ⭐ ESTRELAS INTERATIVAS */
-function renderAvaliarStars(nota = 0){
-  const box = document.getElementById('avaliarStars');
-  box.innerHTML = '';
-
-  const fixas = Math.round(nota / 2);
+/* ⭐ ESTRELAS */
+function renderAvaliarStars(nota=0){
+  const box = avaliarStars;
+  box.innerHTML="";
+  const fixas=Math.round(nota/2);
 
   for(let i=1;i<=5;i++){
-    const s = document.createElement('span');
-    s.textContent = '★';
-
-    if(i <= fixas) s.classList.add('active');
-
-    s.onmouseenter = ()=> pintar(i);
-    s.onmouseleave = ()=> pintar(fixas);
-    s.onclick = ()=> salvarAvaliacao(i * 2);
-
+    const s=document.createElement("span");
+    s.textContent="★";
+    if(i<=fixas)s.classList.add("active");
+    s.onmouseenter=()=>pintar(i);
+    s.onmouseleave=()=>pintar(fixas);
+    s.onclick=()=>salvarAvaliacao(i*2);
     box.appendChild(s);
   }
 }
-
-function pintar(qtd){
-  document.querySelectorAll('#avaliarStars span')
-    .forEach((s,i)=>{
-      s.classList.toggle('hover', i < qtd);
-    });
+function pintar(q){
+  [...avaliarStars.children].forEach((s,i)=>{
+    s.classList.toggle("hover",i<q);
+  });
 }
 
-/* SALVAR AVALIAÇÃO */
+/* 💾 SALVAR */
 async function salvarAvaliacao(nota){
-  if(!usuarioLogado){
+  if(!usuario){
     alert("Faça login para avaliar");
     return;
   }
 
-  await sb.from('avaliacoes').upsert({
-    filme_id: item.id,
-    usuario_id: usuarioLogado.id,
+  await sb.from("avaliacoes").upsert({
+    filme_id:item.id,
+    usuario_id:usuario.id,
     nota
-  }, { onConflict:'filme_id,usuario_id' });
+  },{onConflict:"filme_id,usuario_id"});
 
   renderAvaliarStars(nota);
   carregar();
 }
 
-/* PLAYER */
+/* ▶ PLAYER */
 function tocar(src){
-  if(!src) return;
+  if(!src)return;
   if(/\.m3u8$/i.test(src)){
-    iframe.remove();
-    video.src = src;
-    video.play().catch(()=>{});
+    iframe.remove();video.src=src;video.play().catch(()=>{});
   }else{
     video.remove();
-    iframe.src = `https://iframe.mediadelivery.net/embed/569072/${src}`;
+    iframe.src=`https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
 }
 
-/* CARREGAR TUDO */
+/* 📥 CARREGAR */
 async function carregar(){
   const { data: filme } = await sb
     .from("filmes")
@@ -281,79 +177,61 @@ async function carregar(){
     .eq("id", item.id)
     .single();
 
-  if(!filme){
-    titulo.textContent = "Conteúdo não encontrado";
-    return;
-  }
+  titulo.textContent = filme.titulo;
+  desc.textContent = filme.descricao || "";
 
-  /* MÉDIA ASSINANTES */
   const { data: avals } = await sb
     .from("avaliacoes")
     .select("nota")
     .eq("filme_id", item.id);
 
-  let media = null;
-  if(avals?.length){
-    media = avals.reduce((t,a)=>t+a.nota,0)/avals.length;
-  }
+  let media=null;
+  if(avals?.length)
+    media=avals.reduce((t,a)=>t+a.nota,0)/avals.length;
 
-  /* AVALIAÇÃO DO USUÁRIO */
-  if(usuarioLogado){
-    const { data: minha } = await sb
-      .from("avaliacoes")
-      .select("nota")
-      .eq("filme_id", item.id)
-      .eq("usuario_id", usuarioLogado.id)
-      .single();
-
-    renderAvaliarStars(minha?.nota || 0);
-  }else{
-    renderAvaliarStars(0);
-  }
-
-  /* TEXTO */
-  titulo.textContent = filme.titulo;
-  desc.textContent   = filme.descricao || "";
-
-  /* META */
   const metas=[];
   if(filme.categoria) metas.push(['🎬',filme.categoria]);
   if(filme.tipo) metas.push(['📺',filme.tipo]);
   if(filme.ano_lancamento) metas.push(['📅',filme.ano_lancamento]);
   if(filme.idioma) metas.push(['🌎',filme.idioma]);
   if(filme.audio) metas.push(['🔊',filme.audio]);
-  if(filme.classificacao_indicativa || filme.classificacao)
-    metas.push(['🔞',filme.classificacao_indicativa || filme.classificacao]);
+  if(filme.classificacao) metas.push(['🔞',filme.classificacao]);
+  if(filme.nota_critica) metas.push(['⭐',filme.nota_critica+" • Crítica"]);
+  if(media!==null) metas.push(['👥',"⭐".repeat(Math.round(media/2))+" • Assinantes"]);
 
-  if(filme.nota_critica)
-    metas.push(['⭐',filme.nota_critica + ' • Crítica']);
+  meta.innerHTML=metas.map(m=>
+    `<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`
+  ).join("");
 
-  if(media !== null)
-    metas.push(['👥',estrelasMedia(media) + ' • Assinantes']);
-
-  meta.innerHTML = metas
-    .map(m=>`<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`)
-    .join('');
-
-  /* LER MAIS */
-  setTimeout(()=>{
-    if(desc.scrollHeight > desc.clientHeight){
-      lerMais.style.display='inline';
-      lerMais.textContent='Ler mais';
-    }
-  },50);
-
-  lerMais.onclick = ()=>{
-    const fechado = desc.classList.toggle('collapsed');
-    lerMais.textContent = fechado ? 'Ler mais' : 'Ler menos';
-  };
+  if(usuario){
+    const { data:minha } = await sb
+      .from("avaliacoes")
+      .select("nota")
+      .eq("filme_id",item.id)
+      .eq("usuario_id",usuario.id)
+      .single();
+    renderAvaliarStars(minha?.nota||0);
+  }else{
+    renderAvaliarStars(0);
+  }
 
   tocar(filme.video_url);
+
+  setTimeout(()=>{
+    if(desc.scrollHeight>desc.clientHeight){
+      lerMais.style.display="inline";
+      lerMais.onclick=()=>{
+        desc.classList.toggle("collapsed");
+        lerMais.textContent=
+          desc.classList.contains("collapsed")?"Ler mais":"Ler menos";
+      };
+    }
+  },50);
 }
 
 /* INIT */
-(async ()=>{
-  await carregarSessao();
+(async()=>{
+  await carregarUsuario();
   carregar();
 })();
 </script>
