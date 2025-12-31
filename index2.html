@@ -2412,41 +2412,20 @@ setTimeout(() => {
   });
 }
 async function validarSessao() {
-  // 🔐 PASSO 1 — sessão Auth (Email + Google)
+  // 🔐 sessão Supabase (verdade principal)
   const { data: { session } } = await sb.auth.getSession();
 
-  const email = localStorage.getItem("usuario_email");
-  const tokenLocal = localStorage.getItem("session_token");
-
-  // ❌ sem auth OU sem token local
-  if (!session || !email || !tokenLocal) {
-    localStorage.clear();
-    if (!redirecionando) {
-      redirecionando = true;
-      location.replace("login.html");
-    }
-    return false;
-  }
-
-  // 🔎 PASSO 2 — valida usuário interno
-  const { data, error } = await sb
-    .from("usuarios")
-    .select(`
-      id,
-      status,
-      trial_expires_at,
-      session_token,
-      controle_sessao,
-      tipo_assinatura
-    `)
-    .eq("email", email)
-    .maybeSingle();
-
-  if (error || !data) {
+  if (!session) {
     localStorage.clear();
     location.replace("login.html");
     return false;
   }
+
+  // 📧 garante email SEM depender do login antigo
+  const email = session.user.email;
+  localStorage.setItem("usuario_email", email);
+
+  // ⛔ NÃO BLOQUEIA MAIS POR session_token
 
   // 💳 sem plano → planos
   if (!data.tipo_assinatura) {
