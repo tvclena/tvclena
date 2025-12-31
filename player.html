@@ -104,10 +104,6 @@ font-weight:600;cursor:pointer;align-self:flex-start}
   border-color:#dc2626;
   box-shadow:0 0 0 1px #dc2626;
 }
-#video,
-#iframe{
-  display:none;
-}
 
 </style>
 </head>
@@ -229,14 +225,9 @@ async function carregarEpisodios(){
     .order("temporada", { ascending:true })
     .order("episodio", { ascending:true });
 
-episodios = data || [];
-if(episodios.length){
+  episodios = data || [];
   renderTemporadas();
-}else{
-  temporadasBox.innerHTML="";
-  episodiosBox.innerHTML="<div style='opacity:.6'>Nenhum episódio disponível</div>";
 }
-
 
 
 function renderTemporadas(){
