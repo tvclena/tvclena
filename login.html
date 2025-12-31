@@ -387,12 +387,33 @@ btnCadastro.onclick = async ()=>{
 /* ===== CONTROLE DE SESSÕES ===== */
 async function controlarSessoes(user){
   const token = crypto.randomUUID();
-  const { data:sessoes } = await sb.from("sessoes").select("*").eq("user_id",user.id);
 
-  if(sessoes?.length>=3){
-    modalSessoes.style.display="flex";
-    listaSessoes.innerHTML=sessoes.map(s=>{
-      const d=detectarDispositivo(s.user_agent);
+  // 🔹 BUSCA PERFIL DO USUÁRIO
+  const { data: perfil, error: perfilError } = await sb
+    .from("user")
+    .select("limite_de_telas")
+    .eq("id", user.id)
+    .single();
+
+  if (perfilError || !perfil) {
+    msg.textContent = "Erro ao carregar perfil do usuário";
+    msg.className = "msg error";
+    return;
+  }
+
+  const limite = Number(perfil.limite_de_telas) || 1;
+
+  // 🔹 BUSCA SESSÕES ATIVAS
+  const { data: sessoes } = await sb
+    .from("sessoes")
+    .select("*")
+    .eq("user_id", user.id);
+
+  if (sessoes?.length >= limite) {
+    modalSessoes.style.display = "flex";
+
+    listaSessoes.innerHTML = sessoes.map(s => {
+      const d = detectarDispositivo(s.user_agent);
       return `
         <div class="sessao-item">
           <div class="sessao-icon">${d.icon}</div>
@@ -405,11 +426,13 @@ async function controlarSessoes(user){
           </button>
         </div>`;
     }).join("");
+
     return;
   }
 
-  criarSessao(user,token);
+  criarSessao(user, token);
 }
+
 
 async function criarSessao(user,token){
   await sb.from("sessoes").insert({
