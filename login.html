@@ -328,7 +328,20 @@ btnReset.onclick = ()=> sb.auth.resetPasswordForEmail(email.value);
 
 /* ===== CADASTRO ===== */
 btnCadastro.onclick = async ()=>{
+
+  // 👉 VALIDA FORMATO DO EMAIL
+  if(!emailValido(c_email.value.trim())){
+    msgCadastro.textContent = "Informe um email válido";
+    msgCadastro.className = "msg error";
+    return;
+  }
+
   if(!aceitePrivacidade.checked){
+    msgCadastro.textContent="Aceite as políticas";
+    msgCadastro.className="msg error";
+    return;
+  }
+
     msgCadastro.textContent="Aceite as políticas";
     msgCadastro.className="msg error";
     return;
@@ -454,6 +467,9 @@ whatsInput.addEventListener("input", e => {
 
   e.target.value = v;
 });
+function emailValido(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 
 
