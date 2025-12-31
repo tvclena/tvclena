@@ -2,44 +2,51 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Login • Clena TV</title>
+<title>Entrar • Clena TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 
 <style>
+*{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Inter,Arial;
+  min-height:100vh;
+  font-family:Inter,Arial,sans-serif;
   background:#0f0f10;
   color:#fff;
   display:flex;
   align-items:center;
   justify-content:center;
-  min-height:100vh;
+}
+.login-wrap{
+  width:100%;
+  max-width:420px;
+  padding:28px;
 }
 .login-box{
-  width:100%;
-  max-width:380px;
   background:#1b1b1e;
-  padding:32px;
-  border-radius:16px;
-  box-shadow:0 30px 80px rgba(0,0,0,.7);
+  border-radius:18px;
+  padding:34px 30px;
+  box-shadow:0 40px 100px rgba(0,0,0,.8);
 }
-h1{
+.logo{
   text-align:center;
+  font-size:26px;
+  font-weight:900;
   margin-bottom:6px;
 }
+.logo span{color:#e50914}
 .subtitle{
   text-align:center;
-  color:#aaa;
   font-size:14px;
-  margin-bottom:26px;
+  color:#aaa;
+  margin-bottom:28px;
 }
 input{
   width:100%;
-  padding:14px;
+  padding:14px 16px;
   margin-bottom:14px;
   border-radius:10px;
   border:1px solid #333;
@@ -47,62 +54,108 @@ input{
   color:#fff;
   font-size:15px;
 }
+input:focus{
+  outline:none;
+  border-color:#e50914;
+  box-shadow:0 0 0 2px rgba(229,9,20,.35);
+}
 button{
   width:100%;
-  padding:14px;
+  padding:15px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   background:#e50914;
   color:#fff;
   font-size:15px;
   font-weight:800;
   cursor:pointer;
 }
-button:hover{filter:brightness(1.1)}
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+button:hover:not(:disabled){
+  filter:brightness(1.1);
+}
 .msg{
-  margin-top:14px;
+  margin-top:16px;
   text-align:center;
   font-size:14px;
 }
 .error{color:#ff5555}
 .success{color:#22c55e}
+.footer{
+  text-align:center;
+  margin-top:22px;
+  font-size:13px;
+  color:#888;
+}
+.footer a{
+  color:#3ea6ff;
+  text-decoration:none;
+}
+.footer a:hover{text-decoration:underline}
 </style>
 </head>
 
 <body>
 
-<div class="login-box">
-  <h1>CLENA TV</h1>
-  <div class="subtitle">Entre para continuar</div>
+<div class="login-wrap">
+  <div class="login-box">
 
-  <input id="email" type="email" placeholder="Seu email">
-  <input id="senha" type="password" placeholder="Sua senha">
+    <div class="logo">CLENA <span>TV</span></div>
+    <div class="subtitle">Acesse sua conta para continuar</div>
 
-  <button onclick="login()">Entrar</button>
+    <input id="email" type="email" placeholder="Email">
+    <input id="senha" type="password" placeholder="Senha">
 
-  <div id="msg" class="msg"></div>
+    <button id="btnLogin" onclick="login()">Entrar</button>
+
+    <div id="msg" class="msg"></div>
+
+    <div class="footer">
+      Ao entrar você concorda com nossos termos.<br>
+      <a href="#">Esqueci minha senha</a>
+    </div>
+
+  </div>
 </div>
 
 <script>
+/* ================= SUPABASE ================= */
 const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
 );
 
+let carregando = false;
+
+/* ================= UTIL ================= */
 function gerarToken(){
   return crypto.randomUUID();
 }
+function setMsg(texto, tipo="error"){
+  const el = document.getElementById("msg");
+  el.textContent = texto;
+  el.className = "msg " + tipo;
+}
 
+/* ================= LOGIN ================= */
 async function login(){
+  if(carregando) return;
+  carregando = true;
+
   const email = document.getElementById("email").value.trim().toLowerCase();
   const senha = document.getElementById("senha").value;
-  const msg = document.getElementById("msg");
+  const btn = document.getElementById("btnLogin");
 
-  msg.textContent = "";
+  btn.disabled = true;
+  setMsg("");
 
   if(!email || !senha){
-    msg.textContent = "Preencha email e senha";
-    msg.className = "msg error";
+    setMsg("Informe email e senha");
+    btn.disabled = false;
+    carregando = false;
     return;
   }
 
@@ -120,29 +173,35 @@ async function login(){
     .maybeSingle();
 
   if(error || !user){
-    msg.textContent = "Email ou senha inválidos";
-    msg.className = "msg error";
+    setMsg("Email ou senha inválidos");
+    btn.disabled = false;
+    carregando = false;
     return;
   }
 
-  // 🔐 valida senha (SIMPLES – ajuste se usar hash)
+  /* 🔐 valida senha
+     👉 aqui está em texto puro porque
+     seu sistema atual funciona assim.
+     Se quiser bcrypt depois, eu adapto. */
   if(user.senha !== senha){
-    msg.textContent = "Email ou senha inválidos";
-    msg.className = "msg error";
+    setMsg("Email ou senha inválidos");
+    btn.disabled = false;
+    carregando = false;
     return;
   }
 
-  // 🚫 bloqueado
+  /* 🚫 bloqueado */
   if(user.status === "bloqueado"){
-    msg.textContent = "Conta bloqueada. Entre em contato.";
-    msg.className = "msg error";
+    setMsg("Conta bloqueada. Entre em contato.");
+    btn.disabled = false;
+    carregando = false;
     return;
   }
 
-  // 🔑 gera token
+  /* 🔑 token de sessão */
   const token = gerarToken();
 
-  // 💾 salva token no usuário
+  /* 💾 grava token */
   await sb
     .from("usuarios")
     .update({
@@ -151,26 +210,28 @@ async function login(){
     })
     .eq("id", user.id);
 
-  // 🧾 log de login
-  await sb
-    .from("login_logs")
-    .insert({
-      user_id: user.id,
-      email: user.email,
-      user_agent: navigator.userAgent
-    });
+  /* 🧾 log */
+  await sb.from("login_logs").insert({
+    user_id: user.id,
+    email: user.email,
+    user_agent: navigator.userAgent
+  });
 
-  // 💾 localStorage (REGRA OFICIAL)
+  /* 💾 storage (PADRÃO DO INDEX) */
   localStorage.setItem("usuario_email", user.email);
   localStorage.setItem("session_token", token);
 
-  msg.textContent = "Login realizado com sucesso";
-  msg.className = "msg success";
+  setMsg("Login realizado com sucesso", "success");
 
   setTimeout(() => {
-    location.replace("index2.html");
-  }, 600);
+    location.replace("index.html");
+  }, 700);
 }
+
+/* ⏎ ENTER */
+document.addEventListener("keydown", e => {
+  if(e.key === "Enter") login();
+});
 </script>
 
 </body>
