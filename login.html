@@ -242,12 +242,12 @@ input:focus{outline:none;border-color:var(--accent)}
 
     <div class="group">
       <label>CPF</label>
-      <input id="c_cpf" inputmode="numeric" placeholder="000.000.000-00">
+<input id="c_cpf" inputmode="numeric" pattern="[0-9]*">
     </div>
 
     <div class="group">
       <label>WhatsApp</label>
-      <input id="c_whats" inputmode="numeric" placeholder="(99) 99999-9999">
+<input id="c_whats" inputmode="numeric" pattern="[0-9]*">
     </div>
 
     <div class="group"><label>Senha</label><input id="c_senha" type="password"></div>
@@ -408,6 +408,44 @@ function detectarDispositivo(ua){
   if(/tablet|ipad/.test(ua)) return {icon:"📲",nome:"Tablet",desc:"Tablet"};
   return {icon:"💻",nome:"Computador",desc:"Desktop"};
 }
+// ===== MÁSCARA CPF =====
+const cpfInput = document.getElementById("c_cpf");
+
+cpfInput.addEventListener("input", e => {
+  let v = e.target.value.replace(/\D/g, "").slice(0,11);
+
+  if (v.length > 9) {
+    v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, "$1.$2.$3-$4");
+  } else if (v.length > 6) {
+    v = v.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
+  } else if (v.length > 3) {
+    v = v.replace(/(\d{3})(\d+)/, "$1.$2");
+  }
+
+  e.target.value = v;
+});
+// ===== MÁSCARA WHATSAPP =====
+const whatsInput = document.getElementById("c_whats");
+
+whatsInput.addEventListener("input", e => {
+  let v = e.target.value.replace(/\D/g, "").slice(0,11);
+
+  if (v.length > 10) {
+    v = v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  } else if (v.length > 6) {
+    v = v.replace(/(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
+  } else if (v.length > 2) {
+    v = v.replace(/(\d{2})(\d+)/, "($1) $2");
+  } else {
+    v = v.replace(/(\d+)/, "($1");
+  }
+
+  e.target.value = v;
+});
+
+
+
+  
 </script>
 
 </body>
