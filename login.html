@@ -2,586 +2,477 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Login - CLENA TV</title>
+<title>Entrar • CLENA TV</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
-html,body{margin:0;height:100%;background:#0f0f10;color:#fff}
-
-:root{
-  --surface:#1b1b1e;
-  --accent:#e50914;
-  --muted:#b5b5b5;
-  --border:#2b2b2b;
-  --error:#f87171;
-  --success:#22c55e;
+/* ================= RESET ================= */
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+html,body{
+  margin:0;width:100%;height:100%;
+  overflow:hidden;background:#0b0b0d;color:#fff
 }
 
+/* ================= THEME ================= */
+:root{
+  --card:#141417;
+  --accent:#e50914;
+  --muted:#9ca3af;
+  --border:#242428;
+  --input:#0f0f13;
+}
+
+/* ================= BACKGROUND ================= */
 body{
   display:flex;
   align-items:center;
   justify-content:center;
-  background:radial-gradient(70% 60% at 50% 25%, #1a1a1a 0%, #0f0f10 60%);
+  background:radial-gradient(80% 60% at 50% 20%, #1b1b20 0%, #0b0b0d 70%);
 }
 
-.container{
-  position:relative;
+/* ================= CARD ================= */
+.card{
   width:420px;
   max-width:92%;
-  background:rgba(27,27,30,.85);
-  backdrop-filter:blur(14px);
-  padding:42px;
-  border-radius:20px;
-  box-shadow:0 40px 90px rgba(0,0,0,.7);
+  background:linear-gradient(180deg,#16161b,#101013);
+  border-radius:22px;
+  padding:40px 36px;
+  box-shadow:0 40px 120px rgba(0,0,0,.9);
 }
 
-h1{
-  margin:0 0 32px;
-  font-size:36px;
-  font-weight:900;
+.logo{
   text-align:center;
+  font-size:34px;
+  font-weight:900;
+  margin-bottom:30px;
 }
-h1 span{color:var(--accent)}
+.logo span{color:var(--accent)}
 
-.group{margin-bottom:22px}
-label{font-size:14px;color:var(--muted);margin-bottom:6px;display:block}
+.group{margin-bottom:16px}
+label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
 
 input{
   width:100%;
   padding:14px 16px;
-  font-size:15px;
   border-radius:12px;
   border:1px solid var(--border);
-  background:rgba(0,0,0,.45);
+  background:var(--input);
   color:#fff;
+  font-size:15px;
 }
-
 input:focus{outline:none;border-color:var(--accent)}
 
 .btn{
   width:100%;
-  padding:16px;
-  margin-top:12px;
+  height:52px;
   border:none;
   border-radius:14px;
-  background:var(--accent);
-  color:#fff;
   font-size:16px;
   font-weight:800;
   cursor:pointer;
 }
+.btn-primary{background:var(--accent);color:#fff;margin-top:6px}
 
-.link{
-  margin-top:18px;
-  text-align:center;
-  font-size:14px;
-  text-decoration:underline;
-  cursor:pointer;
+/* ===== GOOGLE ===== */
+.google-btn{
+  margin:16px auto 0;
+  width:52px;height:52px;
+  border-radius:50%;
+  background:#0f0f13;
+  border:1px solid #242428;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:.2s
 }
+.google-btn:hover{background:#18181d;transform:scale(1.05)}
+.google-btn img{width:32px;height:32px}
 
-.msg{margin-top:14px;min-height:20px;font-size:14px}
-.msg.error{color:var(--error)}
-.msg.success{color:var(--success)}
+/* ================= FOOTER ================= */
+.footer{
+  display:flex;justify-content:space-between;
+  margin-top:22px;font-size:13px
+}
+.footer a{color:#c7c7cc;text-decoration:none;cursor:pointer}
+.footer a:hover{text-decoration:underline}
 
+.msg{margin-top:14px;min-height:18px;font-size:14px}
+.msg.error{color:#f87171}
+.msg.success{color:#22c55e}
+
+/* ================= MODAL BASE ================= */
 .modal{
-  position:fixed;inset:0;
+  position:fixed;
+  inset:0;
   background:rgba(0,0,0,.85);
   display:none;
   align-items:center;
   justify-content:center;
+  z-index:9999;
 }
 
-.modal-box{
-  width:420px;
-  max-width:92%;
-  background:var(--surface);
-  padding:36px;
+/* ================= PRIVACIDADE CHECKBOX ================= */
+.privacidade-box{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:14px 0;
+  font-size:13px;
+  color:#c7c7cc;
+}
+.privacidade-box input{
+  width:18px;height:18px;
+  accent-color:#e50914;
+}
+.privacidade-box a{
+  color:#3ea6ff;
+  text-decoration:none;
+}
+.privacidade-box a:hover{text-decoration:underline}
+
+/* ================= POPUP PRIVACIDADE ================= */
+.privacidade-popup{
+  width:92%;
+  max-width:560px;
+  max-height:85vh;
+  background:linear-gradient(180deg,#16161b,#0f0f13);
   border-radius:20px;
-}
-
-/* ANIMAÇÃO SUCESSO */
-.success-anim{
+  box-shadow:0 40px 120px rgba(0,0,0,.9);
   display:flex;
   flex-direction:column;
-  align-items:center;
-  gap:14px;
-  margin-top:20px;
-  animation:fadeUp .4s ease;
-}
-.check{
-  width:72px;
-  height:72px;
-  border-radius:50%;
-  background:var(--success);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:38px;
-  color:#fff;
-  animation:pop .5s ease;
-}
-@keyframes pop{
-  0%{transform:scale(.3);opacity:0}
-  80%{transform:scale(1.1)}
-  100%{transform:scale(1);opacity:1}
-}
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:translateY(0)}
-}
-
-/* POLÍTICAS */
-.politica-texto{
-  font-size:12px;
-  color:var(--muted);
-  text-align:center;
-  margin-top:14px;
-}
-
-.politica-texto button{
-  background:none;
-  border:none;
-  color:var(--accent);
-  cursor:pointer;
-  font-weight:600;
-  padding:0;
-}
-.whatsapp-float{
-  position:absolute;
-  bottom:18px;
-  right:18px;
-  width:46px;
-  height:46px;
-  background:#25D366; /* VERDE DO BOTÃO */
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow:0 8px 20px rgba(0,0,0,.4);
-  transition:.2s;
-}
-
-/* A LOGO PREENCHE O CÍRCULO */
-.whatsapp-float img{
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  padding:8px; /* controla o "respiro" interno */
-}
-
-.whatsapp-float:hover{
-  transform:scale(1.08);
-}
-.btn{
-  position:relative;
   overflow:hidden;
 }
-
-/* overlay */
-.btn.loading{
-  pointer-events:none;
-  opacity:.85;
+.privacidade-header{
+  padding:18px 20px;
+  font-weight:800;
+  border-bottom:1px solid #242428;
+  display:flex;
+  justify-content:space-between;
+}
+.privacidade-fechar{
+  background:#1f1f24;
+  border:none;
+  width:32px;height:32px;
+  border-radius:10px;
+  color:#fff;
+  cursor:pointer;
+}
+.privacidade-fechar:hover{background:#e50914}
+.privacidade-conteudo{
+  flex:1;
+  overflow-y:auto;
+  scrollbar-width:none;
+}
+.privacidade-conteudo::-webkit-scrollbar{display:none}
+.privacidade-conteudo iframe{
+  width:100%;height:100%;border:none;
 }
 
-.btn.loading::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.35);
+/* ================= SESSÕES ================= */
+.sessao-box{
+  background:#141417;
+  padding:26px;
+  border-radius:18px;
+  width:420px;
+  max-width:92%;
+}
+.sessao-item{
+  display:flex;
+  gap:14px;
+  align-items:center;
+  background:#0f0f13;
+  border:1px solid #242428;
+  padding:14px;
+  border-radius:14px;
+  margin-bottom:12px;
+}
+.sessao-icon{
+  width:48px;height:48px;
+  border-radius:12px;
+  background:#18181d;
   display:flex;
   align-items:center;
   justify-content:center;
+  font-size:22px;
 }
-
-/* spinner */
-.btn.loading::before{
-  content:"";
-  position:absolute;
-  width:22px;
-  height:22px;
-  border:3px solid rgba(255,255,255,.4);
-  border-top:3px solid #fff;
-  border-radius:50%;
-  animation:spin .8s linear infinite;
-  z-index:2;
+.sessao-info{flex:1}
+.sessao-info span{font-size:12px;color:#9ca3af}
+.sessao-item button{
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  background:#e50914;
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
 }
-
-@keyframes spin{
-  to{transform:rotate(360deg)}
-}
-
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div class="container">
+<!-- ================= LOGIN ================= -->
+<div class="card">
+  <div class="logo">CLENA <span>TV</span></div>
 
-  <h1>CLENA <span>TV</span></h1>
+  <div class="group"><label>Email</label><input id="email"></div>
+  <div class="group"><label>Senha</label><input id="senha" type="password"></div>
 
-  <div class="group">
-    <label>Email</label>
-    <input id="email" type="email">
+  <button id="btnLogin" class="btn btn-primary">Entrar</button>
+
+  <div id="btnGoogle" class="google-btn">
+    <img src="google.png">
   </div>
 
-  <div class="group">
-    <label>Senha</label>
-    <input id="senha" type="password">
-  </div>
-
-  <button id="btnLogin" class="btn">Entrar</button>
-
-  <div class="link" id="abrirCadastro">
-    Ainda não tenho uma conta
+  <div class="footer">
+    <a id="abrirCadastro">Criar conta</a>
+    <a id="btnReset">Esqueci a senha</a>
   </div>
 
   <div class="msg" id="msg"></div>
-
-  <!-- 🔰 BOTÃO WHATSAPP (APARECE SÓ QUANDO BLOQUEADO) -->
- <a
-  id="btnWhatsapp"
-  href="#"
-  target="_blank"
-  class="whatsapp-float"
-  title="Falar com o suporte no WhatsApp"
-  style="display:none"
->
-  <img src="whatsapp.png" alt="WhatsApp">
-</a>
-
-
 </div>
 
-<!-- CADASTRO -->
-<div class="modal" id="modal">
-  <div class="modal-box">
+<!-- ================= CADASTRO ================= -->
+<div class="modal" id="modalCadastro">
+  <div class="card">
     <h2>Criar conta</h2>
 
-    <div class="group">
-      <label>Email</label>
-      <input id="c_email" type="email">
-    </div>
+    <div class="group"><label>Email</label><input id="c_email"></div>
 
     <div class="group">
       <label>CPF</label>
-      <input
-        id="c_cpf"
-        type="text"
-        inputmode="numeric"
-        pattern="[0-9]*"
-        placeholder="000.000.000-00"
-      >
+<input id="c_cpf" inputmode="numeric" pattern="[0-9]*">
     </div>
 
     <div class="group">
       <label>WhatsApp</label>
-      <input
-        id="c_whats"
-        type="text"
-        inputmode="numeric"
-        pattern="[0-9]*"
-        placeholder="(99) 99999-9999"
-      >
+<input id="c_whats" inputmode="numeric" pattern="[0-9]*">
     </div>
 
-    <div class="group">
-      <label>Senha</label>
-      <input id="c_senha" type="password">
+    <div class="group"><label>Senha</label><input id="c_senha" type="password"></div>
+    <div class="group"><label>Confirmar senha</label><input id="c_confirma" type="password"></div>
+
+    <div class="privacidade-box">
+      <input type="checkbox" id="aceitePrivacidade">
+      <label for="aceitePrivacidade">
+        Aceito as <a onclick="abrirPrivacidade()">Políticas de Privacidade</a>
+      </label>
     </div>
 
-    <div class="group">
-      <label>Confirmar senha</label>
-      <input id="c_confirma" type="password">
-    </div>
-
-    <button id="btnCadastro" class="btn">Cadastrar</button>
-
-    <!-- ✅ POLÍTICAS (APARECE SÓ NO CADASTRO) -->
-    <p class="politica-texto">
-      Ao se cadastrar você concorda com as
-      <button type="button" onclick="abrirPoliticas()">
-        políticas de privacidade
-      </button>
-    </p>
-
-    <div class="link" id="fecharCadastro">Cancelar</div>
+    <button id="btnCadastro" class="btn btn-primary">Cadastrar</button>
+    <div class="footer"><a id="fecharCadastro">Cancelar</a></div>
     <div class="msg" id="msgCadastro"></div>
   </div>
 </div>
 
+<!-- ================= PRIVACIDADE ================= -->
+<div class="modal" id="modalPrivacidade">
+  <div class="privacidade-popup">
+    <div class="privacidade-header">
+      Políticas de Privacidade
+      <button class="privacidade-fechar" onclick="fecharPrivacidade()">✕</button>
+    </div>
+    <div class="privacidade-conteudo">
+      <iframe src="privacidade.html"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SESSÕES ================= -->
+<div class="modal" id="modalSessoes">
+  <div class="sessao-box">
+    <h3>Limite de dispositivos atingido</h3>
+    <div id="listaSessoes"></div>
+  </div>
+</div>
 
 <script>
 const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
-const WHATSAPP_SUPORTE = "5575998112535"; // <-- coloque SEU número aqui
 
-/* MODAL */
-abrirCadastro.onclick = () => modal.style.display = "flex";
-fecharCadastro.onclick = () => modal.style.display = "none";
+function abrirPrivacidade(){ modalPrivacidade.style.display="flex"; }
+function fecharPrivacidade(){ modalPrivacidade.style.display="none"; }
 
-/* MÁSCARAS */
-c_cpf.oninput = e=>{
-  e.target.value=e.target.value
-    .replace(/\D/g,"")
-    .replace(/(\d{3})(\d)/,"$1.$2")
-    .replace(/(\d{3})(\d)/,"$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/,"$1-$2")
-    .slice(0,14);
-};
-c_whats.oninput = e=>{
-  e.target.value=e.target.value
-    .replace(/\D/g,"")
-    .replace(/^(\d{2})(\d)/,"($1) $2")
-    .replace(/(\d{5})(\d)/,"$1-$2")
-    .slice(0,15);
-};
+abrirCadastro.onclick=()=>modalCadastro.style.display="flex";
+fecharCadastro.onclick=()=>modalCadastro.style.display="none";
 
-function bloquearBotao(btn){
-  btn.classList.add("loading");
-}
+/* ===== LOGIN ===== */
+btnLogin.onclick = async ()=>{
+  msg.textContent="";
+  const { data, error } = await sb.auth.signInWithPassword({
+    email: email.value.trim(),
+    password: senha.value
+  });
 
-function liberarBotao(btn){
-  btn.classList.remove("loading");
-}
-
-
-  
-btnLogin.onclick = async () => {
-  bloquearBotao(btnLogin); // 🔒 BLOQUEIA O BOTÃO
-
-  try {
-
-  msg.textContent = "";
-  msg.className = "msg";
-
-
-// permite cadastro livre
-// mas mantém regra de acesso depois
-
-
-  const emailInput = email.value.trim();
-  const senhaInput = senha.value;
-
-if (!emailInput || !senhaInput) {
-  msg.textContent = "Preencha email e senha";
-  msg.className = "msg error";
-  return;
-}
-
-  const { data, error } = await sb
-    .from("usuarios")
-.select(`
-  id,
-  email,
-  senha,
-  status,
-  trial_expires_at,
-  controle_sessao,
-  vencimento_assinatura
-`)
-    .eq("email", emailInput)
-    .maybeSingle();
-
-if (error || !data) {
-  msg.textContent = "Usuário não encontrado";
-  msg.className = "msg error";
-  return;
-}
-
-
-
-if (data.senha !== senhaInput) {
-  msg.textContent = "Senha incorreta";
-  msg.className = "msg error";
-  return;
-}
-
-
-  // ⏳ TRIAL
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
-
-if (agora > expira && data.status !== "aprovado") {
-  msg.textContent = "Período de teste expirado";
-  msg.className = "msg error";
-  return;
-}
-
-
-  // 🔑 GERA TOKEN DE SESSÃO
-  const sessionToken = crypto.randomUUID();
-
-  // 💾 SALVA TOKEN NO USUÁRIO
-  await sb
-    .from("usuarios")
-    .update({ session_token: sessionToken })
-    .eq("id", data.id);
-
-  // 🧾 LOG DE LOGIN
-  await sb
-    .from("login_logs")
-    .insert({
-      user_id: data.id,
-      email: data.email,
-      ip: null,
-      user_agent: navigator.userAgent
-    });
-
-
-// 💾 SALVA LOCAL
-localStorage.setItem("usuario_email", data.email);
-localStorage.setItem("session_token", sessionToken);
-
-
-// 🔒 BLOQUEADO → comportamento controlado por vencimento
-if (data.status === "bloqueado") {
-
-  // sem data = considera vencido
-  if (!data.vencimento_assinatura) {
-    localStorage.setItem("redirect_after_login", "planos.html");
-    location.replace("planos.html");
-return;
-  }
-
-  const vencimento = new Date(data.vencimento_assinatura);
-  vencimento.setHours(23, 59, 59, 999); // válido até o fim do dia
-
-  // ❌ ASSINATURA VENCIDA → PAGAMENTO
-  if (agora > vencimento) {
-    localStorage.setItem("redirect_after_login", "planos.html");
-    location.replace("planos.html");
+  // ❌ confirmação de email DESATIVADA
+  if(error){
+    msg.textContent="Email ou senha inválidos";
+    msg.className="msg error";
     return;
   }
 
-// 🚫 BLOQUEADO, MAS AINDA DENTRO DO PERÍODO
-msg.textContent = "🚫 Acesso bloqueado. Entre em contato com o suporte.";
-msg.className = "msg error";
-
-// monta mensagem com email do usuário
-const texto = encodeURIComponent(
-  `Olá, meu acesso está bloqueado.\n\nEmail: ${data.email}`
-);
-
-// aponta para o WhatsApp de suporte
-const whatsapp = document.getElementById("btnWhatsapp");
-whatsapp.href = `https://wa.me/${WHATSAPP_SUPORTE}?text=${texto}`;
-whatsapp.style.display = "flex";
-
-return;
-} // 🔴 FECHA O IF BLOQUEADO AQUI CORRETAMENTE
-
-// ✅ ACESSO NORMAL
-location.replace("index.html");
-return;
-
-} finally {
-  liberarBotao(btnLogin); // 🔥 GARANTE QUE SEMPRE DESBLOQUEIA
-}
+  controlarSessoes(data.user);
 };
 
+/* ===== GOOGLE ===== */
+btnGoogle.onclick = ()=> sb.auth.signInWithOAuth({
+  provider:"google",
+  options:{ redirectTo: location.origin + "/login.html" }
+});
+
+/* ===== RESET ===== */
+btnReset.onclick = ()=> sb.auth.resetPasswordForEmail(email.value);
+
+/* ===== CADASTRO ===== */
 btnCadastro.onclick = async ()=>{
-  bloquearBotao(btnCadastro);
-  msgCadastro.textContent="";
 
-  try {
+  // 👉 VALIDA FORMATO DO EMAIL
+  if(!emailValido(c_email.value.trim())){
+    msgCadastro.textContent = "Informe um email válido";
+    msgCadastro.className = "msg error";
+    return;
+  }
 
+  // 👉 ACEITE DAS POLÍTICAS
+  if(!aceitePrivacidade.checked){
+    msgCadastro.textContent = "Aceite as políticas";
+    msgCadastro.className = "msg error";
+    return;
+  }
 
+  // 👉 CONFIRMAÇÃO DE SENHA
+  if(c_senha.value !== c_confirma.value){
+    msgCadastro.textContent = "Senhas não conferem";
+    msgCadastro.className = "msg error";
+    return;
+  }
 
-if(c_senha.value!==c_confirma.value){
-  msgCadastro.textContent="As senhas não conferem";
-  msgCadastro.className="msg error";
-  return;
-}
-
-
-  const trial=new Date(Date.now()+10*24*60*60*1000);
-  const emailNovo=c_email.value.trim();
-  const senhaNova=c_senha.value;
-
-  const { error } = await sb.from("usuarios").insert({
-    email: emailNovo,
-    cpf: c_cpf.value.replace(/\D/g,""),
-    whatsapp: c_whats.value.replace(/\D/g,""),
-    senha: senhaNova,
-    status: "pendente",
-    trial_expires_at: trial.toISOString()
+  const { data, error } = await sb.auth.signUp({
+    email: c_email.value.trim(),
+    password: c_senha.value
   });
 
-if(error){
-  msgCadastro.textContent="Erro ao cadastrar";
-  msgCadastro.className="msg error";
-  return;
-}
+  if(error){
+    msgCadastro.textContent = error.message;
+    msgCadastro.className = "msg error";
+    return;
+  }
 
+  await sb.from("user").insert({
+    id: data.user.id,
+    email: data.user.email,
+    cpf: c_cpf.value.replace(/\D/g,""),
+    whatsapp: c_whats.value.replace(/\D/g,"")
+  });
 
-  msgCadastro.innerHTML=`
-    <div class="success-anim">
-      <div class="check">✓</div>
-      <strong>Teste liberado por 10 dias</strong>
-      <span>Voltando para login...</span>
-    </div>
-  `;
-  msgCadastro.className="msg success";
+  // ✅ FEEDBACK
+  msgCadastro.textContent = "Conta criada com sucesso!";
+  msgCadastro.className = "msg success";
 
+  // 👉 PREENCHE LOGIN
+  email.value = c_email.value.trim();
+  senha.value = c_senha.value;
+
+  // 👉 FECHA MODAL
   setTimeout(()=>{
-    modal.style.display="none";
-    email.value=emailNovo;
-    senha.value=senhaNova;
-    msg.textContent="Conta criada! Clique em Entrar 🚀";
-    msg.className="msg success";
-  },2200);
-
-} finally {
-  liberarBotao(btnCadastro); // 🔥 SEMPRE DESBLOQUEIA
-}
+    modalCadastro.style.display = "none";
+    msgCadastro.textContent = "";
+  }, 800);
 };
 
 
-function abrirPoliticas(){
-  document.getElementById("modalPoliticas").style.display = "flex";
+/* ===== CONTROLE DE SESSÕES ===== */
+async function controlarSessoes(user){
+  const token = crypto.randomUUID();
+  const { data:sessoes } = await sb.from("sessoes").select("*").eq("user_id",user.id);
+
+  if(sessoes?.length>=3){
+    modalSessoes.style.display="flex";
+    listaSessoes.innerHTML=sessoes.map(s=>{
+      const d=detectarDispositivo(s.user_agent);
+      return `
+        <div class="sessao-item">
+          <div class="sessao-icon">${d.icon}</div>
+          <div class="sessao-info">
+            <strong>${d.nome}</strong>
+            <span>${d.desc}</span>
+          </div>
+          <button onclick="encerrarSessao('${s.id}','${user.id}','${token}','${user.email}')">
+            Desconectar
+          </button>
+        </div>`;
+    }).join("");
+    return;
+  }
+
+  criarSessao(user,token);
 }
 
-function fecharPoliticas(){
-  document.getElementById("modalPoliticas").style.display = "none";
+async function criarSessao(user,token){
+  await sb.from("sessoes").insert({
+    user_id:user.id,
+    session_token:token,
+    user_agent:navigator.userAgent
+  });
+  location.replace("index.html");
 }
 
+async function encerrarSessao(id,userId,token,email){
+  await sb.from("sessoes").delete().eq("id",id);
+  criarSessao({id:userId,email},token);
+}
+
+function detectarDispositivo(ua){
+  ua=ua.toLowerCase();
+  if(/mobile/.test(ua)) return {icon:"📱",nome:"Celular",desc:"Mobile"};
+  if(/tablet|ipad/.test(ua)) return {icon:"📲",nome:"Tablet",desc:"Tablet"};
+  return {icon:"💻",nome:"Computador",desc:"Desktop"};
+}
+// ===== MÁSCARA CPF =====
+const cpfInput = document.getElementById("c_cpf");
+
+cpfInput.addEventListener("input", e => {
+  let v = e.target.value.replace(/\D/g, "").slice(0,11);
+
+  if (v.length > 9) {
+    v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, "$1.$2.$3-$4");
+  } else if (v.length > 6) {
+    v = v.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
+  } else if (v.length > 3) {
+    v = v.replace(/(\d{3})(\d+)/, "$1.$2");
+  }
+
+  e.target.value = v;
+});
+// ===== MÁSCARA WHATSAPP =====
+const whatsInput = document.getElementById("c_whats");
+
+whatsInput.addEventListener("input", e => {
+  let v = e.target.value.replace(/\D/g, "").slice(0,11);
+
+  if (v.length > 10) {
+    v = v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  } else if (v.length > 6) {
+    v = v.replace(/(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
+  } else if (v.length > 2) {
+    v = v.replace(/(\d{2})(\d+)/, "($1) $2");
+  } else {
+    v = v.replace(/(\d+)/, "($1");
+  }
+
+  e.target.value = v;
+});
+function emailValido(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+
+
+  
 </script>
-<!-- MODAL POLÍTICAS -->
-<div class="modal" id="modalPoliticas">
-  <div class="modal-box" style="max-height:85vh;overflow:hidden;">
-    <h2>Políticas de Privacidade</h2>
-
-    <div style="max-height:60vh;overflow-y:auto;font-size:14px;line-height:1.6;color:#ddd;">
-      <p>
-        Esta Política de Privacidade descreve como coletamos, utilizamos e protegemos
-        os dados dos usuários da plataforma CLENA TV.
-      </p>
-
-      <h4>1. Coleta de Dados</h4>
-      <p>Coletamos informações fornecidas no cadastro, como e-mail, CPF e WhatsApp.</p>
-
-      <h4>2. Uso das Informações</h4>
-      <p>Os dados são utilizados para acesso à plataforma e comunicação.</p>
-
-      <h4>3. Compartilhamento</h4>
-      <p>Não compartilhamos dados pessoais com terceiros.</p>
-
-      <h4>4. Segurança</h4>
-      <p>Utilizamos medidas técnicas para proteger suas informações.</p>
-
-      <h4>5. Direitos do Usuário</h4>
-      <p>Você pode solicitar alteração ou exclusão dos seus dados.</p>
-    </div>
-
-    <div class="link" onclick="fecharPoliticas()">Fechar</div>
-  </div>
-</div>
 
 </body>
 </html>
