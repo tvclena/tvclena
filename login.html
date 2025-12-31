@@ -5,18 +5,15 @@
 <title>Entrar • CLENA TV</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-/* ================= RESET ================= */
 *{box-sizing:border-box;font-family:Inter,system-ui,Arial}
 html,body{
   margin:0;width:100%;height:100%;
   overflow:hidden;background:#0b0b0d;color:#fff
 }
 
-/* ================= THEME ================= */
 :root{
   --card:#141417;
   --accent:#e50914;
@@ -25,7 +22,6 @@ html,body{
   --input:#0f0f13;
 }
 
-/* ================= BACKGROUND ================= */
 body{
   display:flex;
   align-items:center;
@@ -33,7 +29,6 @@ body{
   background:radial-gradient(80% 60% at 50% 20%, #1b1b20 0%, #0b0b0d 70%);
 }
 
-/* ================= CARD ================= */
 .card{
   width:420px;
   max-width:92%;
@@ -43,12 +38,7 @@ body{
   box-shadow:0 40px 120px rgba(0,0,0,.9);
 }
 
-.logo{
-  text-align:center;
-  font-size:34px;
-  font-weight:900;
-  margin-bottom:30px;
-}
+.logo{text-align:center;font-size:34px;font-weight:900;margin-bottom:30px}
 .logo span{color:var(--accent)}
 
 .group{margin-bottom:16px}
@@ -58,105 +48,61 @@ input{
   border:1px solid var(--border);
   background:var(--input);color:#fff;font-size:15px
 }
-input:focus{outline:none;border-color:var(--accent)}
 
 .btn{
   width:100%;height:52px;border:none;border-radius:14px;
   font-size:16px;font-weight:800;cursor:pointer
 }
-.btn-primary{background:var(--accent);color:#fff;margin-top:6px}
+.btn-primary{background:var(--accent);color:#fff}
 
 .google-btn{
   margin:16px auto 0;width:52px;height:52px;border-radius:50%;
   background:#0f0f13;border:1px solid #242428;
   display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:.2s
+  cursor:pointer
 }
-.google-btn:hover{background:#18181d;transform:scale(1.05)}
 .google-btn img{width:32px;height:32px}
 
-.footer{
-  display:flex;justify-content:space-between;margin-top:22px;font-size:13px
-}
-.footer a{color:#c7c7cc;text-decoration:none;cursor:pointer}
-.footer a:hover{text-decoration:underline}
+.footer{display:flex;justify-content:space-between;margin-top:22px;font-size:13px}
+.footer a{color:#c7c7cc;text-decoration:none}
 
 .msg{margin-top:14px;min-height:18px;font-size:14px}
 .msg.error{color:#f87171}
 .msg.success{color:#22c55e}
 
-/* ================= MODAIS ================= */
 .modal{
   position:fixed;inset:0;background:rgba(0,0,0,.85);
-  display:none;align-items:center;justify-content:center;
-  z-index:9999
+  display:none;align-items:center;justify-content:center;z-index:9999
 }
 
-/* ================= PRIVACIDADE ================= */
+/* PRIVACIDADE */
+.privacidade-popup{
+  width:90%;max-width:760px;height:80vh;
+  background:#141417;border-radius:22px;
+  position:relative;overflow:hidden
+}
+.privacidade-fechar{
+  position:absolute;top:14px;right:16px;
+  width:36px;height:36px;border:none;border-radius:50%;
+  background:#1f1f23;color:#fff;font-size:18px;cursor:pointer
+}
+.privacidade-conteudo{
+  height:100%;padding:28px;overflow-y:auto
+}
+.privacidade-conteudo::-webkit-scrollbar{width:0}
+.privacidade-conteudo{scrollbar-width:none}
+
 .privacidade-box{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-top:12px;
-  font-size:13px;
-  color:#c7c7cc;
+  display:flex;align-items:center;gap:10px;margin-top:14px;font-size:13px
 }
-
-.privacidade-box input[type="checkbox"]{
-  width:18px;
-  height:18px;
-  accent-color:#e50914;
-  cursor:pointer;
-}
-
-.privacidade-box label{
-  margin:0;
-  line-height:1.4;
-  cursor:pointer;
-}
-
-.privacidade-box a{
-  color:#3ea6ff;
-  text-decoration:none;
-}
-
-.privacidade-box a:hover{
-  text-decoration:underline;
-}
-
-
-/* ================= SESSÕES ================= */
-.sessao-box{
-  background:#141417;padding:26px;border-radius:18px;
-  width:420px;max-width:92%
-}
-.sessao-item{
-  display:flex;align-items:center;gap:14px;
-  background:#0f0f13;border:1px solid #242428;
-  padding:14px;border-radius:14px;margin-bottom:12px
-}
-.sessao-icon{
-  width:48px;height:48px;border-radius:12px;
-  background:#18181d;display:flex;
-  align-items:center;justify-content:center;font-size:22px
-}
-.sessao-info{flex:1}
-.sessao-info strong{display:block;font-size:14px}
-.sessao-info span{font-size:12px;color:#9ca3af}
-.sessao-item button{
-  padding:10px 14px;border:none;border-radius:10px;
-  background:#e50914;color:#fff;font-weight:800;cursor:pointer
-}
-.privacidade-box{
-  padding:6px 0;
-}
-
+.privacidade-box input{width:18px;height:18px;accent-color:#e50914}
+.privacidade-box a{color:#3ea6ff;text-decoration:none}
 </style>
 </head>
 
 <body>
 
-<!-- ================= LOGIN ================= -->
+<!-- LOGIN -->
 <div class="card">
   <div class="logo">CLENA <span>TV</span></div>
 
@@ -177,24 +123,30 @@ input:focus{outline:none;border-color:var(--accent)}
   <div class="msg" id="msg"></div>
 </div>
 
-<!-- ================= CADASTRO ================= -->
+<!-- CADASTRO -->
 <div class="modal" id="modalCadastro">
   <div class="card">
     <h2>Criar conta</h2>
 
     <div class="group"><label>Email</label><input id="c_email"></div>
-    <div class="group"><label>CPF</label><input id="c_cpf"></div>
-    <div class="group"><label>WhatsApp</label><input id="c_whats"></div>
+
+    <div class="group">
+      <label>CPF</label>
+      <input id="c_cpf" inputmode="numeric" placeholder="000.000.000-00">
+    </div>
+
+    <div class="group">
+      <label>WhatsApp</label>
+      <input id="c_whats" inputmode="numeric" placeholder="(99) 99999-9999">
+    </div>
+
     <div class="group"><label>Senha</label><input id="c_senha" type="password"></div>
     <div class="group"><label>Confirmar senha</label><input id="c_confirma" type="password"></div>
 
-   <div class="privacidade-box">
-  <input type="checkbox" id="aceitePrivacidade">
-  <label for="aceitePrivacidade">
-    Aceito as <a onclick="abrirPrivacidade()">Políticas de Privacidade</a>
-  </label>
-</div>
-
+    <div class="privacidade-box">
+      <input type="checkbox" id="aceitePrivacidade">
+      <label>Aceito as <a onclick="abrirPrivacidade()">Políticas de Privacidade</a></label>
+    </div>
 
     <button id="btnCadastro" class="btn btn-primary">Cadastrar</button>
     <div class="footer"><a id="fecharCadastro">Cancelar</a></div>
@@ -202,20 +154,11 @@ input:focus{outline:none;border-color:var(--accent)}
   </div>
 </div>
 
-<!-- ================= PRIVACIDADE POPUP ================= -->
+<!-- PRIVACIDADE -->
 <div class="modal" id="modalPrivacidade">
   <div class="privacidade-popup">
     <button class="privacidade-fechar" onclick="fecharPrivacidade()">✕</button>
-    <iframe src="privacidade.html"></iframe>
-  </div>
-</div>
-
-<!-- ================= SESSÕES ================= -->
-<div class="modal" id="modalSessoes">
-  <div class="sessao-box">
-    <h3>Limite de dispositivos atingido</h3>
-    <p style="color:#aaa;font-size:14px">Escolha uma sessão para encerrar:</p>
-    <div id="listaSessoes"></div>
+    <div class="privacidade-conteudo" id="conteudoPrivacidade"></div>
   </div>
 </div>
 
@@ -225,52 +168,47 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ===== PRIVACIDADE ===== */
-function abrirPrivacidade(){ modalPrivacidade.style.display="flex"; }
-function fecharPrivacidade(){ modalPrivacidade.style.display="none"; }
+/* EMAIL */
+const emailRegex=/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+const emailValido=e=>emailRegex.test(e);
 
-/* ===== LOGIN ===== */
-btnLogin.onclick = async ()=>{
-  msg.textContent="";
-  const { data, error } = await sb.auth.signInWithPassword({
-    email: email.value.trim(),
-    password: senha.value
-  });
+/* PRIVACIDADE */
+function abrirPrivacidade(){
+  fetch("privacidade.html")
+    .then(r=>r.text())
+    .then(t=>{
+      conteudoPrivacidade.innerHTML=t;
+      modalPrivacidade.style.display="flex";
+    });
+}
+function fecharPrivacidade(){modalPrivacidade.style.display="none";}
 
-  if(error || !data.session){
-    msg.textContent="Email, senha ou confirmação inválidos";
-    msg.className="msg error";
-    return;
-  }
-
-  controlarSessoes(data.user);
-};
-
-/* ===== GOOGLE ===== */
-btnGoogle.onclick = async ()=>{
-  await sb.auth.signInWithOAuth({
-    provider:"google",
-    options:{ redirectTo: location.origin + "/login.html" }
-  });
-};
-
-/* ===== RESET ===== */
-btnReset.onclick = async ()=>{
-  if(!email.value) return;
-  await sb.auth.resetPasswordForEmail(email.value,{
-    redirectTo: location.origin + "/login.html"
-  });
-  msg.textContent="Email de recuperação enviado";
-  msg.className="msg success";
-};
-
-/* ===== CADASTRO ===== */
 abrirCadastro.onclick=()=>modalCadastro.style.display="flex";
 fecharCadastro.onclick=()=>modalCadastro.style.display="none";
 
-btnCadastro.onclick = async ()=>{
+/* MÁSCARAS */
+c_cpf.addEventListener("input",e=>{
+  let v=e.target.value.replace(/\D/g,"").slice(0,11);
+  v=v.replace(/(\d{3})(\d)/,"$1.$2")
+     .replace(/(\d{3})\.(\d{3})(\d)/,"$1.$2.$3")
+     .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/,"$1.$2.$3-$4");
+  e.target.value=v;
+});
+c_whats.addEventListener("input",e=>{
+  let v=e.target.value.replace(/\D/g,"").slice(0,11);
+  v=v.replace(/(\d{2})(\d)/,"($1) $2")
+     .replace(/(\d{5})(\d)/,"$1-$2");
+  e.target.value=v;
+});
+
+/* CADASTRO */
+btnCadastro.onclick=async()=>{
+  if(!emailValido(c_email.value)){
+    msgCadastro.textContent="Email inválido";
+    msgCadastro.className="msg error";return;
+  }
   if(!aceitePrivacidade.checked){
-    msgCadastro.textContent="Aceite as políticas para continuar";
+    msgCadastro.textContent="Aceite as políticas de privacidade";
     msgCadastro.className="msg error";return;
   }
   if(c_senha.value!==c_confirma.value){
@@ -278,8 +216,8 @@ btnCadastro.onclick = async ()=>{
     msgCadastro.className="msg error";return;
   }
 
-  const { data, error } = await sb.auth.signUp({
-    email:c_email.value.trim(),
+  const {error}=await sb.auth.signUp({
+    email:c_email.value,
     password:c_senha.value
   });
 
@@ -288,77 +226,32 @@ btnCadastro.onclick = async ()=>{
     msgCadastro.className="msg error";return;
   }
 
-  await sb.from("user").insert({
-    id:data.user.id,
-    email:data.user.email,
-    cpf:c_cpf.value.replace(/\D/g,""),
-    whatsapp:c_whats.value.replace(/\D/g,"")
-  });
-
-  msgCadastro.textContent="Conta criada! Confirme seu email.";
+  msgCadastro.textContent="Conta criada com sucesso!";
   msgCadastro.className="msg success";
+
+  setTimeout(()=>{
+    modalCadastro.style.display="none";
+  },1200);
 };
 
-/* ===== CONTROLE DE SESSÕES ===== */
-async function controlarSessoes(user){
-  const token = crypto.randomUUID();
-
-  const { data: perfil } = await sb
-    .from("user").select("max_sessoes")
-    .eq("id",user.id).single();
-
-  const { data: sessoes } = await sb
-    .from("sessoes").select("*")
-    .eq("user_id",user.id);
-
-  if(sessoes.length >= perfil.max_sessoes){
-    abrirPopupSessoes(sessoes,user,token);
-    return;
+/* LOGIN */
+btnLogin.onclick=async()=>{
+  if(!emailValido(email.value)){
+    msg.textContent="Email inválido";
+    msg.className="msg error";return;
   }
-
-  await criarSessao(user,token);
-}
-
-async function criarSessao(user,token){
-  await sb.from("sessoes").insert({
-    user_id:user.id,
-    session_token:token,
-    user_agent:navigator.userAgent
+  const {data,error}=await sb.auth.signInWithPassword({
+    email:email.value,password:senha.value
   });
-  localStorage.setItem("session_token",token);
-  localStorage.setItem("usuario_email",user.email);
+  if(error||!data.session){
+    msg.textContent="Email ou senha inválidos";
+    msg.className="msg error";return;
+  }
   location.replace("index.html");
-}
+};
 
-function abrirPopupSessoes(sessoes,user,token){
-  modalSessoes.style.display="flex";
-  listaSessoes.innerHTML = sessoes.map(s=>{
-    const d = detectarDispositivo(s.user_agent);
-    return `
-      <div class="sessao-item">
-        <div class="sessao-icon">${d.icon}</div>
-        <div class="sessao-info">
-          <strong>${d.nome}</strong>
-          <span>${d.desc}</span>
-        </div>
-        <button onclick="encerrarSessao('${s.id}','${user.id}','${token}','${user.email}')">
-          Desconectar
-        </button>
-      </div>`;
-  }).join("");
-}
-
-async function encerrarSessao(id,userId,token,email){
-  await sb.from("sessoes").delete().eq("id",id);
-  await criarSessao({id,email},token);
-}
-
-function detectarDispositivo(ua){
-  ua = ua.toLowerCase();
-  if(/iphone|android.*mobile/.test(ua)) return {icon:"📱",nome:"Celular",desc:"Smartphone"};
-  if(/ipad|tablet|android/.test(ua)) return {icon:"📲",nome:"Tablet",desc:"Tablet"};
-  return {icon:"💻",nome:"Computador",desc:"Desktop / Notebook"};
-}
+btnGoogle.onclick=()=>sb.auth.signInWithOAuth({provider:"google"});
+btnReset.onclick=()=>email.value&&sb.auth.resetPasswordForEmail(email.value);
 </script>
 
 </body>
