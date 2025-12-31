@@ -58,6 +58,53 @@ font-weight:600;cursor:pointer;align-self:flex-start}
 #layout{grid-template-columns:1fr}
 #player{position:relative;top:0}
 }
+
+
+
+/* TEMPORADAS */
+#temporadasBox{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:18px
+}
+.temporada-btn{
+  padding:8px 14px;
+  border-radius:14px;
+  background:#111;
+  border:1px solid #333;
+  color:#fff;
+  cursor:pointer;
+  font-weight:600;
+}
+.temporada-btn.active{
+  background:#dc2626;
+  border-color:#dc2626;
+}
+
+/* EPISÓDIOS */
+#episodiosBox{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:16px
+}
+.episodio{
+  padding:12px 14px;
+  border-radius:16px;
+  background:#0b0b0b;
+  border:1px solid #222;
+  cursor:pointer;
+  transition:.25s;
+}
+.episodio:hover{
+  background:#151515;
+}
+.episodio.active{
+  border-color:#dc2626;
+  box-shadow:0 0 0 1px #dc2626;
+}
+
 </style>
 </head>
 
@@ -87,7 +134,10 @@ font-weight:600;cursor:pointer;align-self:flex-start}
 
     <p id="desc" class="collapsed"></p>
     <button id="lerMais" style="display:none">Ler mais</button>
+  
   </div>
+<div id="temporadasBox"></div>
+<div id="episodiosBox"></div>
 
 </div>
 
@@ -96,7 +146,11 @@ const sb = supabase.createClient(
  "https://dxkszikemntfusfyrzos.supabase.co",
  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
+let episodios = [];
+let temporadaAtual = null;
 
+
+  
 const item = JSON.parse(
  decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
@@ -159,16 +213,92 @@ async function salvarAvaliacao(nota){
   carregar();
 }
 
+
+
+
+async function carregarEpisodios(){
+  const { data } = await sb
+    .from("episodios")
+    .select("*")
+    .eq("filme_id", item.id)
+    .order("temporada", { ascending:true })
+    .order("episodio", { ascending:true });
+
+  episodios = data || [];
+  renderTemporadas();
+}
+
+
+function renderTemporadas(){
+  const temporadas = [...new Set(episodios.map(e=>e.temporada))];
+  temporadasBox.innerHTML="";
+
+  temporadas.forEach(t=>{
+    const b=document.createElement("button");
+    b.className="temporada-btn";
+    b.textContent=`Temporada ${t}`;
+    if(t===temporadaAtual) b.classList.add("active");
+
+    b.onclick=()=>{
+      temporadaAtual=t;
+      renderTemporadas();
+      renderEpisodios();
+    };
+    temporadasBox.appendChild(b);
+  });
+
+  if(!temporadaAtual && temporadas.length){
+    temporadaAtual=temporadas[0];
+    renderTemporadas();
+    renderEpisodios();
+  }
+}
+function renderEpisodios(){
+  episodiosBox.innerHTML="";
+
+  episodios
+    .filter(e=>e.temporada===temporadaAtual)
+    .forEach((e,i)=>{
+      const d=document.createElement("div");
+      d.className="episodio";
+      d.innerHTML=`<strong>Episódio ${e.episodio}</strong><br>${e.titulo || ""}`;
+
+      d.onclick=()=>{
+        document.querySelectorAll(".episodio")
+          .forEach(x=>x.classList.remove("active"));
+        d.classList.add("active");
+        tocar(e.video_url);
+      };
+
+      if(i===0){
+        d.classList.add("active");
+        tocar(e.video_url);
+      }
+
+      episodiosBox.appendChild(d);
+    });
+}
+
+
 /* ▶ PLAYER */
 function tocar(src){
-  if(!src)return;
+  if(!src) return;
+
   if(/\.m3u8$/i.test(src)){
-    iframe.remove();video.src=src;video.play().catch(()=>{});
+    iframe.style.display="none";
+    iframe.src="";
+    video.style.display="block";
+    video.src=src;
+    video.play().catch(()=>{});
   }else{
-    video.remove();
+    video.pause();
+    video.style.display="none";
+    video.src="";
+    iframe.style.display="block";
     iframe.src=`https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
 }
+
 
 /* 📥 CARREGAR */
 async function carregar(){
@@ -216,7 +346,7 @@ async function carregar(){
     renderAvaliarStars(0);
   }
 
-  tocar(filme.video_url);
+await carregarEpisodios();
 
   setTimeout(()=>{
     if(desc.scrollHeight>desc.clientHeight){
