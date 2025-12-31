@@ -201,21 +201,28 @@ const item = JSON.parse(
 );
 
 let usuario = null;
-let episodios = [];
+let authReady = false;
 let temporadaAtual = null;
+let episodios = [];
 
 /* ================= LOGIN ================= */
 async function carregarUsuario(){
+  // tentativa imediata
   const { data:{ session } } = await sb.auth.getSession();
-  if(!session) return;
 
-  const { data } = await sb
-    .from("usuarios")
-    .select("id,email")
-    .eq("email", session.user.email)
-    .maybeSingle();
+  if(session?.user?.email){
+    await carregarPerfil(session.user.email);
+    authReady = true;
+    return;
+  }
 
-  if(data) usuario = data;
+  // fallback correto
+  sb.auth.onAuthStateChange(async (_event, session)=>{
+    if(session?.user?.email){
+      await carregarPerfil(session.user.email);
+    }
+    authReady = true;
+  });
 }
 
 /* ================= PLAYER ================= */
@@ -259,17 +266,43 @@ function hoverStars(q){
   });
 }
 async function salvarAvaliacao(nota){
+  // ⏳ sessão ainda carregando
+  if(!authReady){
+    alert("Aguarde a sessão carregar");
+    return;
+  }
+
+  // 🔐 não logado
   if(!usuario){
     alert("Faça login para avaliar");
     return;
   }
+
   await sb.from("avaliacoes").upsert({
-    filme_id:item.id,
-    usuario_id:usuario.id,
+    filme_id: item.id,
+    usuario_id: usuario.id,
     nota
   });
+
   renderStars(nota);
 }
+async function carregarPerfil(email){
+  const { data, error } = await sb
+    .from("usuarios")
+    .select("id,email")
+    .eq("email", email)
+    .maybeSingle();
+
+  if(error){
+    console.error("Erro ao carregar perfil:", error);
+    return;
+  }
+
+  if(data){
+    usuario = data;
+  }
+}
+
 
 /* ================= LOAD ================= */
 async function carregar(){
