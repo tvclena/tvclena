@@ -216,18 +216,26 @@ async function salvarAvaliacao(nota){
 
 
 
-
 async function carregarEpisodios(){
   const { data } = await sb
-    .from("episodios")
+    .from("filmes")
     .select("*")
-    .eq("filme_id", item.id)
-    .order("temporada", { ascending:true })
-    .order("episodio", { ascending:true });
+    .eq("tipo", "serie")
+    .eq("serie_nome", item.serie_nome)
+    .not("episodio", "is", null)
+    .order("temporada", { ascending: true })
+    .order("episodio", { ascending: true });
 
   episodios = data || [];
-  renderTemporadas();
+
+  if(episodios.length){
+    renderTemporadas();
+  }else{
+    temporadasBox.innerHTML="";
+    episodiosBox.innerHTML="";
+  }
 }
+
 
 
 function renderTemporadas(){
@@ -323,6 +331,9 @@ async function carregar(){
 
   const metas=[];
   if(filme.categoria) metas.push(['🎬',filme.categoria]);
+
+
+  
   if(filme.tipo) metas.push(['📺',filme.tipo]);
   if(filme.ano_lancamento) metas.push(['📅',filme.ano_lancamento]);
   if(filme.idioma) metas.push(['🌎',filme.idioma]);
@@ -347,6 +358,15 @@ async function carregar(){
     renderAvaliarStars(0);
   }
 
+if(filme.tipo !== "serie" || filme.video_url !== "SERIE_PARENT"){
+  temporadasBox.style.display="none";
+  episodiosBox.style.display="none";
+  tocar(filme.video_url);
+  return;
+}
+
+
+  
 await carregarEpisodios();
 
   setTimeout(()=>{
