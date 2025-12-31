@@ -326,77 +326,123 @@ btnGoogle.onclick = ()=> sb.auth.signInWithOAuth({
 /* ===== RESET ===== */
 btnReset.onclick = ()=> sb.auth.resetPasswordForEmail(email.value);
 
-/* ===== CADASTRO ===== */
-btnCadastro.onclick = async ()=>{
+btnCadastro.onclick = async () => {
 
-  // 👉 VALIDA FORMATO DO EMAIL
-  if(!emailValido(c_email.value.trim())){
+  msgCadastro.textContent = "";
+
+  if (!emailValido(c_email.value.trim())) {
     msgCadastro.textContent = "Informe um email válido";
     msgCadastro.className = "msg error";
     return;
   }
 
-  // 👉 ACEITE DAS POLÍTICAS
-  if(!aceitePrivacidade.checked){
+  if (!aceitePrivacidade.checked) {
     msgCadastro.textContent = "Aceite as políticas";
     msgCadastro.className = "msg error";
     return;
   }
 
-  // 👉 CONFIRMAÇÃO DE SENHA
-  if(c_senha.value !== c_confirma.value){
+  if (c_senha.value !== c_confirma.value) {
     msgCadastro.textContent = "Senhas não conferem";
     msgCadastro.className = "msg error";
     return;
   }
 
-  const { data, error } = await sb.auth.signUp({
-  email: c_email.value.trim(),
-  password: c_senha.value
-});
+  // ✅ DECLARA AQUI (ANTES DE QUALQUER IF)
+  let user = null;
 
-if (error) {
-  msgCadastro.textContent = error.message;
-  msgCadastro.className = "msg error";
-  return;
-}
+  // 🔹 tenta criar conta
+  const signUp = await sb.auth.signUp({
+    email: c_email.value.trim(),
+    password: c_senha.value
+  });
 
-// ⏳ Aguarda perfil existir
-let tentativas = 0;
-let perfilExiste = false;
+  if (signUp.error) {
 
-while (!perfilExiste && tentativas < 5) {
-  const { data: perfil } = await sb
-  .from("user")
-  .select("limite_de_telas")
-  .eq("id", user.id)
-  .single();
+    // 👉 se já existe, faz login
+    if (signUp.error.message.toLowerCase().includes("already")) {
 
+      const login = await sb.auth.signInWithPassword({
+        email: c_email.value.trim(),
+        password: c_senha.value
+      });
 
-  if (perfil) perfilExiste = true;
-  else {
-    await new Promise(r => setTimeout(r, 600));
-    tentativas++;
+      if (login.error) {
+        msgCadastro.textContent = "Email já cadastrado. Senha incorreta.";
+        msgCadastro.className = "msg error";
+        return;
+      }
+
+      user = login.data.user;
+
+    } else {
+      msgCadastro.textContent = signUp.error.message;
+      msgCadastro.className = "msg error";
+      return;
+    }
+
+  } else {
+    user = signUp.data.user;
   }
-}
 
-// ❌ Se não criou, aborta
-if (!perfilExiste) {
-  msgCadastro.textContent = "Erro ao criar perfil";
-  msgCadastro.className = "msg error";
-  return;
-}
+  // 🔒 GARANTIA ABSOLUTA
+  if (!user) {
+    msgCadastro.textContent = "Erro ao identificar usuário";
+    msgCadastro.className = "msg error";
+    return;
+  }
 
-// ✅ UPDATE seguro
-const { error: updateError } = await sb
-  .from("user")
-  .update({
-    cpf: c_cpf.value.replace(/\D/g,""),
-    whatsapp: c_whats.value.replace(/\D/g,""),
-    nome_usuario: c_email.value.split("@")[0],
-    username: c_email.value.split("@")[0]
-  })
-  .eq("id", data.user.id);
+  // ⏳ aguarda o perfil existir (trigger)
+  let tentativas = 0;
+  let perfilExiste = false;
+
+  while (!perfilExiste && tentativas < 5) {
+    const { data } = await sb
+      .from("user")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (data) perfilExiste = true;
+    else {
+      await new Promise(r => setTimeout(r, 500));
+      tentativas++;
+    }
+  }
+
+  if (!perfilExiste) {
+    msgCadastro.textContent = "Perfil não encontrado";
+    msgCadastro.className = "msg error";
+    return;
+  }
+
+  // ✅ UPDATE FINAL
+  const { error: updateError } = await sb
+    .from("user")
+    .update({
+      cpf: c_cpf.value.replace(/\D/g, ""),
+      whatsapp: c_whats.value.replace(/\D/g, ""),
+      nome_usuario: c_email.value.split("@")[0],
+      username: c_email.value.split("@")[0]
+    })
+    .eq("id", user.id);
+
+  if (updateError) {
+    msgCadastro.textContent = "Erro ao salvar dados";
+    msgCadastro.className = "msg error";
+    return;
+  }
+
+  msgCadastro.textContent = "Cadastro concluído com sucesso!";
+  msgCadastro.className = "msg success";
+
+  setTimeout(() => {
+    modalCadastro.style.display = "none";
+    msgCadastro.textContent = "";
+  }, 900);
+};
+
+
 
 if (updateError) {
   msgCadastro.textContent = "Erro ao salvar dados";
