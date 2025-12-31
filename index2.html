@@ -2,39 +2,71 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Clena TV</title>
+<title>CLENA TV</title>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="env.js"></script>
 
 <style>
-body{
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+html,body{
   margin:0;
-  font-family:Inter,Arial;
-  background:#0f0f10;
+  background:#0b0b0d;
   color:#fff;
 }
+
+/* ===== HEADER ===== */
 header{
   height:64px;
   padding:0 24px;
   display:flex;
   align-items:center;
-  background:#000;
+  background:#0f0f13;
+  border-bottom:1px solid #242428;
 }
 .logo{
   font-size:22px;
   font-weight:900;
 }
-#perfilBtn img{
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  object-fit:cover;
+.logo span{color:#e50914}
+.logout{
+  margin-left:auto;
+  background:none;
+  border:none;
+  color:#fff;
   cursor:pointer;
+  font-size:14px;
 }
+
+/* ===== GRID ===== */
 main{
-  padding:80px 24px;
+  padding:24px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:18px;
+}
+.card{
+  background:#141417;
+  border-radius:14px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:.2s;
+}
+.card:hover{
+  transform:scale(1.05);
+}
+.card img{
+  width:100%;
+  height:240px;
+  object-fit:cover;
+}
+.card .title{
+  padding:10px;
+  font-size:14px;
+  text-align:center;
 }
 </style>
 </head>
@@ -42,123 +74,67 @@ main{
 <body>
 
 <header>
-  <div class="logo">CLENA <span style="color:#e50914">TV</span></div>
-  <div style="margin-left:auto" id="perfilBtn"></div>
+  <div class="logo">CLENA <span>TV</span></div>
+  <button class="logout" onclick="logout()">Sair</button>
 </header>
 
 <main>
-  <h1>Bem-vindo à Clena TV</h1>
-  <p>Index compatível com login por <strong>usuarios + session_token</strong></p>
+  <h2>Filmes e Séries</h2>
+  <div class="grid" id="grid"></div>
 </main>
 
 <script>
-/* ================= SUPABASE ================= */
 const sb = supabase.createClient(
-  window.ENV.SUPABASE_URL,
-  window.ENV.SUPABASE_ANON_KEY
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-let redirecionando = false;
-
-/* ================= VALIDA SESSÃO ================= */
-async function validarSessao() {
+/* ================= SESSÃO ================= */
+function validarSessao(){
   const email = localStorage.getItem("usuario_email");
-  const tokenLocal = localStorage.getItem("session_token");
+  const token = localStorage.getItem("session_token");
 
-  // ❌ sem sessão
-  if (!email || !tokenLocal) {
-    localStorage.clear();
-    location.replace("login2.html");
-    return false;
-  }
-
-  const { data: user, error } = await sb
-    .from("usuarios")
-    .select(`
-      id,
-      email,
-      status,
-      tipo_assinatura,
-      trial_expires_at,
-      session_token,
-      controle_sessao
-    `)
-    .eq("email", email)
-    .maybeSingle();
-
-  if (error || !user) {
-    localStorage.clear();
+  if(!email || !token){
     location.replace("login.html");
     return false;
   }
-
-  // 🔐 controle por dispositivo
-  if (user.controle_sessao === true) {
-    if (user.session_token !== tokenLocal) {
-      mostrarSessaoEncerrada();
-      return false;
-    }
-  }
-
-  // 🚫 bloqueado
-  if (user.status === "bloqueado") {
-    location.replace("planos.html");
-    return false;
-  }
-
-  // 💳 sem plano
-  if (!user.tipo_assinatura) {
-    location.replace("planos.html");
-    return false;
-  }
-
   return true;
-}
-
-/* ================= PERFIL HEADER ================= */
-async function carregarAvatarHeader(){
-  const email = localStorage.getItem("usuario_email");
-  if(!email) return;
-
-  const { data } = await sb
-    .from("usuarios")
-    .select("avatar_url, nome_usuario")
-    .eq("email", email)
-    .single();
-
-  const avatar =
-    data?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
-
-  document.getElementById("perfilBtn").innerHTML = `
-    <img src="${avatar}" title="Perfil">
-  `;
 }
 
 /* ================= LOGOUT ================= */
 function logout(){
   localStorage.clear();
-  sessionStorage.clear();
-  location.replace("login2.html");
+  location.replace("login.html");
 }
 
-/* ================= SESSÃO ENCERRADA ================= */
-function mostrarSessaoEncerrada(){
-  alert("Sua sessão foi encerrada por outro dispositivo.");
-  logout();
+/* ================= CARREGAR FILMES ================= */
+async function carregarCatalogo(){
+  const { data, error } = await sb
+    .from("filmes")
+    .select("id,titulo,tipo,capa_url")
+    .eq("ativo", true)
+    .in("tipo", ["filme","serie"])
+    .order("titulo");
+
+  if(error){
+    alert("Erro ao carregar catálogo");
+    console.error(error);
+    return;
+  }
+
+  const grid = document.getElementById("grid");
+  grid.innerHTML = data.map(item => `
+    <div class="card">
+      <img src="${item.capa_url}">
+      <div class="title">${item.titulo}</div>
+    </div>
+  `).join("");
 }
 
 /* ================= INIT ================= */
-(async () => {
-  const ok = await validarSessao();
-  if (!ok) return;
-
-  await carregarAvatarHeader();
-
-  // 🔁 watchdog de sessão
-  setInterval(() => {
-    if (!redirecionando) validarSessao();
-  }, 15000);
+(async ()=>{
+  if(!validarSessao()) return;
+  await carregarCatalogo();
 })();
 </script>
 
