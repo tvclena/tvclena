@@ -4,30 +4,35 @@
 <meta charset="UTF-8">
 <title>Sessão • Player</title>
 
-<meta name="viewport"
-  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:#000;color:#fff;font-family:Inter,Arial}
 
 /* TOPO */
-#top{position:sticky;top:0;z-index:100;padding:16px 20px;
-background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0))}
+#top{
+  position:sticky;top:0;z-index:100;
+  padding:16px 20px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0))
+}
 #top button{background:none;border:none;color:#fff;font-size:15px;cursor:pointer}
 
 /* LAYOUT */
 #layout{display:grid;grid-template-columns:3fr 1.4fr;min-height:100vh}
+@media(max-width:900px){#layout{grid-template-columns:1fr}}
 
 /* PLAYER */
 #playerArea{padding:16px}
-#player{position:sticky;top:80px;max-width:1120px;margin:auto;
-aspect-ratio:16/9;border-radius:26px;overflow:hidden;background:#000;
-box-shadow:0 0 70px rgba(220,38,38,.55)}
-#player video,#player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#player{
+  position:sticky;top:80px;max-width:1120px;margin:auto;
+  aspect-ratio:16/9;border-radius:26px;overflow:hidden;background:#000;
+  box-shadow:0 0 70px rgba(220,38,38,.55)
+}
+#player video,#player iframe{
+  position:absolute;inset:0;width:100%;height:100%;border:0
+}
 
 /* SIDE */
 #side{padding:22px;display:flex;flex-direction:column;gap:14px}
@@ -39,100 +44,34 @@ box-shadow:0 0 70px rgba(220,38,38,.55)}
 .meta-item span{opacity:.85}
 
 /* AVALIAÇÃO */
-#avaliarBox{margin-top:6px}
-.avaliar-label{font-size:13px;opacity:.7;margin-bottom:6px}
 .avaliar-stars{display:flex;gap:8px;font-size:26px;cursor:pointer}
-.avaliar-stars span{color:#333;transition:.2s}
+.avaliar-stars span{color:#333}
 .avaliar-stars span.active,
-.avaliar-stars span.hover{color:#facc15;transform:scale(1.08)}
+.avaliar-stars span.hover{color:#facc15}
 
 /* DESCRIÇÃO */
 #desc{font-size:15px;line-height:1.65;opacity:.9}
 #desc.collapsed{
-display:-webkit-box;-webkit-line-clamp:3;
--webkit-box-orient:vertical;overflow:hidden}
-#lerMais{background:none;border:none;color:#f87171;
-font-weight:600;cursor:pointer;align-self:flex-start}
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden
+}
+#lerMais{background:none;border:none;color:#f87171;font-weight:600;cursor:pointer}
 
-@media(max-width:900px){
-#layout{grid-template-columns:1fr}
-#player{position:relative;top:0}
-}
-
-
-
-/* TEMPORADAS */
-#temporadasBox{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:18px
-}
-.temporada-btn{
-  padding:8px 14px;
-  border-radius:14px;
-  background:#111;
-  border:1px solid #333;
-  color:#fff;
-  cursor:pointer;
-  font-weight:600;
-}
-.temporada-btn.active{
-  background:#dc2626;
-  border-color:#dc2626;
-}
-
-/* EPISÓDIOS */
-#episodiosBox{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin-top:16px
-}
-.episodio{
-  padding:12px 14px;
-  border-radius:16px;
-  background:#0b0b0b;
-  border:1px solid #222;
-  cursor:pointer;
-  transition:.25s;
-}
-.episodio:hover{
-  background:#151515;
-}
-.episodio.active{
-  border-color:#dc2626;
-  box-shadow:0 0 0 1px #dc2626;
-}
-#selectorsBox{
-  display:flex;
-  gap:12px;
-  margin-top:18px;
-}
-
+/* SELECTS */
+#selectorsBox{display:flex;gap:12px;margin-top:18px}
 #selectorsBox select{
-  flex:1;
-  padding:12px 14px;
-  border-radius:14px;
-  background:#111;
-  border:1px solid #333;
-  color:#fff;
-  font-weight:600;
-  cursor:pointer;
+  flex:1;padding:12px;border-radius:14px;
+  background:#111;border:1px solid #333;color:#fff
 }
-
-#selectorsBox select:focus{
-  outline:none;
-  border-color:#dc2626;
-}
-
 </style>
 </head>
 
 <body>
 
 <div id="top">
-<button onclick="voltarHome()">← Voltar</button>
+  <button onclick="voltarHome()">← Voltar</button>
 </div>
 
 <div id="layout">
@@ -145,159 +84,100 @@ font-weight:600;cursor:pointer;align-self:flex-start}
   </div>
 
   <div id="side">
-  <h1 id="titulo"></h1>
-  <div id="meta"></div>
+    <h1 id="titulo"></h1>
+    <div id="meta"></div>
 
-  <div id="avaliarBox">
-    <div class="avaliar-label">Avalie este conteúdo</div>
-    <div id="avaliarStars" class="avaliar-stars"></div>
+    <div>
+      <div style="font-size:13px;opacity:.7">Avalie este conteúdo</div>
+      <div id="avaliarStars" class="avaliar-stars"></div>
+    </div>
+
+    <div id="selectorsBox">
+      <select id="temporadaSelect"></select>
+      <select id="episodioSelect"></select>
+    </div>
+
+    <p id="desc" class="collapsed"></p>
+    <button id="lerMais" style="display:none">Ler mais</button>
   </div>
 
-
-<div id="selectorsBox">
-  <select id="temporadaSelect"></select>
-  <select id="episodioSelect"></select>
 </div>
-
-
-    
-  <p id="desc" class="collapsed"></p>
-  <button id="lerMais" style="display:none">Ler mais</button>
-
-
-</div>
-</div> <!-- ✅ FECHAMENTO DO #layout -->
-
 
 <script>
+/* ================= SUPABASE ================= */
 const sb = supabase.createClient(
- "https://dxkszikemntfusfyrzos.supabase.co",
- "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
+
+/* ================= VARS ================= */
+const item = JSON.parse(
+  decodeURIComponent(new URLSearchParams(location.search).get("item"))
+);
+
+const video = document.getElementById("video");
+const iframe = document.getElementById("iframe");
+const titulo = document.getElementById("titulo");
+const meta = document.getElementById("meta");
+const desc = document.getElementById("desc");
+const lerMais = document.getElementById("lerMais");
+const avaliarStars = document.getElementById("avaliarStars");
+const temporadaSelect = document.getElementById("temporadaSelect");
+const episodioSelect = document.getElementById("episodioSelect");
+
+let usuario = null;
 let episodios = [];
 let temporadaAtual = null;
 
+/* ================= LOGIN ================= */
+async function carregarUsuario(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session) return;
 
-  
-const item = JSON.parse(
- decodeURIComponent(new URLSearchParams(location.search).get("item"))
-);
-
-let usuario = null;
-
-/* 🔐 VALIDAR LOGIN CUSTOM */
-/* 🔐 VALIDAR LOGIN (SUPABASE AUTH) */
-async function carregarUsuario() {
-  const { data: { session } } = await sb.auth.getSession();
-
-  // ❌ não logado
-  if (!session) {
-    usuario = null;
-    return;
-  }
-
-  // 📧 email vem do Auth
-  const email = session.user.email;
-  localStorage.setItem("usuario_email", email);
-
-  // 🔎 carrega perfil interno
-  const { data, error } = await sb
+  const { data } = await sb
     .from("usuarios")
     .select("id,email")
-    .eq("email", email)
+    .eq("email", session.user.email)
     .maybeSingle();
 
-  if (error || !data) {
-    usuario = null;
-    return;
-  }
-
-  usuario = data;
+  if(data) usuario = data;
 }
 
-/* ⭐ ESTRELAS */
-function renderAvaliarStars(nota=0){
-  const box = avaliarStars;
-  box.innerHTML="";
-  const fixas=Math.round(nota/2);
+/* ================= PLAYER ================= */
+function tocar(src){
+  if(!src) return;
 
-  for(let i=1;i<=5;i++){
-    const s=document.createElement("span");
-    s.textContent="★";
-    if(i<=fixas)s.classList.add("active");
-    s.onmouseenter=()=>pintar(i);
-    s.onmouseleave=()=>pintar(fixas);
-    s.onclick=()=>salvarAvaliacao(i*2);
-    box.appendChild(s);
+  video.pause(); iframe.src="";
+
+  if(/\.m3u8$/i.test(src)){
+    iframe.style.display="none";
+    video.style.display="block";
+    video.src = src;
+    video.muted = true;
+    video.play().then(()=>video.muted=false).catch(()=>{});
+  }else{
+    video.style.display="none";
+    iframe.style.display="block";
+    iframe.src = `https://iframe.mediadelivery.net/embed/569072/${src}`;
   }
 }
-function pintar(q){
-  [...avaliarStars.children].forEach((s,i)=>{
-    s.classList.toggle("hover",i<q);
-  });
-}
 
-/* 💾 SALVAR */
-async function salvarAvaliacao(nota){
-  if(!usuario){
-    alert("Faça login para avaliar");
-    return;
-  }
-
-  await sb.from("avaliacoes").upsert({
-    filme_id:item.id,
-    usuario_id:usuario.id,
-    nota
-  },{onConflict:"filme_id,usuario_id"});
-
-  renderAvaliarStars(nota);
-  carregar();
-}
-
-
-
+/* ================= EPISÓDIOS ================= */
 async function carregarEpisodios(){
   const { data } = await sb
     .from("filmes")
     .select("*")
-    .eq("tipo", "serie")
+    .eq("tipo","serie")
     .eq("serie_nome", item.serie_nome)
-    .not("episodio", "is", null)
-    .order("temporada", { ascending: true })
-    .order("episodio", { ascending: true });
+    .order("temporada",{ascending:true})
+    .order("episodio",{ascending:true});
 
   episodios = data || [];
+  if(!episodios.length) return;
 
-  if(episodios.length){
-    renderTemporadas();
-  }else{
-    temporadasBox.innerHTML="";
-    episodiosBox.innerHTML="";
-  }
-}
-
-function voltarHome(){
-  const origem = sessionStorage.getItem("origem");
-  if(origem) window.location.href = origem;
-  else window.location.href = "index.html";
-}
-
-
-function renderTemporadas(){
-  const temporadas = [...new Set(episodios.map(e=>e.temporada))];
-
-  temporadaSelect.innerHTML = "";
-  episodioSelect.innerHTML = "";
-
-  temporadas.forEach(t=>{
-    const opt=document.createElement("option");
-    opt.value=t;
-    opt.textContent=`Temporada ${t}`;
-    temporadaSelect.appendChild(opt);
-  });
-
-  temporadaAtual = temporadas[0];
-  temporadaSelect.value = temporadaAtual;
+  const temps = [...new Set(episodios.map(e=>e.temporada))];
+  temporadaSelect.innerHTML = temps.map(t=>`<option>${t}</option>`).join("");
+  temporadaAtual = temps[0];
 
   temporadaSelect.onchange = ()=>{
     temporadaAtual = Number(temporadaSelect.value);
@@ -308,49 +188,46 @@ function renderTemporadas(){
 }
 
 function renderEpisodios(){
-  episodioSelect.innerHTML="";
-
   const lista = episodios.filter(e=>e.temporada===temporadaAtual);
+  episodioSelect.innerHTML = lista.map(e=>
+    `<option value="${e.video_url}">Episódio ${e.episodio}</option>`
+  ).join("");
 
-  lista.forEach(e=>{
-    const opt=document.createElement("option");
-    opt.value = e.video_url;
-    opt.textContent = `Episódio ${e.episodio}`;
-    episodioSelect.appendChild(opt);
+  episodioSelect.onchange = ()=>tocar(episodioSelect.value);
+  if(lista.length) tocar(lista[0].video_url);
+}
+
+/* ================= AVALIAÇÃO ================= */
+function renderAvaliarStars(nota=0){
+  avaliarStars.innerHTML="";
+  const fixas=Math.round(nota/2);
+
+  for(let i=1;i<=5;i++){
+    const s=document.createElement("span");
+    s.textContent="★";
+    if(i<=fixas)s.classList.add("active");
+    s.onmouseenter=()=>pintar(i);
+    s.onmouseleave=()=>pintar(fixas);
+    s.onclick=()=>salvarAvaliacao(i*2);
+    avaliarStars.appendChild(s);
+  }
+}
+function pintar(q){
+  [...avaliarStars.children].forEach((s,i)=>{
+    s.classList.toggle("hover",i<q);
   });
-
-  episodioSelect.onchange = ()=>{
-    tocar(episodioSelect.value);
-  };
-
-  if(lista.length){
-    episodioSelect.value = lista[0].video_url;
-    tocar(lista[0].video_url);
-  }
+}
+async function salvarAvaliacao(nota){
+  if(!usuario){alert("Faça login para avaliar");return;}
+  await sb.from("avaliacoes").upsert({
+    filme_id:item.id,
+    usuario_id:usuario.id,
+    nota
+  });
+  renderAvaliarStars(nota);
 }
 
-
-/* ▶ PLAYER */
-function tocar(src){
-  if(!src) return;
-
-  if(/\.m3u8$/i.test(src)){
-    iframe.style.display="none";
-    iframe.src="";
-    video.style.display="block";
-    video.src=src;
-    video.play().catch(()=>{});
-  }else{
-    video.pause();
-    video.style.display="none";
-    video.src="";
-    iframe.style.display="block";
-    iframe.src=`https://iframe.mediadelivery.net/embed/569072/${src}`;
-  }
-}
-
-
-/* 📥 CARREGAR */
+/* ================= LOAD ================= */
 async function carregar(){
   const { data: filme } = await sb
     .from("filmes")
@@ -361,68 +238,35 @@ async function carregar(){
   titulo.textContent = filme.titulo;
   desc.textContent = filme.descricao || "";
 
-  const { data: avals } = await sb
-    .from("avaliacoes")
-    .select("nota")
-    .eq("filme_id", item.id);
+  meta.innerHTML = [
+    filme.categoria && `🎬 ${filme.categoria}`,
+    filme.tipo && `📺 ${filme.tipo}`,
+    filme.ano_lancamento && `📅 ${filme.ano_lancamento}`
+  ].filter(Boolean).map(m=>`<div class="meta-item"><span>${m}</span></div>`).join("");
 
-  let media=null;
-  if(avals?.length)
-    media=avals.reduce((t,a)=>t+a.nota,0)/avals.length;
-
-  const metas=[];
-  if(filme.categoria) metas.push(['🎬',filme.categoria]);
-
-
-  
-  if(filme.tipo) metas.push(['📺',filme.tipo]);
-  if(filme.ano_lancamento) metas.push(['📅',filme.ano_lancamento]);
-  if(filme.idioma) metas.push(['🌎',filme.idioma]);
-  if(filme.audio) metas.push(['🔊',filme.audio]);
-  if(filme.classificacao) metas.push(['🔞',filme.classificacao]);
-  if(filme.nota_critica) metas.push(['⭐',filme.nota_critica+" • Crítica"]);
-  if(media!==null) metas.push(['👥',"⭐".repeat(Math.round(media/2))+" • Assinantes"]);
-
-  meta.innerHTML=metas.map(m=>
-    `<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`
-  ).join("");
-
-  if(usuario){
-   const { data:minha } = await sb
-  .from("avaliacoes")
-  .select("nota")
-  .eq("filme_id", item.id)
-  .eq("usuario_id", usuario.id)
-  .maybeSingle();
-    renderAvaliarStars(minha?.nota||0);
+  if(filme.tipo === "serie"){
+    await carregarEpisodios();
   }else{
-    renderAvaliarStars(0);
+    temporadaSelect.style.display="none";
+    episodioSelect.style.display="none";
+    tocar(filme.video_url);
   }
 
-if(filme.tipo !== "serie" || filme.video_url !== "SERIE_PARENT"){
-  temporadasBox.style.display="none";
-  episodiosBox.style.display="none";
-  tocar(filme.video_url);
-  return;
+  if(desc.scrollHeight>desc.clientHeight){
+    lerMais.style.display="inline";
+    lerMais.onclick=()=>{
+      desc.classList.toggle("collapsed");
+      lerMais.textContent = desc.classList.contains("collapsed")?"Ler mais":"Ler menos";
+    };
+  }
 }
 
-
-  
-await carregarEpisodios();
-
-  setTimeout(()=>{
-    if(desc.scrollHeight>desc.clientHeight){
-      lerMais.style.display="inline";
-      lerMais.onclick=()=>{
-        desc.classList.toggle("collapsed");
-        lerMais.textContent=
-          desc.classList.contains("collapsed")?"Ler mais":"Ler menos";
-      };
-    }
-  },50);
+/* ================= NAV ================= */
+function voltarHome(){
+  location.href="index.html";
 }
 
-/* INIT */
+/* ================= INIT ================= */
 (async()=>{
   await carregarUsuario();
   carregar();
