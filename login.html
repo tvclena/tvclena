@@ -361,12 +361,16 @@ btnCadastro.onclick = async ()=>{
     return;
   }
 
-  await sb.from("user").insert({
-    id: data.user.id,
-    email: data.user.email,
+await sb
+  .from("user")
+  .update({
     cpf: c_cpf.value.replace(/\D/g,""),
-    whatsapp: c_whats.value.replace(/\D/g,"")
-  });
+    whatsapp: c_whats.value.replace(/\D/g,""),
+    nome_usuario: c_email.value.split("@")[0],
+    username: c_email.value.split("@")[0]
+  })
+  .eq("id", data.user.id);
+
 
   // ✅ FEEDBACK
   msgCadastro.textContent = "Conta criada com sucesso!";
