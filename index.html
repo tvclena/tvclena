@@ -2085,7 +2085,46 @@ function aplicarFiltrosAvancados(){
 
 
 
+function render(buscaTxt = "") {
+  let html = "";
+  let lista = dados;
 
+  if (categoriaAtiva !== "todas") {
+    lista = lista.filter(d =>
+      d.categoria?.toLowerCase().split(",").includes(categoriaAtiva)
+    );
+  }
+
+  // 🎬 FILMES
+  if (filtro === "todos" || filtro === "filme") {
+    lista
+      .filter(d => d.tipo === "filme")
+      .filter(d => d._search.includes(buscaTxt))
+      .forEach(f => html += card(f));
+  }
+
+  // 📺 SÉRIES
+  if (filtro === "todos" || filtro === "serie") {
+    const series = [...new Map(
+      lista.filter(d => d.tipo === "serie")
+           .map(s => [s.serie_nome, s])
+    ).values()];
+
+    series
+      .filter(s => s._search.includes(buscaTxt))
+      .forEach(s => html += card(s));
+  }
+
+  // 🎥 DOCUMENTÁRIOS ✅
+  if (filtro === "documentarios") {
+    lista
+      .filter(d => d.tipo === "documentario")
+      .filter(d => d._search.includes(buscaTxt))
+      .forEach(d => html += card(d));
+  }
+
+  grid.innerHTML = html;
+}
 
 function prepararLista(filtros = null, buscaTxt = "") {
   let lista = [...dados];
