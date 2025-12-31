@@ -2400,60 +2400,139 @@ async function validarSessao() {
   const email = localStorage.getItem("usuario_email");
   const tokenLocal = localStorage.getItem("session_token");
 
-  if (!email || !tokenLocal) {
-    localStorage.clear();
+  // 🛑 PASSO 3 — SE NÃO TIVER EMAIL OU TOKEN, CAI FORA
+if (!email || !tokenLocal) {
+  localStorage.clear();
+
+  if (!redirecionando) {
+    redirecionando = true;
     location.replace("login.html");
-    return false;
   }
 
-  // 🔎 USER
-  const { data: user, error } = await sb
-    .from("user")
-    .select("id, status, trial_expires_at")
-    .eq("email", email)
-    .single();
-
-  if (error || !user) {
-    localStorage.clear();
-    location.replace("login.html");
-    return false;
-  }
-
-  // 🔐 TOKEN
-  const { data: sessao } = await sb
-    .from("sessoes")
-    .select("id, user_agent")
-    .eq("user_id", user.id)
-    .eq("session_token", tokenLocal)
-    .maybeSingle();
-
-  if (!sessao) {
-    mostrarSessaoEncerrada(sessao?.user_agent || "Outro dispositivo");
-    return false;
-  }
-
-  // 🚫 BLOQUEADO
-  if (user.status === "bloqueado") {
-    localStorage.clear();
-    location.replace("login.html");
-    return false;
-  }
-
-  // ⏳ TRIAL
-  if (user.trial_expires_at) {
-    const agora = new Date();
-    const expira = new Date(user.trial_expires_at);
-    if (agora > expira) {
-      localStorage.clear();
-      location.replace("planos.html");
-      return false;
-    }
-  }
-
-  return true;
+  return false;
 }
 
 
+ const { data, error } = await sb
+  .from("usuarios")
+.select("id, status, trial_expires_at, session_token, controle_sessao, tipo_assinatura")
+  .eq("email", email)
+  .maybeSingle();
+// 🔥 REGRA OPÇÃO A — LOGADO MAS SEM PLANO → PLANOS
+if (!data.tipo_assinatura) {
+  if (!redirecionando) {
+    redirecionando = true;
+    location.replace("planos.html");
+  }
+  return false;
+}
+
+
+// 🔐 PASSO 4 — CONTROLE DE SESSÃO (OUTRO DISPOSITIVO)
+if (data.controle_sessao === true) {
+  if (data.session_token !== tokenLocal) {
+
+    const { data: ultimoLogin } = await sb
+      .from("login_logs")
+      .select("user_agent, created_at")
+      .eq("user_id", data.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const agente =
+      ultimoLogin?.user_agent || "Outro dispositivo";
+
+mostrarSessaoEncerrada(agente);
+return false;
+
+
+    localStorage.clear();
+
+    if (window.matchMedia("(display-mode: standalone)").matches) {
+      location.href = "login.html";
+    } else {
+      location.replace("login.html");
+    }
+
+    return false;
+  }
+}
+
+
+  const agora = new Date();
+  const expira = new Date(data.trial_expires_at);
+if (data.status === "bloqueado") {
+  const emailUser = email;
+
+  const mensagem = encodeURIComponent(
+`Olá, meu acesso está bloqueado.
+
+📧 Email: ${emailUser}
+
+Gostaria de regularizar minha assinatura.`
+  );
+
+  const whatsappUrl = `https://wa.me/5575998112535?text=${mensagem}`;
+
+  // 🔥 DESARMA DEFINITIVAMENTE A ABERTURA (CRÍTICO)
+  sessionStorage.setItem("clena_abertura_ok", "1");
+  const aberturaFrame = document.getElementById("aberturaFrame");
+  if (aberturaFrame) aberturaFrame.remove();
+
+  // 🔥 LIMPA QUALQUER TRAVA GLOBAL (MODAL / BUSCA / OVERFLOW)
+  document.body.classList.remove("modal-open");
+  document.body.classList.remove("search-open");
+
+  document.body.style.overflow = "auto";
+  document.documentElement.style.overflow = "auto";
+  document.body.style.touchAction = "auto";
+  document.body.style.height = "auto";
+
+  // 🧱 TELA DE BLOQUEIO
+  document.body.innerHTML = `
+    <div style="
+      min-height:100vh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      background:#0f0f10;
+      color:#fff;
+      font-family:Inter,Arial;
+      padding:20px;
+      overflow-y:auto;
+    ">
+      <div style="width:100%;max-width:960px">
+
+        <!-- 🚫 BLOQUEIO -->
+        <div style="
+          background:#1b1b1e;
+          padding:30px;
+          border-radius:16px;
+          box-shadow:0 20px 40px rgba(0,0,0,.6);
+          text-align:center;
+          margin-bottom:26px;
+        ">
+          <h1 style="color:#e50914;margin-bottom:10px">
+            🚫 Acesso bloqueado
+          </h1>
+
+          <p style="color:#ccc;margin-bottom:14px">
+            Seu acesso está temporariamente bloqueado.<br>
+            Escolha um plano abaixo para continuar assistindo.
+          </p>
+
+          <div style="font-size:12px;color:#777">
+            Email: <strong>${email}</strong>
+          </div>
+        </div>
+
+        <!-- 💳 PLANOS -->
+        <div id="planosContainer"></div>
+
+      </div>
+    </div>
+  `;
 
   // 🔥 FORÇA RECÁLCULO DE SCROLL (SAFARI / iOS)
   setTimeout(() => {
@@ -2461,8 +2540,16 @@ async function validarSessao() {
     document.documentElement.scrollTop = 0;
   }, 0);
 
+  // 🚀 CARREGA PLANOS
+  carregarPlanosBloqueio();
+  return false;
+}
 
 
+
+  usuario = { email };
+  return true;
+}
 
 
 async function abrirLinkPlano(plano){
@@ -2666,7 +2753,44 @@ prepararLista(
   busca?.value?.toLowerCase() || ""
 );
 }
+async function carregarPlanosBloqueio() {
+  const res = await fetch("/api/get-planos");
+  const planos = await res.json();
 
+  const box = document.getElementById("planosContainer");
+
+  // 🔥 REMOVE APEX DA TELA DE BLOQUEIO
+  const planosAssinatura = planos.filter(p =>
+    !p.nome.toLowerCase().includes("apex")
+  );
+
+  box.innerHTML = `
+    <div class="planos-bloqueio">
+      ${planosAssinatura.map((plano, i) => `
+        <div class="plano-card ${i === 1 ? "destaque" : ""}">
+          <h3>${plano.nome}</h3>
+
+          <div class="plano-preco">
+            R$ ${Number(plano.valor).toFixed(2).replace(".", ",")}
+            <span>/mês</span>
+          </div>
+
+          <ul>
+            <li>Acesso completo</li>
+            <li>Conteúdo exclusivo</li>
+            <li>Qualidade máxima</li>
+          </ul>
+
+          <button
+            class="plano-btn"
+            onclick="abrirLinkPlano('${plano.nome}')">
+            Assinar agora
+          </button>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
 
 function mostrarSessaoEncerrada(userAgent){
   document.getElementById("sessaoDevice").textContent =
