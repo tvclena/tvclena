@@ -223,7 +223,7 @@ async function carregarUsuario(){
 
 async function carregarPerfil(email){
   const { data, error } = await sb
-    .from("usuarios")
+    .from("user")
     .select("id,email")
     .eq("email", email)
     .maybeSingle();
