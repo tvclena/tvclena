@@ -124,22 +124,22 @@ font-weight:600;cursor:pointer;align-self:flex-start}
   </div>
 
   <div id="side">
-    <h1 id="titulo"></h1>
-    <div id="meta"></div>
+  <h1 id="titulo"></h1>
+  <div id="meta"></div>
 
-    <div id="avaliarBox">
-      <div class="avaliar-label">Avalie este conteúdo</div>
-      <div id="avaliarStars" class="avaliar-stars"></div>
-    </div>
-
-    <p id="desc" class="collapsed"></p>
-    <button id="lerMais" style="display:none">Ler mais</button>
-  
+  <div id="avaliarBox">
+    <div class="avaliar-label">Avalie este conteúdo</div>
+    <div id="avaliarStars" class="avaliar-stars"></div>
   </div>
-<div id="temporadasBox"></div>
-<div id="episodiosBox"></div>
 
+  <p id="desc" class="collapsed"></p>
+  <button id="lerMais" style="display:none">Ler mais</button>
+
+  <!-- ✅ AQUI DENTRO -->
+  <div id="temporadasBox"></div>
+  <div id="episodiosBox"></div>
 </div>
+
 
 <script>
 const sb = supabase.createClient(
