@@ -53,30 +53,46 @@ body{
 
 .group{margin-bottom:16px}
 label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
+
 input{
-  width:100%;padding:14px 16px;border-radius:12px;
+  width:100%;
+  padding:14px 16px;
+  border-radius:12px;
   border:1px solid var(--border);
-  background:var(--input);color:#fff;font-size:15px
+  background:var(--input);
+  color:#fff;
+  font-size:15px;
 }
 input:focus{outline:none;border-color:var(--accent)}
 
 .btn{
-  width:100%;height:52px;border:none;border-radius:14px;
-  font-size:16px;font-weight:800;cursor:pointer
+  width:100%;
+  height:52px;
+  border:none;
+  border-radius:14px;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
 }
 .btn-primary{background:var(--accent);color:#fff;margin-top:6px}
 
+/* ===== GOOGLE ===== */
 .google-btn{
-  margin:16px auto 0;width:52px;height:52px;border-radius:50%;
-  background:#0f0f13;border:1px solid #242428;
+  margin:16px auto 0;
+  width:52px;height:52px;
+  border-radius:50%;
+  background:#0f0f13;
+  border:1px solid #242428;
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;transition:.2s
 }
 .google-btn:hover{background:#18181d;transform:scale(1.05)}
 .google-btn img{width:32px;height:32px}
 
+/* ================= FOOTER ================= */
 .footer{
-  display:flex;justify-content:space-between;margin-top:22px;font-size:13px
+  display:flex;justify-content:space-between;
+  margin-top:22px;font-size:13px
 }
 .footer a{color:#c7c7cc;text-decoration:none;cursor:pointer}
 .footer a:hover{text-decoration:underline}
@@ -85,72 +101,112 @@ input:focus{outline:none;border-color:var(--accent)}
 .msg.error{color:#f87171}
 .msg.success{color:#22c55e}
 
-/* ================= MODAIS ================= */
+/* ================= MODAL BASE ================= */
 .modal{
-  position:fixed;inset:0;background:rgba(0,0,0,.85);
-  display:none;align-items:center;justify-content:center;
-  z-index:9999
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
 }
 
-/* ================= PRIVACIDADE ================= */
+/* ================= PRIVACIDADE CHECKBOX ================= */
 .privacidade-box{
   display:flex;
   align-items:center;
   gap:10px;
-  margin-top:12px;
+  margin:14px 0;
   font-size:13px;
   color:#c7c7cc;
 }
-
-.privacidade-box input[type="checkbox"]{
-  width:18px;
-  height:18px;
+.privacidade-box input{
+  width:18px;height:18px;
   accent-color:#e50914;
-  cursor:pointer;
 }
-
-.privacidade-box label{
-  margin:0;
-  line-height:1.4;
-  cursor:pointer;
-}
-
 .privacidade-box a{
   color:#3ea6ff;
   text-decoration:none;
 }
+.privacidade-box a:hover{text-decoration:underline}
 
-.privacidade-box a:hover{
-  text-decoration:underline;
+/* ================= POPUP PRIVACIDADE ================= */
+.privacidade-popup{
+  width:92%;
+  max-width:560px;
+  max-height:85vh;
+  background:linear-gradient(180deg,#16161b,#0f0f13);
+  border-radius:20px;
+  box-shadow:0 40px 120px rgba(0,0,0,.9);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
 }
-
+.privacidade-header{
+  padding:18px 20px;
+  font-weight:800;
+  border-bottom:1px solid #242428;
+  display:flex;
+  justify-content:space-between;
+}
+.privacidade-fechar{
+  background:#1f1f24;
+  border:none;
+  width:32px;height:32px;
+  border-radius:10px;
+  color:#fff;
+  cursor:pointer;
+}
+.privacidade-fechar:hover{background:#e50914}
+.privacidade-conteudo{
+  flex:1;
+  overflow-y:auto;
+  scrollbar-width:none;
+}
+.privacidade-conteudo::-webkit-scrollbar{display:none}
+.privacidade-conteudo iframe{
+  width:100%;height:100%;border:none;
+}
 
 /* ================= SESSÕES ================= */
 .sessao-box{
-  background:#141417;padding:26px;border-radius:18px;
-  width:420px;max-width:92%
+  background:#141417;
+  padding:26px;
+  border-radius:18px;
+  width:420px;
+  max-width:92%;
 }
 .sessao-item{
-  display:flex;align-items:center;gap:14px;
-  background:#0f0f13;border:1px solid #242428;
-  padding:14px;border-radius:14px;margin-bottom:12px
+  display:flex;
+  gap:14px;
+  align-items:center;
+  background:#0f0f13;
+  border:1px solid #242428;
+  padding:14px;
+  border-radius:14px;
+  margin-bottom:12px;
 }
 .sessao-icon{
-  width:48px;height:48px;border-radius:12px;
-  background:#18181d;display:flex;
-  align-items:center;justify-content:center;font-size:22px
+  width:48px;height:48px;
+  border-radius:12px;
+  background:#18181d;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
 }
 .sessao-info{flex:1}
-.sessao-info strong{display:block;font-size:14px}
 .sessao-info span{font-size:12px;color:#9ca3af}
 .sessao-item button{
-  padding:10px 14px;border:none;border-radius:10px;
-  background:#e50914;color:#fff;font-weight:800;cursor:pointer
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  background:#e50914;
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
 }
-.privacidade-box{
-  padding:6px 0;
-}
-
 </style>
 </head>
 
@@ -183,18 +239,26 @@ input:focus{outline:none;border-color:var(--accent)}
     <h2>Criar conta</h2>
 
     <div class="group"><label>Email</label><input id="c_email"></div>
-    <div class="group"><label>CPF</label><input id="c_cpf"></div>
-    <div class="group"><label>WhatsApp</label><input id="c_whats"></div>
+
+    <div class="group">
+      <label>CPF</label>
+<input id="c_cpf" inputmode="numeric" pattern="[0-9]*">
+    </div>
+
+    <div class="group">
+      <label>WhatsApp</label>
+<input id="c_whats" inputmode="numeric" pattern="[0-9]*">
+    </div>
+
     <div class="group"><label>Senha</label><input id="c_senha" type="password"></div>
     <div class="group"><label>Confirmar senha</label><input id="c_confirma" type="password"></div>
 
-   <div class="privacidade-box">
-  <input type="checkbox" id="aceitePrivacidade">
-  <label for="aceitePrivacidade">
-    Aceito as <a onclick="abrirPrivacidade()">Políticas de Privacidade</a>
-  </label>
-</div>
-
+    <div class="privacidade-box">
+      <input type="checkbox" id="aceitePrivacidade">
+      <label for="aceitePrivacidade">
+        Aceito as <a onclick="abrirPrivacidade()">Políticas de Privacidade</a>
+      </label>
+    </div>
 
     <button id="btnCadastro" class="btn btn-primary">Cadastrar</button>
     <div class="footer"><a id="fecharCadastro">Cancelar</a></div>
@@ -202,11 +266,16 @@ input:focus{outline:none;border-color:var(--accent)}
   </div>
 </div>
 
-<!-- ================= PRIVACIDADE POPUP ================= -->
+<!-- ================= PRIVACIDADE ================= -->
 <div class="modal" id="modalPrivacidade">
   <div class="privacidade-popup">
-    <button class="privacidade-fechar" onclick="fecharPrivacidade()">✕</button>
-    <iframe src="privacidade.html"></iframe>
+    <div class="privacidade-header">
+      Políticas de Privacidade
+      <button class="privacidade-fechar" onclick="fecharPrivacidade()">✕</button>
+    </div>
+    <div class="privacidade-conteudo">
+      <iframe src="privacidade.html"></iframe>
+    </div>
   </div>
 </div>
 
@@ -214,7 +283,6 @@ input:focus{outline:none;border-color:var(--accent)}
 <div class="modal" id="modalSessoes">
   <div class="sessao-box">
     <h3>Limite de dispositivos atingido</h3>
-    <p style="color:#aaa;font-size:14px">Escolha uma sessão para encerrar:</p>
     <div id="listaSessoes"></div>
   </div>
 </div>
@@ -225,9 +293,11 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ===== PRIVACIDADE ===== */
 function abrirPrivacidade(){ modalPrivacidade.style.display="flex"; }
 function fecharPrivacidade(){ modalPrivacidade.style.display="none"; }
+
+abrirCadastro.onclick=()=>modalCadastro.style.display="flex";
+fecharCadastro.onclick=()=>modalCadastro.style.display="none";
 
 /* ===== LOGIN ===== */
 btnLogin.onclick = async ()=>{
@@ -237,8 +307,9 @@ btnLogin.onclick = async ()=>{
     password: senha.value
   });
 
-  if(error || !data.session){
-    msg.textContent="Email, senha ou confirmação inválidos";
+  // ❌ confirmação de email DESATIVADA
+  if(error){
+    msg.textContent="Email ou senha inválidos";
     msg.className="msg error";
     return;
   }
@@ -247,77 +318,97 @@ btnLogin.onclick = async ()=>{
 };
 
 /* ===== GOOGLE ===== */
-btnGoogle.onclick = async ()=>{
-  await sb.auth.signInWithOAuth({
-    provider:"google",
-    options:{ redirectTo: location.origin + "/login.html" }
-  });
-};
+btnGoogle.onclick = ()=> sb.auth.signInWithOAuth({
+  provider:"google",
+  options:{ redirectTo: location.origin + "/login.html" }
+});
 
 /* ===== RESET ===== */
-btnReset.onclick = async ()=>{
-  if(!email.value) return;
-  await sb.auth.resetPasswordForEmail(email.value,{
-    redirectTo: location.origin + "/login.html"
-  });
-  msg.textContent="Email de recuperação enviado";
-  msg.className="msg success";
-};
+btnReset.onclick = ()=> sb.auth.resetPasswordForEmail(email.value);
 
 /* ===== CADASTRO ===== */
-abrirCadastro.onclick=()=>modalCadastro.style.display="flex";
-fecharCadastro.onclick=()=>modalCadastro.style.display="none";
-
 btnCadastro.onclick = async ()=>{
-  if(!aceitePrivacidade.checked){
-    msgCadastro.textContent="Aceite as políticas para continuar";
-    msgCadastro.className="msg error";return;
+
+  // 👉 VALIDA FORMATO DO EMAIL
+  if(!emailValido(c_email.value.trim())){
+    msgCadastro.textContent = "Informe um email válido";
+    msgCadastro.className = "msg error";
+    return;
   }
-  if(c_senha.value!==c_confirma.value){
-    msgCadastro.textContent="Senhas não conferem";
-    msgCadastro.className="msg error";return;
+
+  // 👉 ACEITE DAS POLÍTICAS
+  if(!aceitePrivacidade.checked){
+    msgCadastro.textContent = "Aceite as políticas";
+    msgCadastro.className = "msg error";
+    return;
+  }
+
+  // 👉 CONFIRMAÇÃO DE SENHA
+  if(c_senha.value !== c_confirma.value){
+    msgCadastro.textContent = "Senhas não conferem";
+    msgCadastro.className = "msg error";
+    return;
   }
 
   const { data, error } = await sb.auth.signUp({
-    email:c_email.value.trim(),
-    password:c_senha.value
+    email: c_email.value.trim(),
+    password: c_senha.value
   });
 
   if(error){
-    msgCadastro.textContent=error.message;
-    msgCadastro.className="msg error";return;
+    msgCadastro.textContent = error.message;
+    msgCadastro.className = "msg error";
+    return;
   }
 
-await sb.from("usuarios").insert({
-    id:data.user.id,
-    email:data.user.email,
-    cpf:c_cpf.value.replace(/\D/g,""),
-    whatsapp:c_whats.value.replace(/\D/g,"")
+  await sb.from("user").insert({
+    id: data.user.id,
+    email: data.user.email,
+    cpf: c_cpf.value.replace(/\D/g,""),
+    whatsapp: c_whats.value.replace(/\D/g,"")
   });
 
-msgCadastro.textContent="Conta criada com sucesso!";
-msgCadastro.className="msg success";
+  // ✅ FEEDBACK
+  msgCadastro.textContent = "Conta criada com sucesso!";
+  msgCadastro.className = "msg success";
 
+  // 👉 PREENCHE LOGIN
+  email.value = c_email.value.trim();
+  senha.value = c_senha.value;
+
+  // 👉 FECHA MODAL
+  setTimeout(()=>{
+    modalCadastro.style.display = "none";
+    msgCadastro.textContent = "";
+  }, 800);
 };
+
 
 /* ===== CONTROLE DE SESSÕES ===== */
 async function controlarSessoes(user){
   const token = crypto.randomUUID();
+  const { data:sessoes } = await sb.from("sessoes").select("*").eq("user_id",user.id);
 
-  const { data: perfil } = await sb
-    .from("user").select("max_sessoes")
-    .eq("id",user.id).single();
-
-  const { data: sessoes } = await sb
-    .from("sessoes").select("*")
-    .eq("user_id",user.id);
-
-  if(sessoes.length >= perfil.max_sessoes){
-    abrirPopupSessoes(sessoes,user,token);
+  if(sessoes?.length>=3){
+    modalSessoes.style.display="flex";
+    listaSessoes.innerHTML=sessoes.map(s=>{
+      const d=detectarDispositivo(s.user_agent);
+      return `
+        <div class="sessao-item">
+          <div class="sessao-icon">${d.icon}</div>
+          <div class="sessao-info">
+            <strong>${d.nome}</strong>
+            <span>${d.desc}</span>
+          </div>
+          <button onclick="encerrarSessao('${s.id}','${user.id}','${token}','${user.email}')">
+            Desconectar
+          </button>
+        </div>`;
+    }).join("");
     return;
   }
 
-  await criarSessao(user,token);
+  criarSessao(user,token);
 }
 
 async function criarSessao(user,token){
@@ -326,40 +417,61 @@ async function criarSessao(user,token){
     session_token:token,
     user_agent:navigator.userAgent
   });
-  localStorage.setItem("session_token",token);
-  localStorage.setItem("usuario_email",user.email);
   location.replace("index.html");
-}
-
-function abrirPopupSessoes(sessoes,user,token){
-  modalSessoes.style.display="flex";
-  listaSessoes.innerHTML = sessoes.map(s=>{
-    const d = detectarDispositivo(s.user_agent);
-    return `
-      <div class="sessao-item">
-        <div class="sessao-icon">${d.icon}</div>
-        <div class="sessao-info">
-          <strong>${d.nome}</strong>
-          <span>${d.desc}</span>
-        </div>
-        <button onclick="encerrarSessao('${s.id}','${user.id}','${token}','${user.email}')">
-          Desconectar
-        </button>
-      </div>`;
-  }).join("");
 }
 
 async function encerrarSessao(id,userId,token,email){
   await sb.from("sessoes").delete().eq("id",id);
-  await criarSessao({id,email},token);
+  criarSessao({id:userId,email},token);
 }
 
 function detectarDispositivo(ua){
-  ua = ua.toLowerCase();
-  if(/iphone|android.*mobile/.test(ua)) return {icon:"📱",nome:"Celular",desc:"Smartphone"};
-  if(/ipad|tablet|android/.test(ua)) return {icon:"📲",nome:"Tablet",desc:"Tablet"};
-  return {icon:"💻",nome:"Computador",desc:"Desktop / Notebook"};
+  ua=ua.toLowerCase();
+  if(/mobile/.test(ua)) return {icon:"📱",nome:"Celular",desc:"Mobile"};
+  if(/tablet|ipad/.test(ua)) return {icon:"📲",nome:"Tablet",desc:"Tablet"};
+  return {icon:"💻",nome:"Computador",desc:"Desktop"};
 }
+// ===== MÁSCARA CPF =====
+const cpfInput = document.getElementById("c_cpf");
+
+cpfInput.addEventListener("input", e => {
+  let v = e.target.value.replace(/\D/g, "").slice(0,11);
+
+  if (v.length > 9) {
+    v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, "$1.$2.$3-$4");
+  } else if (v.length > 6) {
+    v = v.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
+  } else if (v.length > 3) {
+    v = v.replace(/(\d{3})(\d+)/, "$1.$2");
+  }
+
+  e.target.value = v;
+});
+// ===== MÁSCARA WHATSAPP =====
+const whatsInput = document.getElementById("c_whats");
+
+whatsInput.addEventListener("input", e => {
+  let v = e.target.value.replace(/\D/g, "").slice(0,11);
+
+  if (v.length > 10) {
+    v = v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  } else if (v.length > 6) {
+    v = v.replace(/(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
+  } else if (v.length > 2) {
+    v = v.replace(/(\d{2})(\d+)/, "($1) $2");
+  } else {
+    v = v.replace(/(\d+)/, "($1");
+  }
+
+  e.target.value = v;
+});
+function emailValido(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+
+
+  
 </script>
 
 </body>
