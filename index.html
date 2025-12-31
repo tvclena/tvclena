@@ -1732,23 +1732,25 @@ async function iniciarApp() {
 
 const { data, error } = await sb
   .from("filmes")
- .select(`
-  id,
-  titulo,
-  serie_nome,
-  tipo,
-  categoria,
-  capa_url,
-  descricao,
-  video_url,
-  classificacao_indicativa,
-  ano_lancamento,
-  nota_critica,
-  duracao_minutos,
-  idioma,
-  audio
-`)
-;
+  .select(`
+    id,
+    titulo,
+    descricao,
+    categoria,
+    capa_url,
+    video_url,
+    tipo,
+    serie_nome,
+    temporada,
+    episodio,
+    ano_lancamento,
+    idioma,
+    audio,
+    duracao_minutos,
+    classificacao_indicativa,
+    nota_critica
+  `)
+  .eq("ativo", true);
 
 
 
