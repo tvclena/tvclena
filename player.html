@@ -111,7 +111,7 @@ font-weight:600;cursor:pointer;align-self:flex-start}
 <body>
 
 <div id="top">
-  <button onclick="history.back()">← Voltar</button>
+<button onclick="voltarHome()">← Voltar</button>
 </div>
 
 <div id="layout">
@@ -236,6 +236,9 @@ async function carregarEpisodios(){
   }
 }
 
+function voltarHome(){
+  window.location.href = "index.html";
+}
 
 
 function renderTemporadas(){
