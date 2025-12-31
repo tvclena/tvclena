@@ -2285,11 +2285,26 @@ function fechar(){
 
 
 
-function logout(){
+async function logout() {
+  // 🔥 limpa tudo local
   localStorage.clear();
   sessionStorage.clear();
-  location.replace("login.html");
+
+  try {
+    // 🔐 encerra sessão do Supabase Auth (email / google)
+    await sb.auth.signOut();
+  } catch (e) {
+    console.warn("Erro ao sair do auth:", e);
+  }
+
+  // 📱 trata PWA vs browser
+  if (window.matchMedia("(display-mode: standalone)").matches) {
+    location.href = "login.html";
+  } else {
+    location.replace("login.html");
+  }
 }
+
 
 function irProximoEpisodio(){
   btnProximo.style.display = "none";
@@ -2397,161 +2412,58 @@ setTimeout(() => {
   });
 }
 async function validarSessao() {
-  const email = localStorage.getItem("usuario_email");
-  const tokenLocal = localStorage.getItem("session_token");
+  // 🔐 sessão Supabase (verdade principal)
+  const { data: { session } } = await sb.auth.getSession();
 
-  // 🛑 PASSO 3 — SE NÃO TIVER EMAIL OU TOKEN, CAI FORA
-if (!email || !tokenLocal) {
-  localStorage.clear();
-
-  if (!redirecionando) {
-    redirecionando = true;
-    location.replace("login.html");
-  }
-
-  return false;
-}
-
-
- const { data, error } = await sb
-  .from("usuarios")
-.select("id, status, trial_expires_at, session_token, controle_sessao, tipo_assinatura")
-  .eq("email", email)
-  .maybeSingle();
-// 🔥 REGRA OPÇÃO A — LOGADO MAS SEM PLANO → PLANOS
-if (!data.tipo_assinatura) {
-  if (!redirecionando) {
-    redirecionando = true;
-    location.replace("planos.html");
-  }
-  return false;
-}
-
-
-// 🔐 PASSO 4 — CONTROLE DE SESSÃO (OUTRO DISPOSITIVO)
-if (data.controle_sessao === true) {
-  if (data.session_token !== tokenLocal) {
-
-    const { data: ultimoLogin } = await sb
-      .from("login_logs")
-      .select("user_agent, created_at")
-      .eq("user_id", data.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const agente =
-      ultimoLogin?.user_agent || "Outro dispositivo";
-
-mostrarSessaoEncerrada(agente);
-return false;
-
-
+  if (!session) {
     localStorage.clear();
-
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      location.href = "login.html";
-    } else {
-      location.replace("login.html");
-    }
-
+    location.replace("login.html");
     return false;
   }
-}
 
+  // 📧 garante email SEM depender do login antigo
+  const email = session.user.email;
+  localStorage.setItem("usuario_email", email);
 
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
-if (data.status === "bloqueado") {
-  const emailUser = email;
+  // ⛔ NÃO BLOQUEIA MAIS POR session_token
 
-  const mensagem = encodeURIComponent(
-`Olá, meu acesso está bloqueado.
+  // 💳 sem plano → planos
+  if (!data.tipo_assinatura) {
+    if (!redirecionando) {
+      redirecionando = true;
+      location.replace("planos.html");
+    }
+    return false;
+  }
 
-📧 Email: ${emailUser}
+  // 🔐 controle por dispositivo
+  if (data.controle_sessao === true) {
+    if (data.session_token !== tokenLocal) {
 
-Gostaria de regularizar minha assinatura.`
-  );
+      const { data: ultimoLogin } = await sb
+        .from("login_logs")
+        .select("user_agent, created_at")
+        .eq("user_id", data.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-  const whatsappUrl = `https://wa.me/5575998112535?text=${mensagem}`;
+      mostrarSessaoEncerrada(
+        ultimoLogin?.user_agent || "Outro dispositivo"
+      );
+      return false;
+    }
+  }
 
-  // 🔥 DESARMA DEFINITIVAMENTE A ABERTURA (CRÍTICO)
-  sessionStorage.setItem("clena_abertura_ok", "1");
-  const aberturaFrame = document.getElementById("aberturaFrame");
-  if (aberturaFrame) aberturaFrame.remove();
-
-  // 🔥 LIMPA QUALQUER TRAVA GLOBAL (MODAL / BUSCA / OVERFLOW)
-  document.body.classList.remove("modal-open");
-  document.body.classList.remove("search-open");
-
-  document.body.style.overflow = "auto";
-  document.documentElement.style.overflow = "auto";
-  document.body.style.touchAction = "auto";
-  document.body.style.height = "auto";
-
-  // 🧱 TELA DE BLOQUEIO
-  document.body.innerHTML = `
-    <div style="
-      min-height:100vh;
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      background:#0f0f10;
-      color:#fff;
-      font-family:Inter,Arial;
-      padding:20px;
-      overflow-y:auto;
-    ">
-      <div style="width:100%;max-width:960px">
-
-        <!-- 🚫 BLOQUEIO -->
-        <div style="
-          background:#1b1b1e;
-          padding:30px;
-          border-radius:16px;
-          box-shadow:0 20px 40px rgba(0,0,0,.6);
-          text-align:center;
-          margin-bottom:26px;
-        ">
-          <h1 style="color:#e50914;margin-bottom:10px">
-            🚫 Acesso bloqueado
-          </h1>
-
-          <p style="color:#ccc;margin-bottom:14px">
-            Seu acesso está temporariamente bloqueado.<br>
-            Escolha um plano abaixo para continuar assistindo.
-          </p>
-
-          <div style="font-size:12px;color:#777">
-            Email: <strong>${email}</strong>
-          </div>
-        </div>
-
-        <!-- 💳 PLANOS -->
-        <div id="planosContainer"></div>
-
-      </div>
-    </div>
-  `;
-
-  // 🔥 FORÇA RECÁLCULO DE SCROLL (SAFARI / iOS)
-  setTimeout(() => {
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-  }, 0);
-
-  // 🚀 CARREGA PLANOS
-  carregarPlanosBloqueio();
-  return false;
-}
-
-
+  // 🚫 bloqueado
+  if (data.status === "bloqueado") {
+    renderTelaBloqueio(email);
+    return false;
+  }
 
   usuario = { email };
   return true;
 }
-
-
 async function abrirLinkPlano(plano){
   const email = localStorage.getItem("usuario_email");
 
@@ -2632,33 +2544,33 @@ if (!sessionStorage.getItem("clena_session")) {
 
 (async () => {
 
-// 🔥 inicia UI imediatamente
-iniciarApp();
+  // 🚀 inicia UI (hero, grid, filtros) imediatamente
+  iniciarApp();
 
-// valida sessão em paralelo
-validarSessao().then(ok => {
-  if (!ok) return;
-  carregarAvatarHeader();
-});
+  // 🔐 valida sessão real
+  validarSessao().then(ok => {
+    if (!ok) return;
+    carregarAvatarHeader();
+  });
 
-setTimeout(() => {
-  setInterval(() => {
-    if (!redirecionando) {
-      validarSessao();
+  // 🔁 watchdog de sessão
+  setTimeout(() => {
+    setInterval(() => {
+      if (!redirecionando) {
+        validarSessao();
+      }
+    }, 15000);
+  }, 5000);
+
+  // 🎛️ retorno dos filtros avançados
+  window.addEventListener("message", (event) => {
+    if (event.data === "filtros_aplicados") {
+      sessionStorage.removeItem("clena_filtros_aberto");
+      aplicarFiltrosAvancados();
+      atualizarBotaoFiltros();
     }
-  }, 15000);
-}, 5000);
+  });
 
-window.addEventListener("message", (event) => {
-  if (event.data === "filtros_aplicados") {
-    sessionStorage.removeItem("clena_filtros_aberto"); // 🔥 ADICIONE
-    aplicarFiltrosAvancados();
-    atualizarBotaoFiltros();
-  }
-});
-
-
-  
 })();
 
 function abrirFiltrosAvancados(){
