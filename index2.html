@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Clena TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Inter,Arial;
+  background:#0f0f10;
+  color:#fff;
+}
+header{
+  height:64px;
+  padding:0 24px;
+  display:flex;
+  align-items:center;
+  background:#000;
+}
+.logo{
+  font-size:22px;
+  font-weight:900;
+}
+#perfilBtn img{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  object-fit:cover;
+  cursor:pointer;
+}
+main{
+  padding:80px 24px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">CLENA <span style="color:#e50914">TV</span></div>
+  <div style="margin-left:auto" id="perfilBtn"></div>
+</header>
+
+<main>
+  <h1>Bem-vindo à Clena TV</h1>
+  <p>Index compatível com login por <strong>usuarios + session_token</strong></p>
+</main>
+
+<script>
+/* ================= SUPABASE ================= */
+const sb = supabase.createClient(
+  window.ENV.SUPABASE_URL,
+  window.ENV.SUPABASE_ANON_KEY
+);
+
+let redirecionando = false;
+
+/* ================= VALIDA SESSÃO ================= */
+async function validarSessao() {
+  const email = localStorage.getItem("usuario_email");
+  const tokenLocal = localStorage.getItem("session_token");
+
+  // ❌ sem sessão
+  if (!email || !tokenLocal) {
+    localStorage.clear();
+    location.replace("login2.html");
+    return false;
+  }
+
+  const { data: user, error } = await sb
+    .from("usuarios")
+    .select(`
+      id,
+      email,
+      status,
+      tipo_assinatura,
+      trial_expires_at,
+      session_token,
+      controle_sessao
+    `)
+    .eq("email", email)
+    .maybeSingle();
+
+  if (error || !user) {
+    localStorage.clear();
+    location.replace("login.html");
+    return false;
+  }
+
+  // 🔐 controle por dispositivo
+  if (user.controle_sessao === true) {
+    if (user.session_token !== tokenLocal) {
+      mostrarSessaoEncerrada();
+      return false;
+    }
+  }
+
+  // 🚫 bloqueado
+  if (user.status === "bloqueado") {
+    location.replace("planos.html");
+    return false;
+  }
+
+  // 💳 sem plano
+  if (!user.tipo_assinatura) {
+    location.replace("planos.html");
+    return false;
+  }
+
+  return true;
+}
+
+/* ================= PERFIL HEADER ================= */
+async function carregarAvatarHeader(){
+  const email = localStorage.getItem("usuario_email");
+  if(!email) return;
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("avatar_url, nome_usuario")
+    .eq("email", email)
+    .single();
+
+  const avatar =
+    data?.avatar_url ||
+    `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
+
+  document.getElementById("perfilBtn").innerHTML = `
+    <img src="${avatar}" title="Perfil">
+  `;
+}
+
+/* ================= LOGOUT ================= */
+function logout(){
+  localStorage.clear();
+  sessionStorage.clear();
+  location.replace("login2.html");
+}
+
+/* ================= SESSÃO ENCERRADA ================= */
+function mostrarSessaoEncerrada(){
+  alert("Sua sessão foi encerrada por outro dispositivo.");
+  logout();
+}
+
+/* ================= INIT ================= */
+(async () => {
+  const ok = await validarSessao();
+  if (!ok) return;
+
+  await carregarAvatarHeader();
+
+  // 🔁 watchdog de sessão
+  setInterval(() => {
+    if (!redirecionando) validarSessao();
+  }, 15000);
+})();
+</script>
+
+</body>
+</html>
