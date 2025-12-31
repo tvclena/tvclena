@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Login • Clena TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Inter,Arial;
+  background:#0f0f10;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+}
+.login-box{
+  width:100%;
+  max-width:380px;
+  background:#1b1b1e;
+  padding:32px;
+  border-radius:16px;
+  box-shadow:0 30px 80px rgba(0,0,0,.7);
+}
+h1{
+  text-align:center;
+  margin-bottom:6px;
+}
+.subtitle{
+  text-align:center;
+  color:#aaa;
+  font-size:14px;
+  margin-bottom:26px;
+}
+input{
+  width:100%;
+  padding:14px;
+  margin-bottom:14px;
+  border-radius:10px;
+  border:1px solid #333;
+  background:#111;
+  color:#fff;
+  font-size:15px;
+}
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  background:#e50914;
+  color:#fff;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+}
+button:hover{filter:brightness(1.1)}
+.msg{
+  margin-top:14px;
+  text-align:center;
+  font-size:14px;
+}
+.error{color:#ff5555}
+.success{color:#22c55e}
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+  <h1>CLENA TV</h1>
+  <div class="subtitle">Entre para continuar</div>
+
+  <input id="email" type="email" placeholder="Seu email">
+  <input id="senha" type="password" placeholder="Sua senha">
+
+  <button onclick="login()">Entrar</button>
+
+  <div id="msg" class="msg"></div>
+</div>
+
+<script>
+const sb = supabase.createClient(
+  window.ENV.SUPABASE_URL,
+  window.ENV.SUPABASE_ANON_KEY
+);
+
+function gerarToken(){
+  return crypto.randomUUID();
+}
+
+async function login(){
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  const senha = document.getElementById("senha").value;
+  const msg = document.getElementById("msg");
+
+  msg.textContent = "";
+
+  if(!email || !senha){
+    msg.textContent = "Preencha email e senha";
+    msg.className = "msg error";
+    return;
+  }
+
+  const { data: user, error } = await sb
+    .from("usuarios")
+    .select(`
+      id,
+      email,
+      senha,
+      status,
+      tipo_assinatura,
+      controle_sessao
+    `)
+    .eq("email", email)
+    .maybeSingle();
+
+  if(error || !user){
+    msg.textContent = "Email ou senha inválidos";
+    msg.className = "msg error";
+    return;
+  }
+
+  // 🔐 valida senha (SIMPLES – ajuste se usar hash)
+  if(user.senha !== senha){
+    msg.textContent = "Email ou senha inválidos";
+    msg.className = "msg error";
+    return;
+  }
+
+  // 🚫 bloqueado
+  if(user.status === "bloqueado"){
+    msg.textContent = "Conta bloqueada. Entre em contato.";
+    msg.className = "msg error";
+    return;
+  }
+
+  // 🔑 gera token
+  const token = gerarToken();
+
+  // 💾 salva token no usuário
+  await sb
+    .from("usuarios")
+    .update({
+      session_token: token,
+      last_login_at: new Date().toISOString()
+    })
+    .eq("id", user.id);
+
+  // 🧾 log de login
+  await sb
+    .from("login_logs")
+    .insert({
+      user_id: user.id,
+      email: user.email,
+      user_agent: navigator.userAgent
+    });
+
+  // 💾 localStorage (REGRA OFICIAL)
+  localStorage.setItem("usuario_email", user.email);
+  localStorage.setItem("session_token", token);
+
+  msg.textContent = "Login realizado com sucesso";
+  msg.className = "msg success";
+
+  setTimeout(() => {
+    location.replace("index2.html");
+  }, 600);
+}
+</script>
+
+</body>
+</html>
