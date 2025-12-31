@@ -1732,7 +1732,7 @@ async function iniciarApp() {
 
 const { data, error } = await sb
   .from("filmes")
-  .select(`
+ .select(`
   id,
   titulo,
   serie_nome,
@@ -1740,7 +1740,13 @@ const { data, error } = await sb
   categoria,
   capa_url,
   descricao,
-  video_url
+  video_url,
+  classificacao_indicativa,
+  ano_lancamento,
+  nota_critica,
+  duracao_minutos,
+  idioma,
+  audio
 `)
 ;
 
