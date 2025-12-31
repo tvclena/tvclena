@@ -336,51 +336,53 @@ btnCadastro.onclick = async ()=>{
     return;
   }
 
-
-
-    msgCadastro.textContent="Aceite as políticas";
-    msgCadastro.className="msg error";
+  // 👉 ACEITE DAS POLÍTICAS
+  if(!aceitePrivacidade.checked){
+    msgCadastro.textContent = "Aceite as políticas";
+    msgCadastro.className = "msg error";
     return;
   }
-  if(c_senha.value!==c_confirma.value){
-    msgCadastro.textContent="Senhas não conferem";
-    msgCadastro.className="msg error";
+
+  // 👉 CONFIRMAÇÃO DE SENHA
+  if(c_senha.value !== c_confirma.value){
+    msgCadastro.textContent = "Senhas não conferem";
+    msgCadastro.className = "msg error";
     return;
   }
 
   const { data, error } = await sb.auth.signUp({
-    email:c_email.value.trim(),
-    password:c_senha.value
+    email: c_email.value.trim(),
+    password: c_senha.value
   });
 
   if(error){
-    msgCadastro.textContent=error.message;
-    msgCadastro.className="msg error";
+    msgCadastro.textContent = error.message;
+    msgCadastro.className = "msg error";
     return;
   }
 
   await sb.from("user").insert({
-    id:data.user.id,
-    email:data.user.email,
-    cpf:c_cpf.value.replace(/\D/g,""),
-    whatsapp:c_whats.value.replace(/\D/g,"")
+    id: data.user.id,
+    email: data.user.email,
+    cpf: c_cpf.value.replace(/\D/g,""),
+    whatsapp: c_whats.value.replace(/\D/g,"")
   });
 
-// feedback
-msgCadastro.textContent="Conta criada com sucesso!";
-msgCadastro.className="msg success";
+  // ✅ FEEDBACK
+  msgCadastro.textContent = "Conta criada com sucesso!";
+  msgCadastro.className = "msg success";
 
-// 👉 PREENCHE LOGIN
-email.value = c_email.value.trim();
-senha.value = c_senha.value;
+  // 👉 PREENCHE LOGIN
+  email.value = c_email.value.trim();
+  senha.value = c_senha.value;
 
-// 👉 FECHA MODAL
-setTimeout(()=>{
-  modalCadastro.style.display = "none";
-  msgCadastro.textContent = "";
-}, 800);
-
+  // 👉 FECHA MODAL
+  setTimeout(()=>{
+    modalCadastro.style.display = "none";
+    msgCadastro.textContent = "";
+  }, 800);
 };
+
 
 /* ===== CONTROLE DE SESSÕES ===== */
 async function controlarSessoes(user){
