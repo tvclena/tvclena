@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sessão • Player</title>
+
+<meta name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#000;color:#fff;font-family:Inter,Arial}
+
+/* TOPO */
+#top{position:sticky;top:0;z-index:100;padding:16px 20px;
+background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0))}
+#top button{background:none;border:none;color:#fff;font-size:15px;cursor:pointer}
+
+/* LAYOUT */
+#layout{display:grid;grid-template-columns:3fr 1.4fr;min-height:100vh}
+
+/* PLAYER */
+#playerArea{padding:16px}
+#player{position:sticky;top:80px;max-width:1120px;margin:auto;
+aspect-ratio:16/9;border-radius:26px;overflow:hidden;background:#000;
+box-shadow:0 0 70px rgba(220,38,38,.55)}
+#player video,#player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+/* SIDE */
+#side{padding:22px;display:flex;flex-direction:column;gap:14px}
+#titulo{font-size:28px;font-weight:700}
+
+/* META */
+#meta{display:flex;flex-wrap:wrap;gap:12px 22px;font-size:14px}
+.meta-item{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.meta-item span{opacity:.85}
+
+/* AVALIAÇÃO */
+#avaliarBox{margin-top:6px}
+.avaliar-label{font-size:13px;opacity:.7;margin-bottom:6px}
+.avaliar-stars{display:flex;gap:8px;font-size:26px;cursor:pointer}
+.avaliar-stars span{color:#333;transition:.2s}
+.avaliar-stars span.active,
+.avaliar-stars span.hover{color:#facc15;transform:scale(1.08)}
+
+/* DESCRIÇÃO */
+#desc{font-size:15px;line-height:1.65;opacity:.9}
+#desc.collapsed{
+display:-webkit-box;-webkit-line-clamp:3;
+-webkit-box-orient:vertical;overflow:hidden}
+#lerMais{background:none;border:none;color:#f87171;
+font-weight:600;cursor:pointer;align-self:flex-start}
+
+@media(max-width:900px){
+#layout{grid-template-columns:1fr}
+#player{position:relative;top:0}
+}
+</style>
+</head>
+
+<body>
+
+<div id="top">
+  <button onclick="history.back()">← Voltar</button>
+</div>
+
+<div id="layout">
+
+  <div id="playerArea">
+    <div id="player">
+      <video id="video" controls playsinline></video>
+      <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
+    </div>
+  </div>
+
+  <div id="side">
+    <h1 id="titulo"></h1>
+    <div id="meta"></div>
+
+    <div id="avaliarBox">
+      <div class="avaliar-label">Avalie este conteúdo</div>
+      <div id="avaliarStars" class="avaliar-stars"></div>
+    </div>
+
+    <p id="desc" class="collapsed"></p>
+    <button id="lerMais" style="display:none">Ler mais</button>
+  </div>
+
+</div>
+
+<script>
+const sb = supabase.createClient(
+ "https://dxkszikemntfusfyrzos.supabase.co",
+ "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+const item = JSON.parse(
+ decodeURIComponent(new URLSearchParams(location.search).get("item"))
+);
+
+let usuario = null;
+
+/* 🔐 VALIDAR LOGIN CUSTOM */
+async function carregarUsuario(){
+  const email = localStorage.getItem("usuario_email");
+  const token = localStorage.getItem("session_token");
+
+  if(!email || !token) return;
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("id,email,session_token")
+    .eq("email", email)
+    .eq("session_token", token)
+    .single();
+
+  if(data) usuario = data;
+}
+
+/* ⭐ ESTRELAS */
+function renderAvaliarStars(nota=0){
+  const box = avaliarStars;
+  box.innerHTML="";
+  const fixas=Math.round(nota/2);
+
+  for(let i=1;i<=5;i++){
+    const s=document.createElement("span");
+    s.textContent="★";
+    if(i<=fixas)s.classList.add("active");
+    s.onmouseenter=()=>pintar(i);
+    s.onmouseleave=()=>pintar(fixas);
+    s.onclick=()=>salvarAvaliacao(i*2);
+    box.appendChild(s);
+  }
+}
+function pintar(q){
+  [...avaliarStars.children].forEach((s,i)=>{
+    s.classList.toggle("hover",i<q);
+  });
+}
+
+/* 💾 SALVAR */
+async function salvarAvaliacao(nota){
+  if(!usuario){
+    alert("Faça login para avaliar");
+    return;
+  }
+
+  await sb.from("avaliacoes").upsert({
+    filme_id:item.id,
+    usuario_id:usuario.id,
+    nota
+  },{onConflict:"filme_id,usuario_id"});
+
+  renderAvaliarStars(nota);
+  carregar();
+}
+
+/* ▶ PLAYER */
+function tocar(src){
+  if(!src)return;
+  if(/\.m3u8$/i.test(src)){
+    iframe.remove();video.src=src;video.play().catch(()=>{});
+  }else{
+    video.remove();
+    iframe.src=`https://iframe.mediadelivery.net/embed/569072/${src}`;
+  }
+}
+
+/* 📥 CARREGAR */
+async function carregar(){
+  const { data: filme } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("id", item.id)
+    .single();
+
+  titulo.textContent = filme.titulo;
+  desc.textContent = filme.descricao || "";
+
+  const { data: avals } = await sb
+    .from("avaliacoes")
+    .select("nota")
+    .eq("filme_id", item.id);
+
+  let media=null;
+  if(avals?.length)
+    media=avals.reduce((t,a)=>t+a.nota,0)/avals.length;
+
+  const metas=[];
+  if(filme.categoria) metas.push(['🎬',filme.categoria]);
+  if(filme.tipo) metas.push(['📺',filme.tipo]);
+  if(filme.ano_lancamento) metas.push(['📅',filme.ano_lancamento]);
+  if(filme.idioma) metas.push(['🌎',filme.idioma]);
+  if(filme.audio) metas.push(['🔊',filme.audio]);
+  if(filme.classificacao) metas.push(['🔞',filme.classificacao]);
+  if(filme.nota_critica) metas.push(['⭐',filme.nota_critica+" • Crítica"]);
+  if(media!==null) metas.push(['👥',"⭐".repeat(Math.round(media/2))+" • Assinantes"]);
+
+  meta.innerHTML=metas.map(m=>
+    `<div class="meta-item">${m[0]} <span>${m[1]}</span></div>`
+  ).join("");
+
+  if(usuario){
+   const { data:minha } = await sb
+  .from("avaliacoes")
+  .select("nota")
+  .eq("filme_id", item.id)
+  .eq("usuario_id", usuario.id)
+  .maybeSingle();
+    renderAvaliarStars(minha?.nota||0);
+  }else{
+    renderAvaliarStars(0);
+  }
+
+  tocar(filme.video_url);
+
+  setTimeout(()=>{
+    if(desc.scrollHeight>desc.clientHeight){
+      lerMais.style.display="inline";
+      lerMais.onclick=()=>{
+        desc.classList.toggle("collapsed");
+        lerMais.textContent=
+          desc.classList.contains("collapsed")?"Ler mais":"Ler menos";
+      };
+    }
+  },50);
+}
+
+/* INIT */
+(async()=>{
+  await carregarUsuario();
+  carregar();
+})();
+</script>
+
+</body>
+</html>
