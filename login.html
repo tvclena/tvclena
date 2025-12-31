@@ -390,7 +390,7 @@ async function controlarSessoes(user){
 
   // 🔹 BUSCA PERFIL DO USUÁRIO
   const { data: perfil, error: perfilError } = await sb
-    .from("usuarios")
+    .from("user")
     .select("limite_de_telas")
     .eq("id", user.id)
     .single();
