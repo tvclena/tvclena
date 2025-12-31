@@ -1491,6 +1491,18 @@ const sb = supabase.createClient(
   window.ENV.SUPABASE_URL,
   window.ENV.SUPABASE_ANON_KEY
 );
+
+// 🔒 BLOQUEIO DE ACESSO
+(async () => {
+  const { data } = await sb.auth.getSession();
+
+  if (!data.session) {
+    // NÃO está logado → volta para login
+    location.replace("login.html");
+  }
+})();
+
+  
 // ================= APEX CONVERSÃO =================
 const APEX_POR_REAL = 15;
 
