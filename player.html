@@ -104,6 +104,27 @@ font-weight:600;cursor:pointer;align-self:flex-start}
   border-color:#dc2626;
   box-shadow:0 0 0 1px #dc2626;
 }
+#selectorsBox{
+  display:flex;
+  gap:12px;
+  margin-top:18px;
+}
+
+#selectorsBox select{
+  flex:1;
+  padding:12px 14px;
+  border-radius:14px;
+  background:#111;
+  border:1px solid #333;
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+}
+
+#selectorsBox select:focus{
+  outline:none;
+  border-color:#dc2626;
+}
 
 </style>
 </head>
@@ -135,9 +156,11 @@ font-weight:600;cursor:pointer;align-self:flex-start}
   <p id="desc" class="collapsed"></p>
   <button id="lerMais" style="display:none">Ler mais</button>
 
-  <!-- ✅ AQUI DENTRO -->
-  <div id="temporadasBox"></div>
-  <div id="episodiosBox"></div>
+<div id="selectorsBox">
+  <select id="temporadaSelect"></select>
+  <select id="episodioSelect"></select>
+</div>
+
 </div>
 </div> <!-- ✅ FECHAMENTO DO #layout -->
 
@@ -245,52 +268,48 @@ function voltarHome(){
 
 function renderTemporadas(){
   const temporadas = [...new Set(episodios.map(e=>e.temporada))];
-  temporadasBox.innerHTML="";
+
+  temporadaSelect.innerHTML = "";
+  episodioSelect.innerHTML = "";
 
   temporadas.forEach(t=>{
-    const b=document.createElement("button");
-    b.className="temporada-btn";
-    b.textContent=`Temporada ${t}`;
-    if(t===temporadaAtual) b.classList.add("active");
-
-    b.onclick=()=>{
-      temporadaAtual=t;
-      renderTemporadas();
-      renderEpisodios();
-    };
-    temporadasBox.appendChild(b);
+    const opt=document.createElement("option");
+    opt.value=t;
+    opt.textContent=`Temporada ${t}`;
+    temporadaSelect.appendChild(opt);
   });
 
-  if(!temporadaAtual && temporadas.length){
-    temporadaAtual=temporadas[0];
-    renderTemporadas();
+  temporadaAtual = temporadas[0];
+  temporadaSelect.value = temporadaAtual;
+
+  temporadaSelect.onchange = ()=>{
+    temporadaAtual = Number(temporadaSelect.value);
     renderEpisodios();
-  }
+  };
+
+  renderEpisodios();
 }
+
 function renderEpisodios(){
-  episodiosBox.innerHTML="";
+  episodioSelect.innerHTML="";
 
-  episodios
-    .filter(e=>e.temporada===temporadaAtual)
-    .forEach((e,i)=>{
-      const d=document.createElement("div");
-      d.className="episodio";
-      d.innerHTML=`<strong>Episódio ${e.episodio}</strong><br>${e.titulo || ""}`;
+  const lista = episodios.filter(e=>e.temporada===temporadaAtual);
 
-      d.onclick=()=>{
-        document.querySelectorAll(".episodio")
-          .forEach(x=>x.classList.remove("active"));
-        d.classList.add("active");
-        tocar(e.video_url);
-      };
+  lista.forEach(e=>{
+    const opt=document.createElement("option");
+    opt.value = e.video_url;
+    opt.textContent = `Episódio ${e.episodio}`;
+    episodioSelect.appendChild(opt);
+  });
 
-      if(i===0){
-        d.classList.add("active");
-        tocar(e.video_url);
-      }
+  episodioSelect.onchange = ()=>{
+    tocar(episodioSelect.value);
+  };
 
-      episodiosBox.appendChild(d);
-    });
+  if(lista.length){
+    episodioSelect.value = lista[0].video_url;
+    tocar(lista[0].video_url);
+  }
 }
 
 
