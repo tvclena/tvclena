@@ -398,7 +398,7 @@ btnCadastro.onclick = async () => {
 
   while (!perfilExiste && tentativas < 5) {
     const { data } = await sb
-      .from("user")
+      .from("usuarios")
       .select("id")
       .eq("id", user.id)
       .maybeSingle();
@@ -418,7 +418,7 @@ btnCadastro.onclick = async () => {
 
   // ✅ UPDATE FINAL
   const { error: updateError } = await sb
-    .from("user")
+    .from("usuarios")
     .update({
       cpf: c_cpf.value.replace(/\D/g, ""),
       whatsapp: c_whats.value.replace(/\D/g, ""),
@@ -451,7 +451,7 @@ async function controlarSessoes(user){
 
   // 🔹 BUSCA PERFIL DO USUÁRIO
   const { data: perfil, error: perfilError } = await sb
-    .from("user")
+    .from("usuarios")
     .select("limite_de_telas")
     .eq("id", user.id)
     .single();
