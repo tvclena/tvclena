@@ -1487,10 +1487,7 @@ body.modal-open{
   
 <script src="env.js"></script>
 <script>
-const sb = supabase.createClient(
-  window.ENV.SUPABASE_URL,
-  window.ENV.SUPABASE_ANON_KEY
-);
+
 // ================= APEX CONVERSÃO =================
 const APEX_POR_REAL = 15;
 
@@ -1730,19 +1727,19 @@ async function iniciarApp() {
 
 
 
-const { data, error } = await sb
-  .from("filmes")
-  .select(`
-  id,
-  titulo,
-  serie_nome,
-  tipo,
-  categoria,
-  capa_url,
-  descricao,
-  video_url
-`)
-;
+async function carregarFilmes() {
+  const res = await fetch("/api/filmes", {
+    cache: "no-store"
+  });
+
+  if (!res.ok) {
+    alert("Erro ao carregar catálogo");
+    return [];
+  }
+
+  return await res.json();
+}
+
 
 
 
@@ -2528,6 +2525,9 @@ window.addEventListener("message", (event) => {
     sessionStorage.removeItem("clena_filtros_aberto"); // 🔥 ADICIONE
     aplicarFiltrosAvancados();
     atualizarBotaoFiltros();
+    const data = await carregarFilmes();
+dados = data || [];
+
   }
 });
 
