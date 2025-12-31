@@ -186,20 +186,33 @@ const item = JSON.parse(
 let usuario = null;
 
 /* 🔐 VALIDAR LOGIN CUSTOM */
-async function carregarUsuario(){
-  const email = localStorage.getItem("usuario_email");
-  const token = localStorage.getItem("session_token");
+/* 🔐 VALIDAR LOGIN (SUPABASE AUTH) */
+async function carregarUsuario() {
+  const { data: { session } } = await sb.auth.getSession();
 
-  if(!email || !token) return;
+  // ❌ não logado
+  if (!session) {
+    usuario = null;
+    return;
+  }
 
-  const { data } = await sb
+  // 📧 email vem do Auth
+  const email = session.user.email;
+  localStorage.setItem("usuario_email", email);
+
+  // 🔎 carrega perfil interno
+  const { data, error } = await sb
     .from("usuarios")
-    .select("id,email,session_token")
+    .select("id,email")
     .eq("email", email)
-    .eq("session_token", token)
-    .single();
+    .maybeSingle();
 
-  if(data) usuario = data;
+  if (error || !data) {
+    usuario = null;
+    return;
+  }
+
+  usuario = data;
 }
 
 /* ⭐ ESTRELAS */
