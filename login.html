@@ -351,17 +351,44 @@ btnCadastro.onclick = async ()=>{
   }
 
   const { data, error } = await sb.auth.signUp({
-    email: c_email.value.trim(),
-    password: c_senha.value
-  });
+  email: c_email.value.trim(),
+  password: c_senha.value
+});
 
-  if(error){
-    msgCadastro.textContent = error.message;
-    msgCadastro.className = "msg error";
-    return;
+if (error) {
+  msgCadastro.textContent = error.message;
+  msgCadastro.className = "msg error";
+  return;
+}
+
+// ⏳ Aguarda perfil existir
+let tentativas = 0;
+let perfilExiste = false;
+
+while (!perfilExiste && tentativas < 5) {
+  const { data: perfil } = await sb
+  .from("user")
+  .select("limite_de_telas")
+  .eq("id", user.id)
+  .single();
+
+
+  if (perfil) perfilExiste = true;
+  else {
+    await new Promise(r => setTimeout(r, 600));
+    tentativas++;
   }
+}
 
-await sb
+// ❌ Se não criou, aborta
+if (!perfilExiste) {
+  msgCadastro.textContent = "Erro ao criar perfil";
+  msgCadastro.className = "msg error";
+  return;
+}
+
+// ✅ UPDATE seguro
+const { error: updateError } = await sb
   .from("user")
   .update({
     cpf: c_cpf.value.replace(/\D/g,""),
@@ -371,10 +398,12 @@ await sb
   })
   .eq("id", data.user.id);
 
+if (updateError) {
+  msgCadastro.textContent = "Erro ao salvar dados";
+  msgCadastro.className = "msg error";
+  return;
+}
 
-  // ✅ FEEDBACK
-  msgCadastro.textContent = "Conta criada com sucesso!";
-  msgCadastro.className = "msg success";
 
   // 👉 PREENCHE LOGIN
   email.value = c_email.value.trim();
