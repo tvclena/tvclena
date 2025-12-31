@@ -94,19 +94,36 @@ input:focus{outline:none;border-color:var(--accent)}
 
 /* ================= PRIVACIDADE ================= */
 .privacidade-box{
-  display:flex;gap:10px;font-size:13px;color:#c7c7cc;margin-top:10px
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:12px;
+  font-size:13px;
+  color:#c7c7cc;
 }
-.privacidade-box a{color:#3ea6ff;cursor:pointer}
-.privacidade-popup{
-  width:720px;max-width:94%;height:80vh;
-  background:#0f0f10;border-radius:18px;overflow:hidden;position:relative
+
+.privacidade-box input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  accent-color:#e50914;
+  cursor:pointer;
 }
-.privacidade-popup iframe{width:100%;height:100%;border:none}
-.privacidade-fechar{
-  position:absolute;top:10px;right:10px;
-  background:#222;color:#fff;border:none;
-  border-radius:50%;width:32px;height:32px;cursor:pointer
+
+.privacidade-box label{
+  margin:0;
+  line-height:1.4;
+  cursor:pointer;
 }
+
+.privacidade-box a{
+  color:#3ea6ff;
+  text-decoration:none;
+}
+
+.privacidade-box a:hover{
+  text-decoration:underline;
+}
+
 
 /* ================= SESSÕES ================= */
 .sessao-box{
@@ -130,6 +147,10 @@ input:focus{outline:none;border-color:var(--accent)}
   padding:10px 14px;border:none;border-radius:10px;
   background:#e50914;color:#fff;font-weight:800;cursor:pointer
 }
+.privacidade-box{
+  padding:6px 0;
+}
+
 </style>
 </head>
 
@@ -167,12 +188,13 @@ input:focus{outline:none;border-color:var(--accent)}
     <div class="group"><label>Senha</label><input id="c_senha" type="password"></div>
     <div class="group"><label>Confirmar senha</label><input id="c_confirma" type="password"></div>
 
-    <div class="privacidade-box">
-      <input type="checkbox" id="aceitePrivacidade">
-      <label>
-        Aceito as <a onclick="abrirPrivacidade()">Políticas de Privacidade</a>
-      </label>
-    </div>
+   <div class="privacidade-box">
+  <input type="checkbox" id="aceitePrivacidade">
+  <label for="aceitePrivacidade">
+    Aceito as <a onclick="abrirPrivacidade()">Políticas de Privacidade</a>
+  </label>
+</div>
+
 
     <button id="btnCadastro" class="btn btn-primary">Cadastrar</button>
     <div class="footer"><a id="fecharCadastro">Cancelar</a></div>
