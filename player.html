@@ -151,7 +151,7 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial}
   <div id="playerArea">
     <div id="player">
       <video id="video" controls playsinline></video>
-      <iframe id="iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
+      <iframe id="iframe" allow="autoplay; fullscreen" allowfullscreen></iframe>
     </div>
   </div>
 
@@ -159,13 +159,11 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial}
     <h1 id="titulo"></h1>
     <div id="meta"></div>
 
-    <!-- ⭐ AVALIAÇÃO -->
     <div id="avaliarBox">
       <div class="avaliar-label">Avalie este conteúdo</div>
       <div id="avaliarStars" class="avaliar-stars"></div>
     </div>
 
-    <!-- 📺 SELECTS (SÓ SÉRIE) -->
     <div id="selectorsBox">
       <select id="temporadaSelect"></select>
       <select id="episodioSelect"></select>
@@ -202,12 +200,11 @@ const item = JSON.parse(
 
 let usuario = null;
 let authReady = false;
-let temporadaAtual = null;
 let episodios = [];
+let temporadaAtual = null;
 
-/* ================= LOGIN ================= */
+/* ================= AUTH ================= */
 async function carregarUsuario(){
-  // tentativa imediata
   const { data:{ session } } = await sb.auth.getSession();
 
   if(session?.user?.email){
@@ -216,8 +213,7 @@ async function carregarUsuario(){
     return;
   }
 
-  // fallback correto
-  sb.auth.onAuthStateChange(async (_event, session)=>{
+  sb.auth.onAuthStateChange(async (_e, session)=>{
     if(session?.user?.email){
       await carregarPerfil(session.user.email);
     }
@@ -225,12 +221,27 @@ async function carregarUsuario(){
   });
 }
 
+async function carregarPerfil(email){
+  const { data, error } = await sb
+    .from("usuarios")
+    .select("id,email")
+    .eq("email", email)
+    .maybeSingle();
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  if(data) usuario = data;
+}
+
 /* ================= PLAYER ================= */
 function tocar(src){
   if(!src) return;
 
   video.pause();
-  iframe.src="";
+  iframe.src = "";
 
   if(/\.m3u8$/i.test(src)){
     iframe.style.display="none";
@@ -266,43 +277,21 @@ function hoverStars(q){
   });
 }
 async function salvarAvaliacao(nota){
-  // ⏳ sessão ainda carregando
   if(!authReady){
     alert("Aguarde a sessão carregar");
     return;
   }
-
-  // 🔐 não logado
   if(!usuario){
     alert("Faça login para avaliar");
     return;
   }
-
   await sb.from("avaliacoes").upsert({
-    filme_id: item.id,
-    usuario_id: usuario.id,
+    filme_id:item.id,
+    usuario_id:usuario.id,
     nota
   });
-
   renderStars(nota);
 }
-async function carregarPerfil(email){
-  const { data, error } = await sb
-    .from("usuarios")
-    .select("id,email")
-    .eq("email", email)
-    .maybeSingle();
-
-  if(error){
-    console.error("Erro ao carregar perfil:", error);
-    return;
-  }
-
-  if(data){
-    usuario = data;
-  }
-}
-
 
 /* ================= LOAD ================= */
 async function carregar(){
@@ -315,7 +304,6 @@ async function carregar(){
   titulo.textContent = filme.titulo || filme.serie_nome;
   desc.textContent = filme.descricao || "";
 
-  /* ⭐ avaliações */
   const { data: avals } = await sb
     .from("avaliacoes")
     .select("nota")
@@ -338,7 +326,6 @@ async function carregar(){
     renderStars(media);
   }
 
-  /* meta */
   const metas=[];
   if(filme.categoria) metas.push(`🎬 ${filme.categoria}`);
   if(filme.tipo) metas.push(`📺 ${filme.tipo}`);
@@ -353,7 +340,6 @@ async function carregar(){
     `<div class="meta-item"><span>${m}</span></div>`
   ).join("");
 
-  /* filme ou série */
   if(filme.tipo === "serie"){
     await carregarEpisodios();
   }else{
