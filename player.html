@@ -159,11 +159,13 @@ html,body{background:#000;color:#fff;font-family:Inter,Arial}
     <h1 id="titulo"></h1>
     <div id="meta"></div>
 
+    <!-- ⭐ AVALIAÇÃO -->
     <div id="avaliarBox">
       <div class="avaliar-label">Avalie este conteúdo</div>
       <div id="avaliarStars" class="avaliar-stars"></div>
     </div>
 
+    <!-- 📺 SELECTS (SÓ SÉRIE) -->
     <div id="selectorsBox">
       <select id="temporadaSelect"></select>
       <select id="episodioSelect"></select>
@@ -182,7 +184,7 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ================= VARIÁVEIS ================= */
+/* ================= ELEMENTOS ================= */
 const video = document.getElementById("video");
 const iframe = document.getElementById("iframe");
 const titulo = document.getElementById("titulo");
@@ -193,6 +195,7 @@ const avaliarStars = document.getElementById("avaliarStars");
 const temporadaSelect = document.getElementById("temporadaSelect");
 const episodioSelect = document.getElementById("episodioSelect");
 
+/* ================= DADOS ================= */
 const item = JSON.parse(
   decodeURIComponent(new URLSearchParams(location.search).get("item"))
 );
@@ -235,6 +238,107 @@ function tocar(src){
   }
 }
 
+/* ================= AVALIAÇÃO ================= */
+function renderStars(nota=0){
+  avaliarStars.innerHTML="";
+  const fixas=Math.round(nota/2);
+
+  for(let i=1;i<=5;i++){
+    const s=document.createElement("span");
+    s.textContent="★";
+    if(i<=fixas)s.classList.add("active");
+    s.onmouseenter=()=>hoverStars(i);
+    s.onmouseleave=()=>hoverStars(fixas);
+    s.onclick=()=>salvarAvaliacao(i*2);
+    avaliarStars.appendChild(s);
+  }
+}
+function hoverStars(q){
+  [...avaliarStars.children].forEach((s,i)=>{
+    s.classList.toggle("hover",i<q);
+  });
+}
+async function salvarAvaliacao(nota){
+  if(!usuario){
+    alert("Faça login para avaliar");
+    return;
+  }
+  await sb.from("avaliacoes").upsert({
+    filme_id:item.id,
+    usuario_id:usuario.id,
+    nota
+  });
+  renderStars(nota);
+}
+
+/* ================= LOAD ================= */
+async function carregar(){
+  const { data: filme } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("id", item.id)
+    .single();
+
+  titulo.textContent = filme.titulo || filme.serie_nome;
+  desc.textContent = filme.descricao || "";
+
+  /* ⭐ avaliações */
+  const { data: avals } = await sb
+    .from("avaliacoes")
+    .select("nota")
+    .eq("filme_id", item.id);
+
+  let media = 0;
+  if(avals?.length){
+    media = avals.reduce((t,a)=>t+a.nota,0)/avals.length;
+  }
+
+  if(usuario){
+    const { data:minha } = await sb
+      .from("avaliacoes")
+      .select("nota")
+      .eq("filme_id", item.id)
+      .eq("usuario_id", usuario.id)
+      .maybeSingle();
+    renderStars(minha?.nota || media);
+  }else{
+    renderStars(media);
+  }
+
+  /* meta */
+  const metas=[];
+  if(filme.categoria) metas.push(`🎬 ${filme.categoria}`);
+  if(filme.tipo) metas.push(`📺 ${filme.tipo}`);
+  if(filme.ano_lancamento) metas.push(`📅 ${filme.ano_lancamento}`);
+  if(filme.idioma) metas.push(`🌎 ${filme.idioma}`);
+  if(filme.audio) metas.push(`🔊 ${filme.audio}`);
+  if(filme.classificacao) metas.push(`🔞 ${filme.classificacao}`);
+  if(filme.nota_critica) metas.push(`⭐ ${filme.nota_critica} • Crítica`);
+  if(media) metas.push(`👥 ${"★".repeat(Math.round(media/2))} • Assinantes`);
+
+  meta.innerHTML = metas.map(m =>
+    `<div class="meta-item"><span>${m}</span></div>`
+  ).join("");
+
+  /* filme ou série */
+  if(filme.tipo === "serie"){
+    await carregarEpisodios();
+  }else{
+    temporadaSelect.style.display="none";
+    episodioSelect.style.display="none";
+    tocar(filme.video_url);
+  }
+
+  if(desc.scrollHeight > desc.clientHeight){
+    lerMais.style.display="inline";
+    lerMais.onclick=()=>{
+      desc.classList.toggle("collapsed");
+      lerMais.textContent =
+        desc.classList.contains("collapsed") ? "Ler mais" : "Ler menos";
+    };
+  }
+}
+
 /* ================= SÉRIES ================= */
 async function carregarEpisodios(){
   const { data } = await sb
@@ -254,97 +358,21 @@ async function carregarEpisodios(){
   ).join("");
 
   temporadaAtual = temporadas[0];
-  temporadaSelect.onchange = ()=>{
+  temporadaSelect.onchange=()=>{
     temporadaAtual = Number(temporadaSelect.value);
     renderEpisodios();
   };
 
   renderEpisodios();
 }
-
 function renderEpisodios(){
   const lista = episodios.filter(e=>e.temporada===temporadaAtual);
   episodioSelect.innerHTML = lista.map(e =>
     `<option value="${e.video_url}">Episódio ${e.episodio}</option>`
   ).join("");
 
-  episodioSelect.onchange = ()=>tocar(episodioSelect.value);
+  episodioSelect.onchange=()=>tocar(episodioSelect.value);
   if(lista.length) tocar(lista[0].video_url);
-}
-
-/* ================= AVALIAÇÃO ================= */
-function renderAvaliarStars(nota=0){
-  avaliarStars.innerHTML="";
-  const fixas=Math.round(nota/2);
-
-  for(let i=1;i<=5;i++){
-    const s=document.createElement("span");
-    s.textContent="★";
-    if(i<=fixas)s.classList.add("active");
-    s.onmouseenter=()=>pintar(i);
-    s.onmouseleave=()=>pintar(fixas);
-    s.onclick=()=>salvarAvaliacao(i*2);
-    avaliarStars.appendChild(s);
-  }
-}
-function pintar(q){
-  [...avaliarStars.children].forEach((s,i)=>{
-    s.classList.toggle("hover",i<q);
-  });
-}
-async function salvarAvaliacao(nota){
-  if(!usuario){
-    alert("Faça login para avaliar");
-    return;
-  }
-  await sb.from("avaliacoes").upsert({
-    filme_id:item.id,
-    usuario_id:usuario.id,
-    nota
-  });
-  renderAvaliarStars(nota);
-}
-
-/* ================= LOAD ================= */
-async function carregar(){
-  const { data: filme } = await sb
-    .from("filmes")
-    .select("*")
-    .eq("id", item.id)
-    .single();
-
-  titulo.textContent = filme.titulo || filme.serie_nome;
-  desc.textContent = filme.descricao || "";
-
-  const metas=[];
-  if(filme.categoria) metas.push(`🎬 ${filme.categoria}`);
-  if(filme.tipo) metas.push(`📺 ${filme.tipo}`);
-  if(filme.ano_lancamento) metas.push(`📅 ${filme.ano_lancamento}`);
-  if(filme.idioma) metas.push(`🌎 ${filme.idioma}`);
-  if(filme.audio) metas.push(`🔊 ${filme.audio}`);
-  if(filme.classificacao) metas.push(`🔞 ${filme.classificacao}`);
-  if(filme.nota_critica) metas.push(`⭐ ${filme.nota_critica} • Crítica`);
-
-  meta.innerHTML = metas.map(m =>
-    `<div class="meta-item"><span>${m}</span></div>`
-  ).join("");
-
-  if(filme.tipo === "serie"){
-    await carregarEpisodios();
-  }else{
-    temporadaSelect.style.display="none";
-    episodioSelect.style.display="none";
-    tocar(filme.video_url);
-  }
-
-  if(desc.scrollHeight > desc.clientHeight){
-    lerMais.style.display="inline";
-    lerMais.onclick = ()=>{
-      desc.classList.toggle("collapsed");
-      lerMais.textContent =
-        desc.classList.contains("collapsed") ? "Ler mais" : "Ler menos";
-    };
-  }
 }
 
 /* ================= NAV ================= */
