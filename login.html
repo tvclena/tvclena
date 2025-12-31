@@ -357,8 +357,20 @@ btnCadastro.onclick = async ()=>{
     whatsapp:c_whats.value.replace(/\D/g,"")
   });
 
-  msgCadastro.textContent="Conta criada com sucesso!";
-  msgCadastro.className="msg success";
+// feedback
+msgCadastro.textContent="Conta criada com sucesso!";
+msgCadastro.className="msg success";
+
+// 👉 PREENCHE LOGIN
+email.value = c_email.value.trim();
+senha.value = c_senha.value;
+
+// 👉 FECHA MODAL
+setTimeout(()=>{
+  modalCadastro.style.display = "none";
+  msgCadastro.textContent = "";
+}, 800);
+
 };
 
 /* ===== CONTROLE DE SESSÕES ===== */
