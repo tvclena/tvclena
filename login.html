@@ -288,15 +288,16 @@ btnCadastro.onclick = async ()=>{
     msgCadastro.className="msg error";return;
   }
 
-  await sb.from("user").insert({
+await sb.from("usuarios").insert({
     id:data.user.id,
     email:data.user.email,
     cpf:c_cpf.value.replace(/\D/g,""),
     whatsapp:c_whats.value.replace(/\D/g,"")
   });
 
-  msgCadastro.textContent="Conta criada! Confirme seu email.";
-  msgCadastro.className="msg success";
+msgCadastro.textContent="Conta criada com sucesso!";
+msgCadastro.className="msg success";
+
 };
 
 /* ===== CONTROLE DE SESSÕES ===== */
