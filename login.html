@@ -333,7 +333,6 @@ btnCadastro.onclick = async ()=>{
     msgCadastro.className="msg error";
     return;
   }
-
   if(c_senha.value!==c_confirma.value){
     msgCadastro.textContent="Senhas não conferem";
     msgCadastro.className="msg error";
@@ -341,32 +340,26 @@ btnCadastro.onclick = async ()=>{
   }
 
   const { data, error } = await sb.auth.signUp({
-    email: c_email.value.trim(),
-    password: c_senha.value
+    email:c_email.value.trim(),
+    password:c_senha.value
   });
 
   if(error){
-    msgCadastro.textContent = error.message;
-    msgCadastro.className = "msg error";
+    msgCadastro.textContent=error.message;
+    msgCadastro.className="msg error";
     return;
   }
 
   await sb.from("user").insert({
-    id: data.user.id,
-    email: data.user.email,
-    cpf: c_cpf.value.replace(/\D/g,""),
-    whatsapp: c_whats.value.replace(/\D/g,"")
+    id:data.user.id,
+    email:data.user.email,
+    cpf:c_cpf.value.replace(/\D/g,""),
+    whatsapp:c_whats.value.replace(/\D/g,"")
   });
 
-  // 🔐 LOGIN AUTOMÁTICO
-  const { data: loginData } = await sb.auth.signInWithPassword({
-    email: c_email.value.trim(),
-    password: c_senha.value
-  });
-
-  controlarSessoes(loginData.user);
+  msgCadastro.textContent="Conta criada com sucesso!";
+  msgCadastro.className="msg success";
 };
-
 
 /* ===== CONTROLE DE SESSÕES ===== */
 async function controlarSessoes(user){
