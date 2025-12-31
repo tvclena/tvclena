@@ -1533,7 +1533,7 @@ async function perfilCarregar(){
   if (!email) return;
 
   const { data: user, error } = await sb
-    .from("usuarios")
+    .from("user")
     .select(`
       id,
       email,
@@ -1593,7 +1593,7 @@ async function perfilValidarUsername(){
   }
 
   const { data } = await sb
-    .from("usuarios")
+    .from("user")
     .select("id")
     .eq("username", u)
     .neq("id", perfilUserId);
@@ -1612,7 +1612,7 @@ async function perfilValidarUsername(){
 async function perfilSalvar(){
   if(!(await perfilValidarUsername())) return;
 
-  await sb.from("usuarios")
+  await sb.from("user")
     .update({
       nome_usuario: pNome.value,
       username: pUser.value
@@ -1682,7 +1682,7 @@ async function perfilUploadAvatar(input){
   const avatarUrl =
     `https://sessao99.b-cdn.net/avatars/${nome}`;
 
-  await sb.from("usuarios")
+  await sb.from("user")
     .update({ avatar_url: avatarUrl })
     .eq("id", perfilUserId);
 
@@ -2519,7 +2519,7 @@ async function carregarAvatarHeader() {
   if (!email) return;
 
   const { data } = await sb
-    .from("usuarios")
+    .from("user")
     .select("avatar_url, nome_usuario")
     .eq("email", email)
     .single();
