@@ -275,21 +275,39 @@ function aceitarPrivacidade(){
 }
 
 /* LOGIN */
+/* LOGIN */
 btnLogin.onclick = async ()=>{
   showLoading("Entrando…");
 
-  const { error } = await sb.auth.signInWithPassword({
+  const { data, error } = await sb.auth.signInWithPassword({
     email: email.value.trim(),
     password: senha.value
   });
 
-  if(error){
+  if (error) {
     hideLoading();
-    msg.textContent="Login inválido";
-    msg.className="msg error";
+    msg.textContent = "Login inválido";
+    msg.className = "msg error";
     return;
   }
 
+  // ===============================
+  // 🔥 OBRIGATÓRIO PARA O INDEX.HTML
+  // ===============================
+
+  // email usado pelo index
+  localStorage.setItem("usuario_email", data.user.email);
+
+  // token único da sessão
+  const sessionToken = crypto.randomUUID();
+  localStorage.setItem("session_token", sessionToken);
+
+  // (opcional, mas ajuda debug)
+  localStorage.setItem("login_at", Date.now());
+
+  // ===============================
+  // REDIRECIONAMENTO FINAL
+  // ===============================
   setTimeout(()=>{
     location.replace("index.html");
   },600);
