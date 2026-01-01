@@ -110,10 +110,65 @@ input:focus{outline:none;border-color:var(--accent)}
   width:18px;height:18px;accent-color:#e50914
 }
 .privacidade-box a{color:#3ea6ff}
+
+/* ================= OVERLAY LOADING ================= */
+.loading{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.92);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+}
+
+.loading-box{
+  text-align:center;
+  animation:fadeScale .3s ease;
+}
+
+.loading-spinner{
+  width:54px;
+  height:54px;
+  border:4px solid #333;
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:0 auto 16px;
+}
+
+.loading-text{
+  font-size:15px;
+  color:#e5e7eb;
+  letter-spacing:.4px;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+@keyframes fadeScale{
+  from{opacity:0;transform:scale(.92)}
+  to{opacity:1;transform:scale(1)}
+}
+
+
+
+  
 </style>
 </head>
 
 <body>
+
+<!-- OVERLAY LOADING -->
+<div class="loading" id="loading">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">
+      Processando…
+    </div>
+  </div>
+</div>
+
 
 <!-- LOGIN -->
 <div class="card">
@@ -194,6 +249,20 @@ const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
+// =======================
+// CONTROLE DO OVERLAY
+// =======================
+const loading = document.getElementById("loading");
+const loadingText = document.getElementById("loadingText");
+
+function showLoading(text){
+  loadingText.textContent = text || "Processando…";
+  loading.style.display = "flex";
+}
+
+function hideLoading(){
+  loading.style.display = "none";
+}
 
 /* MODAIS */
 abrirCadastro.onclick=()=>modalCadastro.style.display="flex";
@@ -207,13 +276,25 @@ function aceitarPrivacidade(){
 
 /* LOGIN */
 btnLogin.onclick = async ()=>{
+  showLoading("Entrando…");
+
   const { error } = await sb.auth.signInWithPassword({
     email: email.value.trim(),
     password: senha.value
   });
-  if(error){ msg.textContent="Login inválido"; msg.className="msg error"; return; }
-  location.replace("index.html");
+
+  if(error){
+    hideLoading();
+    msg.textContent="Login inválido";
+    msg.className="msg error";
+    return;
+  }
+
+  setTimeout(()=>{
+    location.replace("index.html");
+  },600);
 };
+
 
 /* RESET */
 btnReset.onclick = async ()=>{
@@ -227,27 +308,40 @@ btnReset.onclick = async ()=>{
 btnCadastro.onclick = async ()=>{
   if(!aceitePrivacidade.checked){
     msgCadastro.textContent="Aceite a política de privacidade";
-    msgCadastro.className="msg error";return;
+    msgCadastro.className="msg error";
+    return;
   }
+
+  showLoading("Criando conta…");
+
   if(c_senha.value!==c_confirma.value){
+    hideLoading();
     msgCadastro.textContent="Senhas não conferem";
-    msgCadastro.className="msg error";return;
+    msgCadastro.className="msg error";
+    return;
   }
+
   const { data, error } = await sb.auth.signUp({
     email:c_email.value.trim(),
     password:c_senha.value
   });
+
   if(error){
+    hideLoading();
     msgCadastro.textContent=error.message;
-    msgCadastro.className="msg error";return;
+    msgCadastro.className="msg error";
+    return;
   }
+
   await sb.from("users_profile").update({
     cpf:c_cpf.value.replace(/\D/g,""),
     whatsapp:c_whats.value.replace(/\D/g,""),
     aceite_privacidade:true
   }).eq("id",data.user.id);
-  msgCadastro.textContent="Conta criada! Confirme seu email.";
-  msgCadastro.className="msg success";
+
+  setTimeout(()=>{
+    location.replace("index.html");
+  },700);
 };
 
 // =======================
@@ -274,6 +368,11 @@ document.getElementById("c_whats").addEventListener("input", function () {
 
   this.value = v;
 });
+
+window.addEventListener("unhandledrejection", () => {
+  hideLoading();
+});
+
 </script>
 
 </body>
