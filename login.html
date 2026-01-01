@@ -64,17 +64,47 @@ input:focus{outline:none;border-color:var(--accent)}
   z-index:9999
 }
 
+/* ===== OVERLAY VISUAL ===== */
+.loading{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.92);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+}
+.loading-box{
+  text-align:center;
+  animation:fadeScale .3s ease;
+}
+.loading-spinner{
+  width:54px;height:54px;
+  border:4px solid #333;
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:0 auto 16px;
+}
+.loading-text{
+  font-size:15px;
+  color:#e5e7eb;
+  letter-spacing:.4px;
+}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeScale{
+  from{opacity:0;transform:scale(.92)}
+  to{opacity:1;transform:scale(1)}
+}
+
 /* PRIVACIDADE PREMIUM */
 .privacidade-popup{
   width:620px;max-width:94%;max-height:85vh;
   background:#141417;border-radius:22px;
   display:flex;flex-direction:column;
   box-shadow:0 40px 120px rgba(0,0,0,.9);
-  animation:scaleIn .25s ease;
-}
-@keyframes scaleIn{
-  from{transform:scale(.92);opacity:0}
-  to{transform:scale(1);opacity:1}
+  animation:fadeScale .25s ease;
 }
 .privacidade-header{
   padding:22px 26px;
@@ -90,7 +120,6 @@ input:focus{outline:none;border-color:var(--accent)}
   padding:26px;overflow-y:auto;
   font-size:14px;line-height:1.6;color:#d1d5db
 }
-.privacidade-body h4{margin-top:0;color:#fff}
 .privacidade-footer{
   padding:18px;border-top:1px solid #242428;
   text-align:right
@@ -100,20 +129,23 @@ input:focus{outline:none;border-color:var(--accent)}
   border:none;border-radius:12px;
   padding:12px 20px;font-weight:800;cursor:pointer
 }
-
-/* CHECKBOX */
 .privacidade-box{
   display:flex;gap:10px;margin-top:12px;
   font-size:13px;color:#c7c7cc
 }
-.privacidade-box input{
-  width:18px;height:18px;accent-color:#e50914
-}
-.privacidade-box a{color:#3ea6ff}
+.privacidade-box input{width:18px;height:18px;accent-color:#e50914}
 </style>
 </head>
 
 <body>
+
+<!-- OVERLAY -->
+<div class="loading" id="loading">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Processando…</div>
+  </div>
+</div>
 
 <!-- LOGIN -->
 <div class="card">
@@ -149,7 +181,7 @@ input:focus{outline:none;border-color:var(--accent)}
   </div>
 </div>
 
-<!-- PRIVACIDADE POPUP -->
+<!-- PRIVACIDADE -->
 <div class="modal" id="modalPrivacidade">
   <div class="privacidade-popup">
     <div class="privacidade-header">
@@ -157,17 +189,7 @@ input:focus{outline:none;border-color:var(--accent)}
       <button class="privacidade-fechar" onclick="fecharPrivacidade()">✕</button>
     </div>
     <div class="privacidade-body">
-      <h4>1. Coleta de Dados</h4>
-      <p>Coletamos informações como email, CPF e WhatsApp exclusivamente para fins de autenticação, segurança e uso do serviço.</p>
-
-      <h4>2. Uso das Informações</h4>
-      <p>Seus dados não são vendidos, compartilhados ou divulgados a terceiros, exceto quando exigido por lei.</p>
-
-      <h4>3. Segurança</h4>
-      <p>Utilizamos criptografia, autenticação segura e controle de acesso para proteger suas informações.</p>
-
-      <h4>4. Consentimento</h4>
-      <p>Ao criar sua conta, você concorda com esta política.</p>
+      <p>Seus dados são protegidos e usados apenas para autenticação.</p>
     </div>
     <div class="privacidade-footer">
       <button onclick="aceitarPrivacidade()">Li e Aceito</button>
@@ -179,53 +201,56 @@ input:focus{outline:none;border-color:var(--accent)}
 const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed",
-  {
-    auth:{
-      persistSession:true,
-      autoRefreshToken:true,
-      storage:localStorage
-    }
-  }
+  { auth:{ persistSession:true, autoRefreshToken:true, storage:localStorage } }
 );
+
+const loading = document.getElementById("loading");
+const loadingText = document.getElementById("loadingText");
+
+function showLoading(txt){
+  loadingText.textContent = txt;
+  loading.style.display = "flex";
+}
+function hideLoading(){
+  loading.style.display = "none";
+}
 
 /* MODAIS */
 abrirCadastro.onclick=()=>modalCadastro.style.display="flex";
 fecharCadastro.onclick=()=>modalCadastro.style.display="none";
 function abrirPrivacidade(){ modalPrivacidade.style.display="flex"; }
 function fecharPrivacidade(){ modalPrivacidade.style.display="none"; }
-function aceitarPrivacidade(){
-  aceitePrivacidade.checked=true;
-  fecharPrivacidade();
-}
+function aceitarPrivacidade(){ aceitePrivacidade.checked=true; fecharPrivacidade(); }
 
 /* AUTOLOGIN */
 (async()=>{
   const { data } = await sb.auth.getSession();
   if(data.session){
-    location.replace("index.html");
+    showLoading("Entrando…");
+    setTimeout(()=>location.replace("index.html"),600);
   }
 })();
 
 /* LOGIN */
 btnLogin.onclick = async ()=>{
-  const emailVal = email.value.trim();
-  const senhaVal = senha.value;
+  showLoading("Entrando…");
 
   const { error } = await sb.auth.signInWithPassword({
-    email: emailVal,
-    password: senhaVal
+    email: email.value.trim(),
+    password: senha.value
   });
 
   if(error){
+    hideLoading();
     msg.textContent="Login inválido";
     msg.className="msg error";
     return;
   }
 
-  localStorage.setItem("clena_email", emailVal);
-  localStorage.setItem("clena_senha", senhaVal);
+  localStorage.setItem("clena_email", email.value.trim());
+  localStorage.setItem("clena_senha", senha.value);
 
-  location.replace("index.html");
+  setTimeout(()=>location.replace("index.html"),700);
 };
 
 /* RESET */
@@ -238,24 +263,26 @@ btnReset.onclick = async ()=>{
 
 /* CADASTRO */
 btnCadastro.onclick = async ()=>{
+  showLoading("Criando conta…");
+
   if(!aceitePrivacidade.checked){
+    hideLoading();
     msgCadastro.textContent="Aceite a política de privacidade";
     msgCadastro.className="msg error";return;
   }
   if(c_senha.value!==c_confirma.value){
+    hideLoading();
     msgCadastro.textContent="Senhas não conferem";
     msgCadastro.className="msg error";return;
   }
 
-  const emailVal = c_email.value.trim();
-  const senhaVal = c_senha.value;
-
   const { data, error } = await sb.auth.signUp({
-    email:emailVal,
-    password:senhaVal
+    email:c_email.value.trim(),
+    password:c_senha.value
   });
 
   if(error){
+    hideLoading();
     msgCadastro.textContent=error.message;
     msgCadastro.className="msg error";return;
   }
@@ -267,14 +294,14 @@ btnCadastro.onclick = async ()=>{
   }).eq("id",data.user.id);
 
   await sb.auth.signInWithPassword({
-    email:emailVal,
-    password:senhaVal
+    email:c_email.value.trim(),
+    password:c_senha.value
   });
 
-  localStorage.setItem("clena_email", emailVal);
-  localStorage.setItem("clena_senha", senhaVal);
+  localStorage.setItem("clena_email", c_email.value.trim());
+  localStorage.setItem("clena_senha", c_senha.value);
 
-  location.replace("index.html");
+  setTimeout(()=>location.replace("index.html"),800);
 };
 </script>
 
