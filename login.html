@@ -64,57 +64,56 @@ input:focus{outline:none;border-color:var(--accent)}
   z-index:9999
 }
 
-/* OVERLAY */
-.loading{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.92);
-  display:none;align-items:center;justify-content:center;
-  z-index:10000
-}
-.loading-box{text-align:center;animation:fadeScale .3s ease}
-.loading-spinner{
-  width:54px;height:54px;
-  border:4px solid #333;border-top-color:var(--accent);
-  border-radius:50%;animation:spin 1s linear infinite;
-  margin:0 auto 16px
-}
-.loading-text{font-size:15px;color:#e5e7eb;letter-spacing:.4px}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeScale{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
-
-/* PRIVACIDADE */
+/* PRIVACIDADE PREMIUM */
 .privacidade-popup{
   width:620px;max-width:94%;max-height:85vh;
   background:#141417;border-radius:22px;
   display:flex;flex-direction:column;
-  box-shadow:0 40px 120px rgba(0,0,0,.9)
+  box-shadow:0 40px 120px rgba(0,0,0,.9);
+  animation:scaleIn .25s ease;
+}
+@keyframes scaleIn{
+  from{transform:scale(.92);opacity:0}
+  to{transform:scale(1);opacity:1}
 }
 .privacidade-header{
-  padding:22px 26px;border-bottom:1px solid #242428;
+  padding:22px 26px;
+  border-bottom:1px solid #242428;
   display:flex;justify-content:space-between;align-items:center
 }
 .privacidade-header h3{margin:0;font-size:18px}
-.privacidade-fechar{background:none;border:none;color:#aaa;font-size:22px;cursor:pointer}
-.privacidade-body{padding:26px;font-size:14px;color:#d1d5db}
-.privacidade-footer{padding:18px;border-top:1px solid #242428;text-align:right}
-.privacidade-footer button{
-  background:var(--accent);color:#fff;border:none;
-  border-radius:12px;padding:12px 20px;font-weight:800
+.privacidade-fechar{
+  background:none;border:none;color:#aaa;
+  font-size:22px;cursor:pointer
 }
-.privacidade-box{display:flex;gap:10px;margin-top:12px;font-size:13px;color:#c7c7cc}
-.privacidade-box input{width:18px;height:18px;accent-color:#e50914}
+.privacidade-body{
+  padding:26px;overflow-y:auto;
+  font-size:14px;line-height:1.6;color:#d1d5db
+}
+.privacidade-body h4{margin-top:0;color:#fff}
+.privacidade-footer{
+  padding:18px;border-top:1px solid #242428;
+  text-align:right
+}
+.privacidade-footer button{
+  background:var(--accent);color:#fff;
+  border:none;border-radius:12px;
+  padding:12px 20px;font-weight:800;cursor:pointer
+}
+
+/* CHECKBOX */
+.privacidade-box{
+  display:flex;gap:10px;margin-top:12px;
+  font-size:13px;color:#c7c7cc
+}
+.privacidade-box input{
+  width:18px;height:18px;accent-color:#e50914
+}
+.privacidade-box a{color:#3ea6ff}
 </style>
 </head>
 
 <body>
-
-<!-- OVERLAY -->
-<div class="loading" id="loading">
-  <div class="loading-box">
-    <div class="loading-spinner"></div>
-    <div class="loading-text" id="loadingText">Processando…</div>
-  </div>
-</div>
 
 <!-- LOGIN -->
 <div class="card">
@@ -134,16 +133,21 @@ input:focus{outline:none;border-color:var(--accent)}
   <div class="card">
     <h2>Criar conta</h2>
     <div class="group"><label>Email</label><input id="c_email"></div>
+  <div class="group">
+  <label>CPF</label>
+  <input id="c_cpf"
+         inputmode="numeric"
+         maxlength="14"
+         placeholder="000.000.000-00">
+</div>
 
-    <div class="group">
-      <label>CPF</label>
-      <input id="c_cpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00">
-    </div>
-
-    <div class="group">
-      <label>WhatsApp</label>
-      <input id="c_whats" inputmode="tel" maxlength="15" placeholder="(00) 00000-0000">
-    </div>
+<div class="group">
+  <label>WhatsApp</label>
+  <input id="c_whats"
+         inputmode="tel"
+         maxlength="15"
+         placeholder="(00) 00000-0000">
+</div>
 
     <div class="group"><label>Senha</label><input id="c_senha" type="password"></div>
     <div class="group"><label>Confirmar senha</label><input id="c_confirma" type="password"></div>
@@ -159,7 +163,7 @@ input:focus{outline:none;border-color:var(--accent)}
   </div>
 </div>
 
-<!-- PRIVACIDADE -->
+<!-- PRIVACIDADE POPUP -->
 <div class="modal" id="modalPrivacidade">
   <div class="privacidade-popup">
     <div class="privacidade-header">
@@ -167,7 +171,17 @@ input:focus{outline:none;border-color:var(--accent)}
       <button class="privacidade-fechar" onclick="fecharPrivacidade()">✕</button>
     </div>
     <div class="privacidade-body">
-      Seus dados são protegidos e usados apenas para autenticação.
+      <h4>1. Coleta de Dados</h4>
+      <p>Coletamos informações como email, CPF e WhatsApp exclusivamente para fins de autenticação, segurança e uso do serviço.</p>
+
+      <h4>2. Uso das Informações</h4>
+      <p>Seus dados não são vendidos, compartilhados ou divulgados a terceiros, exceto quando exigido por lei.</p>
+
+      <h4>3. Segurança</h4>
+      <p>Utilizamos criptografia, autenticação segura e controle de acesso para proteger suas informações.</p>
+
+      <h4>4. Consentimento</h4>
+      <p>Ao criar sua conta, você concorda com esta política.</p>
     </div>
     <div class="privacidade-footer">
       <button onclick="aceitarPrivacidade()">Li e Aceito</button>
@@ -176,59 +190,29 @@ input:focus{outline:none;border-color:var(--accent)}
 </div>
 
 <script>
-/* ===== SUPABASE ===== */
 const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed",
-  { auth:{ persistSession:true, autoRefreshToken:true, storage:localStorage } }
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ===== OVERLAY ===== */
-const loading = document.getElementById("loading");
-const loadingText = document.getElementById("loadingText");
-const showLoading = t => { loadingText.textContent=t; loading.style.display="flex"; };
-const hideLoading = ()=> loading.style.display="none";
-
-/* ===== MODAIS ===== */
+/* MODAIS */
 abrirCadastro.onclick=()=>modalCadastro.style.display="flex";
 fecharCadastro.onclick=()=>modalCadastro.style.display="none";
 function abrirPrivacidade(){ modalPrivacidade.style.display="flex"; }
 function fecharPrivacidade(){ modalPrivacidade.style.display="none"; }
-function aceitarPrivacidade(){ aceitePrivacidade.checked=true; fecharPrivacidade(); }
-
-/* ===== MÁSCARAS ===== */
-c_cpf.addEventListener("input",()=>{
-  let v=c_cpf.value.replace(/\D/g,"").slice(0,11);
-  v=v.replace(/(\d{3})(\d)/,"$1.$2")
-     .replace(/(\d{3})(\d)/,"$1.$2")
-     .replace(/(\d{3})(\d{1,2})$/,"$1-$2");
-  c_cpf.value=v;
-});
-c_whats.addEventListener("input",()=>{
-  let v=c_whats.value.replace(/\D/g,"").slice(0,11);
-  v=v.replace(/(\d{2})(\d)/,"($1) $2")
-     .replace(/(\d{5})(\d)/,"$1-$2");
-  c_whats.value=v;
-});
-
-/* ===== AUTOLOGIN ===== */
-(async()=>{
-  const { data } = await sb.auth.getSession();
-  if(data.session){
-    showLoading("Entrando…");
-    setTimeout(()=>location.replace("index.html"),600);
-  }
-})();
+function aceitarPrivacidade(){
+  aceitePrivacidade.checked=true;
+  fecharPrivacidade();
+}
 
 /* LOGIN */
 btnLogin.onclick = async ()=>{
-  showLoading("Entrando…");
   const { error } = await sb.auth.signInWithPassword({
     email: email.value.trim(),
     password: senha.value
   });
-  if(error){ hideLoading(); msg.textContent="Login inválido"; msg.className="msg error"; return; }
-  setTimeout(()=>location.replace("index.html"),700);
+  if(error){ msg.textContent="Login inválido"; msg.className="msg error"; return; }
+  location.replace("index.html");
 };
 
 /* RESET */
@@ -241,26 +225,55 @@ btnReset.onclick = async ()=>{
 
 /* CADASTRO */
 btnCadastro.onclick = async ()=>{
-  showLoading("Criando conta…");
-
-  if(!aceitePrivacidade.checked){ hideLoading(); msgCadastro.textContent="Aceite a política"; msgCadastro.className="msg error"; return; }
-  if(c_senha.value!==c_confirma.value){ hideLoading(); msgCadastro.textContent="Senhas não conferem"; msgCadastro.className="msg error"; return; }
-
+  if(!aceitePrivacidade.checked){
+    msgCadastro.textContent="Aceite a política de privacidade";
+    msgCadastro.className="msg error";return;
+  }
+  if(c_senha.value!==c_confirma.value){
+    msgCadastro.textContent="Senhas não conferem";
+    msgCadastro.className="msg error";return;
+  }
   const { data, error } = await sb.auth.signUp({
     email:c_email.value.trim(),
     password:c_senha.value
   });
-  if(error){ hideLoading(); msgCadastro.textContent=error.message; msgCadastro.className="msg error"; return; }
-
+  if(error){
+    msgCadastro.textContent=error.message;
+    msgCadastro.className="msg error";return;
+  }
   await sb.from("users_profile").update({
     cpf:c_cpf.value.replace(/\D/g,""),
     whatsapp:c_whats.value.replace(/\D/g,""),
     aceite_privacidade:true
   }).eq("id",data.user.id);
-
-  await sb.auth.signInWithPassword({ email:c_email.value.trim(), password:c_senha.value });
-  setTimeout(()=>location.replace("index.html"),800);
+  msgCadastro.textContent="Conta criada! Confirme seu email.";
+  msgCadastro.className="msg success";
 };
+
+// =======================
+// MÁSCARA DE CPF
+// =======================
+document.getElementById("c_cpf").addEventListener("input", function () {
+  let v = this.value.replace(/\D/g, "").slice(0, 11);
+
+  v = v.replace(/(\d{3})(\d)/, "$1.$2")
+       .replace(/(\d{3})(\d)/, "$1.$2")
+       .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+
+  this.value = v;
+});
+
+// =======================
+// MÁSCARA DE WHATSAPP
+// =======================
+document.getElementById("c_whats").addEventListener("input", function () {
+  let v = this.value.replace(/\D/g, "").slice(0, 11);
+
+  v = v.replace(/(\d{2})(\d)/, "($1) $2")
+       .replace(/(\d{5})(\d)/, "$1-$2");
+
+  this.value = v;
+});
 </script>
 
 </body>
