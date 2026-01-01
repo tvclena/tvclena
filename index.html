@@ -1269,7 +1269,11 @@ body.modal-open{
  #sentinela{
   height: 1px;
 }
- 
+ .btn-neo-apex,
+.perfil-apex {
+  display: none !important;
+}
+
 </style>
 </head>
 
@@ -1449,11 +1453,18 @@ body.modal-open{
         <div><strong>Valor:</strong> <span id="perfilValorNovo"></span></div>
         <div><strong>Vencimento:</strong> <span id="perfilVencimentoNovo"></span></div>
       </div>
+
+
+      
+<!--
 <button class="btn-neo-apex" onclick="abrirApexInfo()">
   <span>Recarregar carteira</span>
 </button>
+-->
 
-      <div class="perfil-apex">
+
+    <!--
+<div class="perfil-apex">
   <div class="apex-valor">
     <span id="apexQtd">0</span>
     <span class="apex-nome">
@@ -1465,6 +1476,7 @@ body.modal-open{
     Saiba mais
   </div>
 </div>
+-->
 
       <div class="perfil-acoes">
         <button class="btn-salvar" onclick="perfilSalvar()">Salvar</button>
