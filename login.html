@@ -305,7 +305,7 @@ btnLogin.onclick = async () => {
 
   // 3️⃣ SE NÃO EXISTIR → CRIA
   if (!usuario) {
-    await sb.from("usuarios").insert({
+await sb.auth.signInWithPassword({ email, password });
       id: userId,
       email: emailValue,
       status: "aprovado",
@@ -372,7 +372,7 @@ btnCadastro.onclick = async () => {
   const sessionToken = crypto.randomUUID();
 
   // 2️⃣ CRIA USUÁRIO NA TABELA usuarios
-  await sb.from("usuarios").insert({
+await sb.auth.signInWithPassword({ email, password });
     id: data.user.id,
     email: c_email.value.trim(),
     cpf: c_cpf.value.replace(/\D/g, ""),
