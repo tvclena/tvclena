@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Meu Perfil • Clena TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env.js"></script>
+
+<style>
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+body{
+  margin:0;
+  min-height:100vh;
+  background:#0f0f10;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.perfil-card{
+  background:#1c1c1c;
+  border-radius:18px;
+  padding:28px;
+  width:420px;
+  max-width:92%;
+  display:grid;
+  grid-template-columns:120px 1fr;
+  gap:22px;
+}
+
+.avatar-col{
+  text-align:center;
+}
+
+.avatar-col img{
+  width:96px;
+  height:96px;
+  border-radius:50%;
+  object-fit:cover;
+  background:#333;
+}
+
+.avatar-upload{
+  margin-top:10px;
+  font-size:13px;
+  color:#3ea6ff;
+  cursor:pointer;
+}
+.avatar-upload input{display:none}
+
+.dados-col h2{
+  margin:0 0 12px;
+}
+
+label{
+  font-size:12px;
+  color:#999;
+  display:block;
+  margin-top:10px;
+  margin-bottom:4px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #333;
+  background:#111;
+  color:#fff;
+}
+
+.username-box{
+  display:flex;
+  align-items:center;
+  background:#111;
+  border:1px solid #333;
+  border-radius:8px;
+  padding-left:10px;
+}
+.username-box span{color:#777}
+.username-box input{
+  border:none;
+  background:none;
+  margin:0;
+}
+
+#usernameStatus{
+  font-size:12px;
+  margin-top:4px;
+}
+
+.perfil-info{
+  margin-top:14px;
+  font-size:13px;
+  color:#ccc;
+}
+.perfil-info div{margin-bottom:6px}
+
+.acoes{
+  display:flex;
+  gap:10px;
+  margin-top:18px;
+}
+
+.acoes button{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.salvar{background:#e50914;color:#fff}
+.sair{background:#333;color:#fff}
+</style>
+</head>
+
+<body>
+
+<div class="perfil-card">
+
+  <div class="avatar-col">
+    <img id="avatar">
+    <label class="avatar-upload">
+      Alterar foto
+      <input type="file" accept="image/*" onchange="uploadAvatar(this)">
+    </label>
+  </div>
+
+  <div class="dados-col">
+    <h2>Meu Perfil</h2>
+
+    <label>Nome</label>
+    <input id="nome">
+
+    <label>Usuário</label>
+    <div class="username-box">
+      <span>@</span>
+      <input id="username" oninput="validarUsername()">
+    </div>
+    <small id="usernameStatus"></small>
+
+    <div class="perfil-info">
+      <div><strong>Email:</strong> <span id="email"></span></div>
+      <div><strong>Plano:</strong> <span id="plano"></span></div>
+      <div><strong>Valor:</strong> <span id="valor"></span></div>
+      <div><strong>Vencimento:</strong> <span id="vencimento"></span></div>
+    </div>
+
+    <div class="acoes">
+      <button class="salvar" onclick="salvarPerfil()">Salvar</button>
+      <button class="sair" onclick="logout()">Sair</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const sb = supabase.createClient(
+  window.ENV.SUPABASE_URL,
+  window.ENV.SUPABASE_ANON_KEY
+);
+
+let userId = null;
+
+const elAvatar = document.getElementById("avatar");
+const elNome = document.getElementById("nome");
+const elUser = document.getElementById("username");
+const elStatus = document.getElementById("usernameStatus");
+
+async function carregarPerfil(){
+  const email = localStorage.getItem("usuario_email");
+  if(!email){
+    location.replace("login.html");
+    return;
+  }
+
+  const { data, error } = await sb
+    .from("users_profile")
+    .select(`
+      id,
+      email,
+      nome_usuario,
+      username,
+      avatar_url,
+      tipo_assinatura,
+      valor_assinatura,
+      vencimento_assinatura
+    `)
+    .eq("email", email)
+    .single();
+
+  if(error || !data){
+    alert("Erro ao carregar perfil");
+    return;
+  }
+
+  userId = data.id;
+
+  document.getElementById("email").textContent = data.email;
+  elNome.value = data.nome_usuario || "";
+  elUser.value = data.username || "";
+
+  document.getElementById("plano").textContent = data.tipo_assinatura || "-";
+  document.getElementById("valor").textContent =
+    data.valor_assinatura
+      ? Number(data.valor_assinatura).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+      : "-";
+
+  document.getElementById("vencimento").textContent =
+    data.vencimento_assinatura
+      ? new Date(data.vencimento_assinatura).toLocaleDateString("pt-BR")
+      : "-";
+
+  elAvatar.src =
+    data.avatar_url ||
+    `https://ui-avatars.com/api/?name=${(data.nome_usuario || "U")[0]}&background=e50914&color=fff`;
+}
+
+async function validarUsername(){
+  const u = elUser.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
+  elUser.value = u;
+
+  if(u.length < 3){
+    elStatus.textContent = "Muito curto";
+    elStatus.style.color = "#ff5555";
+    return false;
+  }
+
+  const { data } = await sb
+    .from("users_profile")
+    .select("id")
+    .eq("username", u)
+    .neq("id", userId);
+
+  if(data.length){
+    elStatus.textContent = "Já em uso";
+    elStatus.style.color = "#ff5555";
+    return false;
+  }
+
+  elStatus.textContent = "Disponível";
+  elStatus.style.color = "#00ff99";
+  return true;
+}
+
+async function salvarPerfil(){
+  if(!(await validarUsername())) return;
+
+  await sb.from("users_profile")
+    .update({
+      nome_usuario: elNome.value,
+      username: elUser.value
+    })
+    .eq("id", userId);
+
+  alert("Perfil atualizado");
+}
+
+async function uploadAvatar(input){
+  const file = input.files[0];
+  if(!file || !userId) return;
+
+  const img = new Image();
+  img.src = URL.createObjectURL(file);
+  await new Promise(r => img.onload = r);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
+  canvas.getContext("2d").drawImage(img,0,0,512,512);
+
+  const blob = await new Promise(r => canvas.toBlob(r,"image/jpeg",0.9));
+  URL.revokeObjectURL(img.src);
+
+  const nome = `${userId}_${Date.now()}.jpg`;
+
+  const res = await fetch(
+    `https://br.storage.bunnycdn.com/sessao99/avatars/${nome}`,
+    {
+      method:"PUT",
+      headers:{
+        "AccessKey":"d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
+        "Content-Type":"application/octet-stream"
+      },
+      body:blob
+    }
+  );
+
+  if(!res.ok){
+    alert("Erro ao enviar avatar");
+    return;
+  }
+
+  const avatarUrl = `https://sessao99.b-cdn.net/avatars/${nome}`;
+
+  await sb.from("users_profile")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", userId);
+
+  elAvatar.src = avatarUrl;
+}
+
+function logout(){
+  localStorage.clear();
+  sessionStorage.clear();
+  location.replace("login.html");
+}
+
+carregarPerfil();
+</script>
+
+</body>
+</html>
