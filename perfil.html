@@ -188,7 +188,9 @@ const elVenc = document.getElementById("vencimento");
 
 async function carregarPerfil(){
   const email = localStorage.getItem("usuario_email");
-  if(!email){
+
+  if (!email) {
+    alert("Sessão expirada. Faça login novamente.");
     location.replace("login.html");
     return;
   }
@@ -206,10 +208,18 @@ async function carregarPerfil(){
       vencimento_assinatura
     `)
     .eq("email", email)
-    .single();
+    .maybeSingle(); // 🔥 ESSENCIAL
 
-  if(error || !data){
+  if (error) {
+    console.error("Erro Supabase:", error);
     alert("Erro ao carregar perfil");
+    return;
+  }
+
+  if (!data) {
+    alert("Usuário não encontrado. Faça login novamente.");
+    localStorage.clear();
+    location.replace("login.html");
     return;
   }
 
@@ -221,16 +231,22 @@ async function carregarPerfil(){
 
   elAvatar.src =
     data.avatar_url ||
-    `https://ui-avatars.com/api/?name=${(data.nome_usuario||"U")[0]}&background=e50914&color=fff`;
+    `https://ui-avatars.com/api/?name=${(data.nome_usuario || "U")[0]}&background=e50914&color=fff`;
 
   elPlano.textContent = data.tipo_assinatura || "-";
+
   elValor.textContent = data.valor_assinatura
-    ? Number(data.valor_assinatura).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+    ? Number(data.valor_assinatura).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      })
     : "-";
+
   elVenc.textContent = data.vencimento_assinatura
     ? new Date(data.vencimento_assinatura).toLocaleDateString("pt-BR")
     : "-";
 }
+
 
 async function validarUsername(){
   const u = elUser.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
