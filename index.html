@@ -1729,20 +1729,10 @@ const { data, error } = await sb
 
 
 if (error) {
-  console.error("Erro Supabase filmes:", error);
-
-  grid.innerHTML = `
-    <div style="padding:40px;color:#777;text-align:center">
-      Não foi possível carregar o catálogo no momento.
-    </div>
-  `;
-
-  // 🔥 NÃO mata o app
-  dados = [];
-  dadosCarregados = true;
+  console.error(error);
+  alert("Erro ao carregar catálogo");
   return;
 }
-
 
 
   console.log("🎬 FILMES CARREGADOS:", data);
