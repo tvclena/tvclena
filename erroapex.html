@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Erro no Pagamento | CLENA TV</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+html,body{margin:0;height:100%;background:#0f0f10;color:#fff}
+
+:root{
+  --surface:#1b1b1e;
+  --accent:#e50914;
+  --muted:#b5b5b5;
+  --error:#ef4444;
+}
+
+body{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(70% 60% at 50% 25%, #1a1a1a 0%, #0f0f10 60%);
+}
+
+.card{
+  width:420px;
+  max-width:92%;
+  background:rgba(27,27,30,.88);
+  backdrop-filter:blur(14px);
+  padding:46px 40px;
+  border-radius:22px;
+  box-shadow:0 40px 90px rgba(0,0,0,.75);
+  text-align:center;
+  animation:fade .4s ease;
+}
+
+h1{
+  margin:0 0 16px;
+  font-size:34px;
+  font-weight:900;
+}
+h1 span{color:var(--accent)}
+
+.icon{
+  width:72px;
+  height:72px;
+  margin:22px auto;
+  border-radius:50%;
+  background:var(--error);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:36px;
+  font-weight:900;
+}
+
+.title{
+  margin-top:8px;
+  font-size:20px;
+  font-weight:900;
+}
+
+.desc{
+  margin-top:10px;
+  font-size:14px;
+  color:var(--muted);
+  line-height:1.5;
+}
+
+.value{
+  margin-top:12px;
+  font-size:14px;
+  color:#999;
+}
+
+.btn{
+  width:100%;
+  padding:16px;
+  margin-top:26px;
+  border:none;
+  border-radius:16px;
+  background:var(--accent);
+  color:#fff;
+  font-size:16px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.btn.secondary{
+  margin-top:12px;
+  background:#2a2a2e;
+}
+
+.footer{
+  margin-top:20px;
+  font-size:12px;
+  color:#777;
+}
+
+@keyframes fade{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>CLENA <span>TV</span></h1>
+
+  <div class="icon">!</div>
+
+  <div class="title">Pagamento não aprovado</div>
+
+  <div class="desc">
+    Não foi possível concluir a recarga de Apex.<br>
+    Você não foi cobrado e pode tentar novamente.
+  </div>
+
+  <div class="value" id="valor"></div>
+
+  <button class="btn" onclick="location.replace('planos.html')">
+    Tentar novamente
+  </button>
+
+  <button class="btn secondary" onclick="location.replace('index.html')">
+    Voltar ao início
+  </button>
+
+  <div class="footer">
+    © 2026 • CLENA TV
+  </div>
+</div>
+
+<script>
+const supabase = supabase.createClient(
+  "https://SEU-PROJETO.supabase.co",
+  "PUBLIC_ANON_KEY"
+);
+
+async function carregarErro() {
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  // último pagamento Apex NÃO aprovado
+  const { data: pagamento } = await supabase
+    .from("pagamentos")
+    .select("valor, status")
+    .eq("user_id", user.id)
+    .eq("tipo", "apex")
+    .not("status", "eq", "approved")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (!pagamento) return;
+
+  document.getElementById("valor").innerText =
+    `Valor da tentativa: R$ ${Number(pagamento.valor).toFixed(2).replace('.', ',')}`;
+}
+
+carregarErro();
+</script>
+
+</body>
+</html>
