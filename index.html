@@ -1577,6 +1577,20 @@ async function perfilCarregar(){
     ? new Date(user.vencimento_assinatura).toLocaleDateString("pt-BR")
     : "-";
   await carregarApex();
+
+  if (!user) {
+  console.warn("Perfil não encontrado");
+  return;
+}
+
+pPlano.textContent = user.tipo_assinatura || "-";
+pValor.textContent = user.valor_assinatura
+  ? Number(user.valor_assinatura).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    })
+  : "-";
+
 }
 
 
@@ -2418,7 +2432,8 @@ if (!email || !tokenLocal) {
   .eq("email", email)
   .maybeSingle();
 // 🔥 REGRA OPÇÃO A — LOGADO MAS SEM PLANO → PLANOS
-if (!data.tipo_assinatura) {
+if (!data || !data.tipo_assinatura) {
+  console.warn("Usuário sem plano ativo");
   if (!redirecionando) {
     redirecionando = true;
     location.replace("planos.html");
