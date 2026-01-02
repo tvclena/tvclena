@@ -353,116 +353,98 @@ function liberarBotao(btn){
 
   
 btnLogin.onclick = async () => {
-  bloquearBotao(btnLogin); // 🔒 BLOQUEIA O BOTÃO
-
-  try {
+  bloquearBotao(btnLogin);
 
   msg.textContent = "";
   msg.className = "msg";
 
+  try {
+    const emailInput = email.value.trim();
+    const senhaInput = senha.value;
 
-// permite cadastro livre
-// mas mantém regra de acesso depois
+    if (!emailInput || !senhaInput) {
+      msg.textContent = "Preencha email e senha";
+      msg.className = "msg error";
+      return;
+    }
 
+    const { data, error } = await sb
+      .from("usuarios")
+      .select(`
+        id,
+        email,
+        senha,
+        status,
+        trial_expires_at,
+        vencimento_assinatura
+      `)
+      .eq("email", emailInput)
+      .maybeSingle();
 
-  const emailInput = email.value.trim();
-  const senhaInput = senha.value;
+    if (error || !data) {
+      msg.textContent = "Usuário não encontrado";
+      msg.className = "msg error";
+      return;
+    }
 
-if (!emailInput || !senhaInput) {
-  msg.textContent = "Preencha email e senha";
-  msg.className = "msg error";
-  return;
-}
+    if (data.senha !== senhaInput) {
+      msg.textContent = "Senha incorreta";
+      msg.className = "msg error";
+      return;
+    }
 
-  const { data, error } = await sb
-    .from("usuarios")
-.select(`
-  id,
-  email,
-  senha,
-  status,
-  trial_expires_at,
-  controle_sessao,
-  vencimento_assinatura
-`)
-    .eq("email", emailInput)
-    .maybeSingle();
+    const agora = new Date();
+    const expira = data.trial_expires_at
+      ? new Date(data.trial_expires_at)
+      : null;
 
-if (error || !data) {
-  msg.textContent = "Usuário não encontrado";
-  msg.className = "msg error";
-  return;
-}
+    // 🔴 BLOQUEIO MANUAL
+    if (data.status === "bloqueado") {
+      msg.textContent = "🚫 Conta bloqueada. Contate o suporte.";
+      msg.className = "msg error";
+      return;
+    }
 
+    // 🟡 INATIVO
+    if (data.status === "inativo") {
+      location.replace("planos.html");
+      return;
+    }
 
+    // 🟢 TRIAL EXPIRADO → INATIVO
+    if (expira && agora > expira && data.status === "ativo") {
+      await sb
+        .from("usuarios")
+        .update({ status: "inativo" })
+        .eq("id", data.id);
 
-if (data.senha !== senhaInput) {
-  msg.textContent = "Senha incorreta";
-  msg.className = "msg error";
-  return;
-}
+      location.replace("planos.html");
+      return;
+    }
 
+    // ✅ LOGIN OK
+    localStorage.setItem("usuario_email", data.email);
+    location.replace("index.html");
 
-  // ⏳ TRIAL
-// ⏳ TRIAL
-const agora = new Date();
-const expira = data.trial_expires_at
-  ? new Date(data.trial_expires_at)
-  : null;
-
-// 🔴 BLOQUEADO = BAN MANUAL
-if (data.status === "bloqueado") {
-  msg.textContent = "🚫 Conta bloqueada. Contate o suporte.";
-  msg.className = "msg error";
-  return;
-}
-
-// 🟡 INATIVO = SEM PLANO / TRIAL EXPIRADO
-if (data.status === "inativo") {
-  msg.textContent = "Assinatura inativa. Regularize para continuar.";
-  msg.className = "msg error";
-  location.replace("planos.html");
-  return;
-}
-
-// 🟢 TRIAL EXPIRADO → vira INATIVO (não bloqueado)
-if (expira && agora > expira && data.status === "ativo") {
-  await sb
-    .from("usuarios")
-    .update({ status: "inativo" })
-    .eq("id", data.id);
-
-  location.replace("planos.html");
-  return;
-}
-
-
-// 🚫 BLOQUEADO, MAS AINDA DENTRO DO PERÍODO
-msg.textContent = "🚫 Acesso bloqueado. Entre em contato com o suporte.";
-msg.className = "msg error";
-
-// monta mensagem com email do usuário
-const texto = encodeURIComponent(
-  `Olá, meu acesso está bloqueado.\n\nEmail: ${data.email}`
-);
-
-// aponta para o WhatsApp de suporte
-const whatsapp = document.getElementById("btnWhatsapp");
-whatsapp.href = `https://wa.me/${WHATSAPP_SUPORTE}?text=${texto}`;
-whatsapp.style.display = "flex";
-
-return;
-} // 🔴 FECHA O IF BLOQUEADO AQUI CORRETAMENTE
-
-// ✅ ACESSO NORMAL
-location.replace("index.html");
-return;
-
-} finally {
-  liberarBotao(btnLogin); // 🔥 GARANTE QUE SEMPRE DESBLOQUEIA
-}
+  } catch (err) {
+    console.error("Erro no login:", err);
+    msg.textContent = "Erro inesperado. Tente novamente.";
+    msg.className = "msg error";
+  } finally {
+    liberarBotao(btnLogin);
+  }
 };
 
+
+
+
+
+
+
+
+
+
+  
 btnCadastro.onclick = async ()=>{
   bloquearBotao(btnCadastro);
   msgCadastro.textContent="";
