@@ -274,17 +274,19 @@ function aceitarPrivacidade(){
   fecharPrivacidade();
 }
 
-/* LOGIN */
-btnLogin.onclick = async () => {
+/* =======================
+   LOGIN
+======================= */
 btnLogin.onclick = async () => {
   showLoading("Entrando…");
 
   const emailValue = email.value.trim();
+  const senhaValue = senha.value;
 
   // 1️⃣ AUTH — LOGIN PELO SUPABASE
   const { data, error } = await sb.auth.signInWithPassword({
     email: emailValue,
-    password: senha.value
+    password: senhaValue
   });
 
   // ❌ ERRO DE LOGIN
@@ -306,26 +308,24 @@ btnLogin.onclick = async () => {
     location.replace("index.html");
   }, 600);
 };
-  // 5️⃣ LOCALSTORAGE (INDEX DEPENDE DISSO)
-  localStorage.setItem("usuario_email", emailValue);
-  localStorage.setItem("session_token", sessionToken);
 
-  // 6️⃣ REDIRECT
-  setTimeout(() => {
-    location.replace("index.html");
-  }, 600);
+
+/* =======================
+   RESET DE SENHA
+======================= */
+btnReset.onclick = async () => {
+  if (!email.value.trim()) return;
+
+  await sb.auth.resetPasswordForEmail(email.value.trim());
+
+  msg.textContent = "Email de recuperação enviado";
+  msg.className = "msg success";
 };
 
 
-/* RESET */
-btnReset.onclick = async ()=>{
-  if(!email.value) return;
-  await sb.auth.resetPasswordForEmail(email.value);
-  msg.textContent="Email de recuperação enviado";
-  msg.className="msg success";
-};
-
-/* CADASTRO */
+/* =======================
+   CADASTRO
+======================= */
 btnCadastro.onclick = async () => {
   if (!aceitePrivacidade.checked) {
     msgCadastro.textContent = "Aceite a política de privacidade";
@@ -341,7 +341,7 @@ btnCadastro.onclick = async () => {
 
   showLoading("Criando conta…");
 
-  // 1️⃣ SIGN UP
+  // 1️⃣ SIGN UP (AUTH)
   const { data, error } = await sb.auth.signUp({
     email: c_email.value.trim(),
     password: c_senha.value
@@ -354,34 +354,16 @@ btnCadastro.onclick = async () => {
     return;
   }
 
-  const sessionToken = crypto.randomUUID();
+  // ⚠️ IMPORTANTE
+  // NÃO cria usuário manualmente aqui
+  // A tabela "usuarios" é preenchida AUTOMATICAMENTE
+  // por TRIGGER no banco usando auth.users
 
-  // 2️⃣ CRIA USUÁRIO NA TABELA usuarios
-await sb.auth.signInWithPassword({ email, password });
-    id: data.user.id,
-    email: c_email.value.trim(),
-    cpf: c_cpf.value.replace(/\D/g, ""),
-    whatsapp: c_whats.value.replace(/\D/g, ""),
-    nome_usuario: "",
-    username: null,
-    status: "aprovado",
-    trial_expires_at: new Date(Date.now() + 10 * 86400000),
-    session_token: sessionToken,
-    controle_sessao: false,
-    is_admin: false
-  });
+  msgCadastro.textContent = "Conta criada! Confirme seu email.";
+  msgCadastro.className = "msg success";
 
-  // 3️⃣ LOCALSTORAGE (LOGIN AUTOMÁTICO)
-  localStorage.setItem("usuario_email", c_email.value.trim());
-  localStorage.setItem("session_token", sessionToken);
-
-  // 4️⃣ REDIRECT
-  setTimeout(() => {
-    location.replace("index.html");
-  }, 700);
+  hideLoading();
 };
-
-
 // =======================
 // MÁSCARA DE CPF
 // =======================
