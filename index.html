@@ -1554,30 +1554,12 @@ async function perfilCarregar(){
 
   perfilUserId = user.id;
 
-  // 📧 Dados básicos
   pEmail.textContent = user.email;
   pNome.value = user.nome_usuario || "";
   pUser.value = user.username || "";
-
-  // 🖼 Avatar
-  pAvatar.src =
-    user.avatar_url ||
-    `https://ui-avatars.com/api/?name=${(user.nome_usuario || "U")[0]}&background=e50914&color=fff`;
-
-  // 💳 Plano (vem DIRETO do usuário)
   pPlano.textContent = user.tipo_assinatura || "-";
-
-  pValor.textContent = user.valor_assinatura
-    ? Number(user.valor_assinatura).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-      })
-    : "-";
-
-  pVenc.textContent = user.vencimento_assinatura
-    ? new Date(user.vencimento_assinatura).toLocaleDateString("pt-BR")
-    : "-";
-  await carregarApex();
+  pValor.textContent = user.valor_assinatura || "-";
+  pVenc.textContent = user.vencimento_assinatura || "-";
 }
 
 
