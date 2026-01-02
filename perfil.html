@@ -201,29 +201,40 @@ function preencher(u){
 }
 
 async function validarUsername(){
-  const u = elUsername.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
+  const u = elUsername.value
+    .toLowerCase()
+    .replace(/[^a-z0-9._]/g,"");
+
   elUsername.value = u;
 
   if(u.length < 3){
-    elStatus.textContent="Muito curto";
-    elStatus.style.color="#f87171";
+    elStatus.textContent = "Muito curto";
+    elStatus.style.color = "#f87171";
     return false;
   }
 
-  const { data } = await sb
+  const { data, error } = await sb
     .from("users_profile")
     .select("id")
     .eq("username", u)
     .neq("id", perfilId);
 
-  if(data.length){
-    elStatus.textContent="Já em uso";
-    elStatus.style.color="#f87171";
+  // 🔥 CORREÇÃO CRÍTICA
+  if (error) {
+    console.error("Erro ao validar username:", error);
+    elStatus.textContent = "Erro ao validar";
+    elStatus.style.color = "#f87171";
     return false;
   }
 
-  elStatus.textContent="Disponível";
-  elStatus.style.color="#22c55e";
+  if (Array.isArray(data) && data.length > 0) {
+    elStatus.textContent = "Já em uso";
+    elStatus.style.color = "#f87171";
+    return false;
+  }
+
+  elStatus.textContent = "Disponível";
+  elStatus.style.color = "#22c55e";
   return true;
 }
 
