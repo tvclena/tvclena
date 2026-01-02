@@ -404,60 +404,38 @@ if (data.senha !== senhaInput) {
 
 
   // ⏳ TRIAL
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
+// ⏳ TRIAL
+const agora = new Date();
+const expira = data.trial_expires_at
+  ? new Date(data.trial_expires_at)
+  : null;
 
-if (agora > expira && data.status !== "aprovado") {
-  msg.textContent = "Período de teste expirado";
+// 🔴 BLOQUEADO = BAN MANUAL
+if (data.status === "bloqueado") {
+  msg.textContent = "🚫 Conta bloqueada. Contate o suporte.";
   msg.className = "msg error";
   return;
 }
 
+// 🟡 INATIVO = SEM PLANO / TRIAL EXPIRADO
+if (data.status === "inativo") {
+  msg.textContent = "Assinatura inativa. Regularize para continuar.";
+  msg.className = "msg error";
+  location.replace("planos.html");
+  return;
+}
 
-  // 🔑 GERA TOKEN DE SESSÃO
-  const sessionToken = crypto.randomUUID();
-
-  // 💾 SALVA TOKEN NO USUÁRIO
+// 🟢 TRIAL EXPIRADO → vira INATIVO (não bloqueado)
+if (expira && agora > expira && data.status === "ativo") {
   await sb
     .from("usuarios")
-    .update({ session_token: sessionToken })
+    .update({ status: "inativo" })
     .eq("id", data.id);
 
-  // 🧾 LOG DE LOGIN
-  await sb
-    .from("login_logs")
-    .insert({
-      user_id: data.id,
-      email: data.email,
-      ip: null,
-      user_agent: navigator.userAgent
-    });
+  location.replace("planos.html");
+  return;
+}
 
-
-// 💾 SALVA LOCAL
-localStorage.setItem("usuario_email", data.email);
-localStorage.setItem("session_token", sessionToken);
-
-
-// 🔒 BLOQUEADO → comportamento controlado por vencimento
-if (data.status === "bloqueado") {
-
-  // sem data = considera vencido
-  if (!data.vencimento_assinatura) {
-    localStorage.setItem("redirect_after_login", "planos.html");
-    location.replace("planos.html");
-return;
-  }
-
-  const vencimento = new Date(data.vencimento_assinatura);
-  vencimento.setHours(23, 59, 59, 999); // válido até o fim do dia
-
-  // ❌ ASSINATURA VENCIDA → PAGAMENTO
-  if (agora > vencimento) {
-    localStorage.setItem("redirect_after_login", "planos.html");
-    location.replace("planos.html");
-    return;
-  }
 
 // 🚫 BLOQUEADO, MAS AINDA DENTRO DO PERÍODO
 msg.textContent = "🚫 Acesso bloqueado. Entre em contato com o suporte.";
