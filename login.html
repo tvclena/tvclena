@@ -274,22 +274,18 @@ function aceitarPrivacidade(){
   fecharPrivacidade();
 }
 
-/* =======================
-   LOGIN
-======================= */
+/* LOGIN */
 btnLogin.onclick = async () => {
   showLoading("Entrando…");
 
   const emailValue = email.value.trim();
-  const senhaValue = senha.value;
 
-  // 1️⃣ AUTH — LOGIN PELO SUPABASE
+  // 1️⃣ AUTH
   const { data, error } = await sb.auth.signInWithPassword({
     email: emailValue,
-    password: senhaValue
+    password: senha.value
   });
 
-  // ❌ ERRO DE LOGIN
   if (error || !data.user) {
     hideLoading();
     msg.textContent = "Email ou senha inválidos";
@@ -297,35 +293,54 @@ btnLogin.onclick = async () => {
     return;
   }
 
-  // 2️⃣ CONTROLE DE SESSÃO LOCAL (INDEX USA ISSO)
+  const userId = data.user.id;
   const sessionToken = crypto.randomUUID();
 
+  // 2️⃣ VERIFICA USUÁRIO NA TABELA usuarios
+  const { data: usuario } = await sb
+    .from("usuarios")
+    .select("id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  // 3️⃣ SE NÃO EXISTIR → CRIA
+  if (!usuario) {
+    await sb.from("usuarios").insert({
+      id: userId,
+      email: emailValue,
+      status: "aprovado",
+      trial_expires_at: new Date(Date.now() + 10 * 86400000), // 10 dias
+      session_token: sessionToken,
+      controle_sessao: false,
+      is_admin: false
+    });
+  } else {
+    // 4️⃣ SE EXISTIR → ATUALIZA TOKEN
+    await sb.from("usuarios")
+      .update({ session_token: sessionToken })
+      .eq("id", userId);
+  }
+
+  // 5️⃣ LOCALSTORAGE (INDEX DEPENDE DISSO)
   localStorage.setItem("usuario_email", emailValue);
   localStorage.setItem("session_token", sessionToken);
 
-  // 3️⃣ REDIRECIONA
+  // 6️⃣ REDIRECT
   setTimeout(() => {
     location.replace("index.html");
   }, 600);
 };
 
 
-/* =======================
-   RESET DE SENHA
-======================= */
-btnReset.onclick = async () => {
-  if (!email.value.trim()) return;
-
-  await sb.auth.resetPasswordForEmail(email.value.trim());
-
-  msg.textContent = "Email de recuperação enviado";
-  msg.className = "msg success";
+/* RESET */
+btnReset.onclick = async ()=>{
+  if(!email.value) return;
+  await sb.auth.resetPasswordForEmail(email.value);
+  msg.textContent="Email de recuperação enviado";
+  msg.className="msg success";
 };
 
-
-/* =======================
-   CADASTRO
-======================= */
+/* CADASTRO */
 btnCadastro.onclick = async () => {
   if (!aceitePrivacidade.checked) {
     msgCadastro.textContent = "Aceite a política de privacidade";
@@ -341,7 +356,7 @@ btnCadastro.onclick = async () => {
 
   showLoading("Criando conta…");
 
-  // 1️⃣ SIGN UP (AUTH)
+  // 1️⃣ SIGN UP
   const { data, error } = await sb.auth.signUp({
     email: c_email.value.trim(),
     password: c_senha.value
@@ -354,16 +369,34 @@ btnCadastro.onclick = async () => {
     return;
   }
 
-  // ⚠️ IMPORTANTE
-  // NÃO cria usuário manualmente aqui
-  // A tabela "usuarios" é preenchida AUTOMATICAMENTE
-  // por TRIGGER no banco usando auth.users
+  const sessionToken = crypto.randomUUID();
 
-  msgCadastro.textContent = "Conta criada! Confirme seu email.";
-  msgCadastro.className = "msg success";
+  // 2️⃣ CRIA USUÁRIO NA TABELA usuarios
+  await sb.from("usuarios").insert({
+    id: data.user.id,
+    email: c_email.value.trim(),
+    cpf: c_cpf.value.replace(/\D/g, ""),
+    whatsapp: c_whats.value.replace(/\D/g, ""),
+    nome_usuario: "",
+    username: null,
+    status: "aprovado",
+    trial_expires_at: new Date(Date.now() + 10 * 86400000),
+    session_token: sessionToken,
+    controle_sessao: false,
+    is_admin: false
+  });
 
-  hideLoading();
+  // 3️⃣ LOCALSTORAGE (LOGIN AUTOMÁTICO)
+  localStorage.setItem("usuario_email", c_email.value.trim());
+  localStorage.setItem("session_token", sessionToken);
+
+  // 4️⃣ REDIRECT
+  setTimeout(() => {
+    location.replace("index.html");
+  }, 700);
 };
+
+
 // =======================
 // MÁSCARA DE CPF
 // =======================
