@@ -276,16 +276,18 @@ function aceitarPrivacidade(){
 
 /* LOGIN */
 btnLogin.onclick = async () => {
+btnLogin.onclick = async () => {
   showLoading("Entrando…");
 
   const emailValue = email.value.trim();
 
-  // 1️⃣ AUTH
+  // 1️⃣ AUTH — LOGIN PELO SUPABASE
   const { data, error } = await sb.auth.signInWithPassword({
     email: emailValue,
     password: senha.value
   });
 
+  // ❌ ERRO DE LOGIN
   if (error || !data.user) {
     hideLoading();
     msg.textContent = "Email ou senha inválidos";
@@ -293,34 +295,17 @@ btnLogin.onclick = async () => {
     return;
   }
 
-  const userId = data.user.id;
+  // 2️⃣ CONTROLE DE SESSÃO LOCAL (INDEX USA ISSO)
   const sessionToken = crypto.randomUUID();
 
-  // 2️⃣ VERIFICA USUÁRIO NA TABELA usuarios
-  const { data: usuario } = await sb
-    .from("usuarios")
-    .select("id")
-    .eq("id", userId)
-    .maybeSingle();
+  localStorage.setItem("usuario_email", emailValue);
+  localStorage.setItem("session_token", sessionToken);
 
-  // 3️⃣ SE NÃO EXISTIR → CRIA
-  if (!usuario) {
-await sb.auth.signInWithPassword({ email, password });
-      id: userId,
-      email: emailValue,
-      status: "aprovado",
-      trial_expires_at: new Date(Date.now() + 10 * 86400000), // 10 dias
-      session_token: sessionToken,
-      controle_sessao: false,
-      is_admin: false
-    });
-  } else {
-    // 4️⃣ SE EXISTIR → ATUALIZA TOKEN
-    await sb.from("usuarios")
-      .update({ session_token: sessionToken })
-      .eq("id", userId);
-  }
-
+  // 3️⃣ REDIRECIONA
+  setTimeout(() => {
+    location.replace("index.html");
+  }, 600);
+};
   // 5️⃣ LOCALSTORAGE (INDEX DEPENDE DISSO)
   localStorage.setItem("usuario_email", emailValue);
   localStorage.setItem("session_token", sessionToken);
