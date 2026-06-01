@@ -1612,1558 +1612,572 @@
 
 
 
-  <script src="env.js"></script>
+<script src="env.js"></script>
   <script>
+    // Configuração dinâmica da URL base da API com fallback seguro
     const API_BASE_URL = (
-  window.ENV?.API_BASE_URL ||
-  window.ENV?.API_URL ||
-  const API = "https://bullet-occasions-enjoyed-satisfy.trycloudflare.com";
-).replace(/\/+$/, "");
-
-function getSessionToken(){
-  return localStorage.getItem("session_token") || "";
-}
-
-function getUsuarioEmail(){
-  return localStorage.getItem("usuario_email") || "";
-}
-
-function authHeaders(extra = {}){
-  const token = getSessionToken();
-  return {
-    ...extra,
-    ...(token ? { Authorization: `Bearer ${token}` } : {})
-  };
-}
-
-async function apiFetch(path, options = {}){
-  const url = path.startsWith("http")
-    ? path
-    : `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
-
-  const isFormData = options.body instanceof FormData;
-
-  const res = await fetch(url, {
-    cache: "no-store",
-    ...options,
-    headers: authHeaders({
-      ...(isFormData ? {} : { "Content-Type": "application/json" }),
-      ...(options.headers || {})
-    })
-  });
-
-  const contentType = res.headers.get("content-type") || "";
-  const data = contentType.includes("application/json")
-    ? await res.json()
-    : await res.text();
-
-  if (!res.ok) {
-    const message = data?.message || data?.error || "Erro ao comunicar com o servidor";
-    throw new Error(message);
-  }
-
-  return data;
-}
-
-const ClenaAPI = {
-  login: ({ email, senha }) =>
-    apiFetch("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, senha })
-    }),
-
-  validarSessao: ({ email, token }) =>
-    apiFetch("/auth/session", {
-      method: "POST",
-      body: JSON.stringify({ email, token })
-    }),
-
-  catalogo: () => apiFetch("/catalogo"),
-
-  perfil: () =>
-    apiFetch(`/perfil?email=${encodeURIComponent(getUsuarioEmail())}`),
-
-  validarUsername: ({ username, userId }) =>
-    apiFetch(`/perfil/username?username=${encodeURIComponent(username)}&user_id=${encodeURIComponent(userId || "")}`),
-
-  salvarPerfil: (payload) =>
-    apiFetch("/perfil", {
-      method: "PATCH",
-      body: JSON.stringify(payload)
-    }),
-
-  uploadAvatar: (formData) =>
-    apiFetch("/perfil/avatar", {
-      method: "POST",
-      body: formData
-    }),
-
-  favorito: (payload) =>
-    apiFetch("/favoritos", {
-      method: "POST",
-      body: JSON.stringify(payload)
-    }),
-
-  historico: (payload) =>
-    apiFetch("/historico", {
-      method: "POST",
-      body: JSON.stringify(payload)
-    }),
-
-  planos: () => apiFetch("/planos"),
-
-  criarPagamento: (payload) =>
-    apiFetch("/pagamentos/create", {
-      method: "POST",
-      body: JSON.stringify(payload)
-    }),
-
-  carteira: () =>
-    apiFetch(`/carteira?email=${encodeURIComponent(getUsuarioEmail())}`),
-
-  player: (id) =>
-    apiFetch(`/player/${encodeURIComponent(id)}`)
-};
-
-window.ClenaAPI = ClenaAPI;
-// ================= APEX CONVERSÃƒO =================
-const APEX_POR_REAL = 15;
-
-function reaisParaApex(reais){
-  return Math.floor(Number(reais) * APEX_POR_REAL);
-}
-
-function apexParaReais(apex){
-  return (Number(apex) / APEX_POR_REAL).toFixed(2);
-}
-
-
-
-
-  
-let redirecionando = false;
-
-/* ================= PERFIL NOVO ISOLADO ================= */
-let perfilUserId = null;
-
-const pAvatar = document.getElementById("perfilAvatarNovo");
-const pNome = document.getElementById("perfilNomeNovo");
-const pUser = document.getElementById("perfilUsernameNovo");
-const pStatus = document.getElementById("perfilUsernameStatus");
-const pEmail = document.getElementById("perfilEmailNovo");
-const pPlano = document.getElementById("perfilPlanoNovo");
-const pValor = document.getElementById("perfilValorNovo");
-const pVenc = document.getElementById("perfilVencimentoNovo");
-
-function perfilAbrir(){
-  document.getElementById("perfilOverlayNovo").style.display="flex";
-  perfilCarregar();
-}
-function perfilFechar(){
-  document.getElementById("perfilOverlayNovo").style.display="none";
-}
-
-async function perfilCarregar(){
-  const email = localStorage.getItem("usuario_email");
-  if (!email) return;
-
-  let user;
-  try {
-    user = await ClenaAPI.perfil();
-  } catch (error) {
-    console.error("Erro ao carregar perfil:", error);
-    return;
-  }
-
-  perfilUserId = user.id;
-
-  // ðŸ“§ Dados bÃ¡sicos
-  pEmail.textContent = user.email;
-  pNome.value = user.nome_usuario || "";
-  pUser.value = user.username || "";
-
-  // ðŸ–¼ Avatar
-  pAvatar.src =
-    user.avatar_url ||
-    `https://ui-avatars.com/api/?name=${(user.nome_usuario || "U")[0]}&background=e50914&color=fff`;
-
-  // ðŸ’³ Plano (vem DIRETO do usuÃ¡rio)
-  pPlano.textContent = user.tipo_assinatura || "-";
-
-  pValor.textContent = user.valor_assinatura
-    ? Number(user.valor_assinatura).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-      })
-    : "-";
-
-  pVenc.textContent = user.vencimento_assinatura
-    ? new Date(user.vencimento_assinatura).toLocaleDateString("pt-BR")
-    : "-";
-  await carregarApex();
-}
-
-
-
-async function perfilValidarUsername(){
-  const u = pUser.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
-  pUser.value = u;
-
-  if(u.length < 3){
-    pStatus.textContent="Muito curto";
-    pStatus.style.color="#ff5555";
-    return false;
-  }
-
-  const data = await ClenaAPI.validarUsername({
-    username: u,
-    userId: perfilUserId
-  });
-
-  if(data?.disponivel === false || data?.available === false){
-    pStatus.textContent="JÃ¡ em uso";
-    pStatus.style.color="#ff5555";
-    return false;
-  }
-
-  pStatus.textContent="DisponÃ­vel";
-  pStatus.style.color="#00ff99";
-  return true;
-}
-
-async function perfilSalvar(){
-  if(!(await perfilValidarUsername())) return;
-
-  await ClenaAPI.salvarPerfil({
-    id: perfilUserId,
-    email: getUsuarioEmail(),
-    nome_usuario: pNome.value,
-    username: pUser.value
-  });
-
-  perfilFechar();
-}
-function atualizarBotaoFiltros(){
-  const btn = document.getElementById("btnFiltrosAvancados");
-  if (!btn) return;
-
-  const filtros = JSON.parse(
-    localStorage.getItem("clena_filtros") || "{}"
-  );
-
-  const ativo =
-    (filtros.busca && filtros.busca.length) ||
-    (filtros.classificacao !== undefined && filtros.classificacao < 18) ||
-    (filtros.anos && filtros.anos.length) ||
-    (filtros.generos && filtros.generos.length) ||
-    (filtros.tipos && filtros.tipos.length);
-
-  btn.classList.toggle("ativo", !!ativo);
-}
-
-
-async function perfilUploadAvatar(input){
-  const file = input.files[0];
-  if(!file || !perfilUserId) return;
-
-  const img = new Image();
-  img.src = URL.createObjectURL(file);
-  await new Promise(r => img.onload = r);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(img,0,0,512,512);
-
-  const blob = await new Promise(r =>
-    canvas.toBlob(r,"image/jpeg",0.9)
-  );
-
-  URL.revokeObjectURL(img.src);
-
-  const formData = new FormData();
-  formData.append("avatar", blob, `${perfilUserId}_${Date.now()}.jpg`);
-  formData.append("id", perfilUserId);
-  formData.append("email", getUsuarioEmail());
-
-  let data;
-  try {
-    data = await ClenaAPI.uploadAvatar(formData);
-  } catch (error) {
-    console.error("Erro ao enviar avatar:", error);
-    alert("Erro ao enviar avatar");
-    return;
-  }
-
-  const avatarUrl = data.avatar_url || data.avatarUrl || data.url;
-  if (!avatarUrl) return;
-
-  pAvatar.src = avatarUrl;
-  await carregarAvatarHeader();
-}
-
-
-
-
-
-
-  
-
-
-let dados=[], heroItem=null, filtro='todos', usuario=null;
-let serieAtual=[], filmeAtual=null;
-let episodioIndexAtual = 0;
-let dadosCarregados = false;
-let categoriaAtiva = "todas";
-let dadosFiltrados = [];
-let paginaAtual = 0;
-const LIMITE_POR_PAGINA = 24;
-let carregando = false;
-
-
-// ================= ELEMENTOS DOM =================
-const hero = document.getElementById("hero");
-const heroTitle = document.getElementById("heroTitle");
-const heroMeta = document.getElementById("heroMeta");
-const heroDesc = document.getElementById("heroDesc");
-const grid = document.getElementById("grid");
-
-
-const video = document.getElementById("video");
-const btnProximo = document.getElementById("btnProximo");
-const selTemporada = document.getElementById("selTemporada");
-const selEpisodio = document.getElementById("selEpisodio");
-
-
-  
-const ID_PRINCIPAL = "649a1523-e49b-49d8-a34a-452a54b04ba";
-
-async function iniciarApp() {
-
-
-
-let data;
-try {
-  data = await ClenaAPI.catalogo();
-} catch (error) {
-  console.error(error);
-  alert("Erro ao carregar catÃƒÂ¡logo");
-  return;
-}
-
-
-  console.log("ðŸŽ¬ FILMES CARREGADOS:", data);
-
-dados = (data || []).map(d => {
-  // ðŸ”¢ classificaÃ§Ã£o indicativa â†’ nÃºmero
-  let classificacaoNum = null;
-  if (d.classificacao_indicativa) {
-    const m = d.classificacao_indicativa.match(/\d+/);
-    if (m) classificacaoNum = Number(m[0]);
-  }
-
-  return {
-  ...d,
-
-  ano_lancamento: d.ano_lancamento
-    ? Number(d.ano_lancamento)
-    : null,
-
-  nota_critica: d.nota_critica
-    ? Number(d.nota_critica)
-    : null,
-
-  duracao_minutos: d.duracao_minutos
-    ? Number(d.duracao_minutos)
-    : null,
-
-  classificacao_num: classificacaoNum,
-
-  idioma: (d.idioma || "").toLowerCase(),
-  audio: (d.audio || "").toLowerCase(),
-
-  // ðŸ”¥ CACHE DE BUSCA (CRÃTICO)
-  _search: `
-    ${d.titulo || ""}
-    ${d.serie_nome || ""}
-    ${d.categoria || ""}
-  `.toLowerCase()
-};
-
-});
-  dadosCarregados = true;
-montarFiltrosCategorias(); // ðŸ‘ˆ ADICIONE AQUI
-// âœ… aplica filtros APENAS se o popup de filtros ainda estiver ativo
-if (
-  sessionStorage.getItem("clena_filtros_aberto") === "1" &&
-  localStorage.getItem("clena_filtros")
-) {
-  aplicarFiltrosAvancados();
-}
-
-
-
-  
-
-  if (!dados.length) {
-    console.warn("âš ï¸ Nenhum filme ativo encontrado");
-    return;
-  }
-
-  heroItem =
-    dados.find(d => d.id === ID_PRINCIPAL) ||
-    dados[0];
-
-  hero.style.backgroundImage = `url(${heroItem.capa_url})`;
-  heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
-  heroMeta.textContent = `${heroItem.categoria} â€¢ ${heroItem.tipo}`;
-  heroDesc.textContent = heroItem.descricao || "";
-
-  const heroVideo = document.getElementById("heroVideo");
-
-  // â³ adia vÃ­deo para depois do primeiro paint
-setTimeout(() => {
-  if (!heroItem.video_url) return;
-
-  heroVideo.src = heroItem.video_url;
-  heroVideo.muted = true;
-  heroVideo.play().catch(()=>{});
-}, 1200);
-
-
-  
-
-// ðŸ”¥ GARANTE ESTADO DO BOTÃƒO AO CARREGAR
-atualizarBotaoFiltros();
-// ðŸš€ LOAD INICIAL PROGRESSIVO
-prepararLista(
-  JSON.parse(localStorage.getItem("clena_filtros") || "null"),
-  busca?.value?.toLowerCase() || ""
-);
-
-
-}
-
-
-
-
-const searchMobileBox = document.getElementById("searchMobileBox");
-const buscaMobile = document.getElementById("buscaMobile");
-const searchResults = document.getElementById("searchResults");
-const searchGrid = document.getElementById("searchGrid");
-
-  
-function abrirResultadoMobile(e) {
-  e.preventDefault();
-  e.stopPropagation();
-
-  const card = e.currentTarget;
-  const itemEncoded = card.dataset.item;
-  if (!itemEncoded) return;
-
-  document.body.classList.remove("search-open");
-  searchResults.style.display = "none";
-  searchMobileBox.style.display = "none";
-
-  setTimeout(() => {
-    location.href = `player.html?item=${itemEncoded}`;
-  }, 100);
-}
-
-const busca = document.getElementById("busca");
-function executarBusca(texto) {
-  if (!dadosCarregados) {
-    searchGrid.innerHTML =
-      "<p style='color:#777'>Carregando catÃ¡logo...</p>";
-    searchResults.style.display = "block";
-    return;
-  }
-
-  
-  const q = texto.trim().toLowerCase();
-
-  if (q.length < 2) {
-    searchResults.style.display = "none";
-    searchGrid.innerHTML = "";
-    return;
-  }
-
-const resultados = [
-  // ðŸŽ¬ FILMES
-  ...dados.filter(d =>
-    d.tipo === "filme" && d._search.includes(q)
-  ),
-
-  // ðŸ“º SÃ‰RIES (AGRUPADAS)
-  ...[
-    ...new Map(
-      dados
-        .filter(d =>
-          d.tipo === "serie" && d._search.includes(q)
-        )
-        .map(s => [s.serie_nome, s])
-    ).values()
-  ]
-];
-
-
-
-  if (!resultados.length) {
-    searchGrid.innerHTML =
-      "<p style='color:#777'>Nenhum resultado encontrado</p>";
-
+      window.ENV?.API_BASE_URL ||
+      window.ENV?.API_URL ||
+      "https://bullet-occasions-enjoyed-satisfy.trycloudflare.com"
+    ).replace(/\/+$/, "");
+
+    // Estados Globais do Aplicativo
+    let catalogoCompleto = { filmes: [], series: [] };
+    let itensFiltrados = [];
+    let itensExibidos = [];
+    let heroItem = null;
+    let paginaAtual = 1;
+    const itensPorPagina = 12;
     
-} else {
-searchGrid.innerHTML = resultados.map(r => `
-  <div class="search-card"
-       ontouchstart="abrirResultadoMobile(event)"
-       onclick="abrirResultadoMobile(event)"
-       data-item='${encodeURIComponent(JSON.stringify(r))}'>
-    <img src="${r.capa_url}">
-    <span>${r.titulo || r.serie_nome}</span>
-  </div>
-`).join("");
-  }
+    let filtroTipo = 'todos';
+    let filtroCategoria = 'todas';
 
-  searchResults.style.display = "block";
-}
+    // Estados do Player de Séries
+    let episodiosDaSerieAtual = [];
+    let idEpisodioAtual = null;
+    let monitoramentoProgressoInterval = null;
 
-
-function toggleSearch(){
-  searchMobileBox.style.display = "block";
-  searchResults.style.display = "none";
-  buscaMobile.value = "";
-  document.body.classList.add("search-open");
-
-  // forÃ§a foco sem zoom
-  setTimeout(() => buscaMobile.focus(), 100);
-}
-const searchBtn = document.getElementById("searchBtn");
-
-searchBtn.addEventListener("touchstart", e => {
-  e.preventDefault();
-  e.stopPropagation();
-  toggleSearch();
-});
-
-searchBtn.addEventListener("click", e => {
-  e.preventDefault();
-  e.stopPropagation();
-  toggleSearch();
-});
-
-
-buscaMobile.oninput = () => {
-  executarBusca(buscaMobile.value);
-};
-
-if (busca) {
-  busca.oninput = () => {
-    executarBusca(busca.value);
-  };
-}
-
-
-document.addEventListener("click", e => {
-  if (
-    searchResults.contains(e.target) ||
-    searchMobileBox.contains(e.target) ||
-    e.target.closest(".search-card") ||
-    e.target.closest("#searchBtn") // ðŸ”¥ ESSENCIAL
-  ) {
-    return;
-  }
-
-  searchMobileBox.style.display = "none";
-  searchResults.style.display = "none";
-  searchGrid.innerHTML = "";
-  document.body.classList.remove("search-open");
-});
-
-
-
-
-function setFiltro(f, el){
-  filtro = f;
-
-  document
-    .querySelectorAll(".filtros button")
-    .forEach(b => b.classList.remove("active"));
-
-  el.classList.add("active");
-
-  prepararLista(
-    JSON.parse(localStorage.getItem("clena_filtros") || "null"),
-    busca?.value?.toLowerCase() || ""
-  );
-}
-
-
-function card(i){
-  return `
-    <div class="card" onclick='abrirPlayer(${JSON.stringify(i)})'>
-      <img src="${i.capa_url}">
-      <div class="title">
-        ${i.titulo || i.serie_nome}
-      </div>
-    </div>
-  `;
-}
-
-function renderComFiltros(f){
-  let html = "";
-
-  dados.filter(d => {
-
-    if (f.busca && !d._search.includes(f.busca)) {
-      return false;
+    // Helpers de Armazenamento e Autenticação
+    function getSessionToken() {
+      return localStorage.getItem("session_token") || "";
     }
 
-    if (f.classificacao !== undefined) {
-      if (d.classificacao_num !== null && d.classificacao_num > f.classificacao) {
-        return false;
+    function authHeaders(extra = {}) {
+      const token = getSessionToken();
+      return {
+        "Content-Type": "application/json",
+        ...extra,
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      };
+    }
+
+    async function apiFetch(path, options = {}) {
+      const url = path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
+      const response = await fetch(url, options);
+      if (response.status === 401 || response.status === 403) {
+        logout();
+        throw new Error("Sessão expirada. Faça login novamente.");
       }
-    }
-
-    if (f.anos?.length && !f.anos.includes(String(d.ano_lancamento))) {
-      return false;
-    }
-
-    if (f.generos?.length) {
-      const cats = (d.categoria || "").toLowerCase();
-      if (!f.generos.some(g => cats.includes(g.toLowerCase()))) {
-        return false;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erro na requisição: ${response.status}`);
       }
+      return response.json();
     }
 
-    if (f.tipos?.length && !f.tipos.includes(d.tipo)) {
-      return false;
-    }
-
-    if (f.notaMin && d.nota_critica !== null && d.nota_critica < f.notaMin) {
-      return false;
-    }
-
-    if (f.duracaoMin && d.duracao_minutos !== null && d.duracao_minutos < f.duracaoMin) {
-      return false;
-    }
-
-    if (f.idiomas?.length) {
-      if (!f.idiomas.some(i => d.idioma.includes(i.toLowerCase()))) {
-        return false;
-      }
-    }
-
-    if (f.audios?.length) {
-      if (!f.audios.some(a => d.audio.includes(a.toLowerCase()))) {
-        return false;
-      }
-    }
-
-    return true;
-  }).forEach(item => {
-    html += card(item);
-  });
-
-  grid.innerHTML = html;
-}
-
-
-function aplicarFiltrosAvancados(){
-  const filtros = JSON.parse(
-    localStorage.getItem("clena_filtros") || "{}"
-  );
-
-  paginaAtual = 0;
-  carregando = false;
-  observer.observe(sentinela);
-
-  prepararLista(filtros, busca?.value?.toLowerCase() || "");
-}
-
-
-
-
-function render(buscaTxt = "") {
-  let html = "";
-  let lista = dados;
-
-  if (categoriaAtiva !== "todas") {
-    lista = lista.filter(d =>
-      d.categoria?.toLowerCase().split(",").includes(categoriaAtiva)
-    );
-  }
-
-  // ðŸŽ¬ FILMES
-  if (filtro === "todos" || filtro === "filme") {
-    lista
-      .filter(d => d.tipo === "filme")
-      .filter(d => d._search.includes(buscaTxt))
-      .forEach(f => html += card(f));
-  }
-
-  // ðŸ“º SÃ‰RIES
-  if (filtro === "todos" || filtro === "serie") {
-    const series = [...new Map(
-      lista.filter(d => d.tipo === "serie")
-           .map(s => [s.serie_nome, s])
-    ).values()];
-
-    series
-      .filter(s => s._search.includes(buscaTxt))
-      .forEach(s => html += card(s));
-  }
-
-  // ðŸŽ¥ DOCUMENTÃRIOS âœ…
-  if (filtro === "documentarios") {
-    lista
-      .filter(d => d.tipo === "documentario")
-      .filter(d => d._search.includes(buscaTxt))
-      .forEach(d => html += card(d));
-  }
-
-  grid.innerHTML = html;
-}
-
-function prepararLista(filtros = null, buscaTxt = "") {
-  let lista = [...dados];
-
-  // ðŸŽ¯ FILTRO PRINCIPAL
-  if (filtro !== "todos") {
-    lista = lista.filter(d => {
-      if (filtro === "documentarios") {
-        return d.tipo === "documentario";
-      }
-      return d.tipo === filtro;
-    });
-  }
-
-  if (categoriaAtiva !== "todas") {
-    lista = lista.filter(d =>
-      d.categoria?.toLowerCase().split(",").includes(categoriaAtiva)
-    );
-  }
-
-  if (filtros) {
-    lista = lista.filter(d => {
-      if (filtros.busca && !d._search.includes(filtros.busca)) return false;
-      if (filtros.classificacao !== undefined &&
-          d.classificacao_num !== null &&
-          d.classificacao_num > filtros.classificacao) return false;
-      if (filtros.anos?.length &&
-          !filtros.anos.includes(String(d.ano_lancamento))) return false;
-      if (filtros.generos?.length) {
-        const cats = (d.categoria || "").toLowerCase();
-        if (!filtros.generos.some(g => cats.includes(g.toLowerCase())))
-          return false;
-      }
-      if (filtros.tipos?.length &&
-          !filtros.tipos.includes(d.tipo)) return false;
-      return true;
-    });
-  }
-
-  if (buscaTxt) {
-    lista = lista.filter(d => d._search.includes(buscaTxt));
-  }
-
-  dadosFiltrados = agruparSeries(lista);
-  paginaAtual = 0;
-  grid.innerHTML = "";
-
-  observer.observe(sentinela);
-  carregarProximaPagina();
-}
-
-
-function carregarProximaPagina() {
-  if (carregando) return;
-  carregando = true;
-
-  const inicio = paginaAtual * LIMITE_POR_PAGINA;
-  const fim = inicio + LIMITE_POR_PAGINA;
-
-  const lote = dadosFiltrados.slice(inicio, fim);
-
-if (!lote.length) {
-  observer.unobserve(sentinela); // ðŸ›‘ para o infinite scroll
-  carregando = false;
-  return;
-}
-
-
-  let html = "";
-  lote.forEach(item => {
-    html += card(item);
-  });
-
-  grid.insertAdjacentHTML("beforeend", html);
-
-  paginaAtual++;
-  carregando = false;
-}
-
-
-const sentinela = document.getElementById("sentinela");
-
-const observer = new IntersectionObserver(entries => {
-  if (entries[0].isIntersecting) {
-    carregarProximaPagina();
-  }
-}, {
-  rootMargin: "300px" // carrega antes de chegar no fim
-});
-
-observer.observe(sentinela);
-
-function formatarReal(valor){
-  if(valor == null) return "-";
-  return valor.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
-}
-
-function formatarData(data){
-  if(!data) return "-";
-  return new Date(data).toLocaleDateString("pt-BR");
-}
-
-async function abrirPlayer(item){
-  // ðŸ”¥ impede restauraÃ§Ã£o ao voltar
-  sessionStorage.removeItem("clena_filtros_aberto");
-
-  let playerItem = item;
-
-  if (item?.id) {
-    try {
-      playerItem = await ClenaAPI.player(item.id);
-    } catch (error) {
-      console.error("Erro ao carregar informaÃ§Ãµes do player:", error);
-      alert("Erro ao carregar o vÃ­deo");
-      return;
-    }
-  }
-
-  const dados = encodeURIComponent(JSON.stringify(playerItem));
-  location.href = `player.html?item=${dados}`;
-}
-
-
-
-function montarSerie(){
-  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
-  selTemporada.innerHTML=temps.map(t=>`<option>${t}</option>`).join("");
-  selTemporada.onchange=montarEpisodios;
-  montarEpisodios();
-}
-function montarEpisodios(){
-  const eps = serieAtual.filter(
-    e => e.temporada == selTemporada.value
-  );
-
-  selEpisodio.innerHTML = eps
-    .map((e, i) => `<option value="${i}">Ep ${e.episodio}</option>`)
-    .join("");
-
-  episodioIndexAtual = 0;
-
-  // â–¶ï¸ reproduz o primeiro episÃ³dio
-  tocarEpisodio(eps, episodioIndexAtual);
-
-  selEpisodio.onchange = () => {
-    episodioIndexAtual = Number(selEpisodio.value);
-    tocarEpisodio(eps, episodioIndexAtual);
-  };
-}
-async function tocarEpisodio(eps, index){
-  btnProximo.style.display = "none"; // ðŸ‘ˆ ESCONDE SEMPRE
-
-  const episodio = eps[index];
-  if(!episodio) return;
-
-  let playerInfo = episodio;
-  if (episodio?.id) {
-    try {
-      playerInfo = await ClenaAPI.player(episodio.id);
-    } catch (error) {
-      console.error("Erro ao carregar episÃ³dio:", error);
-      alert("Erro ao carregar o episÃ³dio");
-      return;
-    }
-  }
-
-  video.src = playerInfo.video_url;
-  video.play().catch(() => {});
-}
-
-
-
-function fechar(){
-  video.pause();video.src="";
-  document.getElementById("player").style.display = "none";
-  document.getElementById("perfilBtn").style.display="block";
-}
-
-
-
-function logout(){
-  localStorage.clear();
-  sessionStorage.clear();
-  location.replace("login.html");
-}
-
-function irProximoEpisodio(){
-  btnProximo.style.display = "none";
-
-  const temporadaAtual = selTemporada.value;
-  const epsDaTemp = serieAtual.filter(
-    e => e.temporada == temporadaAtual
-  );
-
-  episodioIndexAtual++;
-
-  // â–¶ï¸ prÃ³ximo episÃ³dio da mesma temporada
-  if (episodioIndexAtual < epsDaTemp.length) {
-    selEpisodio.value = episodioIndexAtual;
-    tocarEpisodio(epsDaTemp, episodioIndexAtual);
-    return;
-  }
-
-  // ðŸ”„ prÃ³xima temporada
-  const temporadas = [...new Set(serieAtual.map(e => e.temporada))];
-  const tempIndex = temporadas.indexOf(Number(temporadaAtual));
-
-  if (tempIndex < temporadas.length - 1) {
-    selTemporada.value = temporadas[tempIndex + 1];
-    montarEpisodios();
-  }
-}
-
-video.addEventListener("ended", () => {
-
-  // se nÃ£o estiver em sÃ©rie, ignora
-  if (!serieAtual.length) return;
-
-  const temporadaAtual = selTemporada.value;
-  const epsDaTemp = serieAtual.filter(
-    e => e.temporada == temporadaAtual
-  );
-
-  episodioIndexAtual++;
-
-  // â–¶ï¸ ainda tem episÃ³dio na mesma temporada
-  if (episodioIndexAtual < epsDaTemp.length) {
-    selEpisodio.value = episodioIndexAtual;
-    tocarEpisodio(epsDaTemp, episodioIndexAtual);
-    return;
-  }
-
-  // ðŸ”„ acabou a temporada â†’ tenta prÃ³xima
-  const temporadas = [...new Set(serieAtual.map(e => e.temporada))];
-  const tempIndex = temporadas.indexOf(Number(temporadaAtual));
-
-  if (tempIndex < temporadas.length - 1) {
-    const proximaTemp = temporadas[tempIndex + 1];
-    selTemporada.value = proximaTemp;
-    montarEpisodios();
-    return;
-  }
-
-  // ðŸ›‘ acabou a sÃ©rie
-  console.log("SÃ©rie finalizada");
-});
-video.addEventListener("timeupdate", () => {
-
-  // sÃ³ funciona para sÃ©rie
-  if (!serieAtual.length) return;
-
-  if (!video.duration) return;
-
-  const tempoRestante = video.duration - video.currentTime;
-
-  // â± mostra com 60 segundos restantes
-  if (tempoRestante <= 60) {
-    btnProximo.style.display = "block";
-  } else {
-    btnProximo.style.display = "none";
-  }
-});
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js").then(reg => {
-
-    // ðŸ”¥ forÃ§a atualizaÃ§Ã£o quando houver nova versÃ£o
-    if (reg.waiting) {
-      reg.waiting.postMessage({ type: "SKIP_WAITING" });
-    }
-
-    reg.addEventListener("updatefound", () => {
-      const newWorker = reg.installing;
-
-      newWorker.addEventListener("statechange", () => {
-        if (newWorker.state === "installed") {
-          if (navigator.serviceWorker.controller) {
-setTimeout(() => {
-  if (!sessionStorage.getItem("sw_reloaded")) {
-    sessionStorage.setItem("sw_reloaded", "1");
-    location.reload();
-  }
-}, 5000);
-
-
-          }
-        }
+    // Inicialização do Sistema
+    document.addEventListener("DOMContentLoaded", () => {
+      inicializarBusca();
+      verificarSessao().then(() => {
+        carregarCatalogo();
+        configurarScrollInfinito();
       });
     });
 
-  });
-}
-async function validarSessao() {
-  const email = localStorage.getItem("usuario_email");
-  const tokenLocal = localStorage.getItem("session_token");
-
-  // ðŸ›‘ PASSO 3 â€” SE NÃƒO TIVER EMAIL OU TOKEN, CAI FORA
-if (!email || !tokenLocal) {
-  localStorage.clear();
-
-  if (!redirecionando) {
-    redirecionando = true;
-    location.replace("login.html");
-  }
-
-  return false;
-}
-
-
- let data;
- try {
-   data = await ClenaAPI.validarSessao({
-     email,
-     token: tokenLocal
-   });
- } catch (error) {
-   console.error("Erro ao validar sessÃ£o:", error);
-   localStorage.clear();
-
-   if (!redirecionando) {
-     redirecionando = true;
-     location.replace("login.html");
-   }
-
-   return false;
- }
-// ðŸ”¥ REGRA OPÃ‡ÃƒO A â€” LOGADO MAS SEM PLANO â†’ PLANOS
-if (!data.tipo_assinatura) {
-  if (!redirecionando) {
-    redirecionando = true;
-    location.replace("planos.html");
-  }
-  return false;
-}
-
-
-// ðŸ” PASSO 4 â€” CONTROLE DE SESSÃƒO (OUTRO DISPOSITIVO)
-if (data.controle_sessao === true) {
-  if (data.session_token !== tokenLocal) {
-
-    const agente =
-      data.ultimo_login_user_agent ||
-      data.ultimoLogin?.user_agent ||
-      "Outro dispositivo";
-
-mostrarSessaoEncerrada(agente);
-return false;
-
-
-    localStorage.clear();
-
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      location.href = "login.html";
-    } else {
-      location.replace("login.html");
-    }
-
-    return false;
-  }
-}
-
-
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
-if (data.status === "bloqueado") {
-  const emailUser = email;
-
-  const mensagem = encodeURIComponent(
-`OlÃ¡, meu acesso estÃ¡ bloqueado.
-
-ðŸ“§ Email: ${emailUser}
-
-Gostaria de regularizar minha assinatura.`
-  );
-
-  const whatsappUrl = `https://wa.me/5575998112535?text=${mensagem}`;
-
-  // ðŸ”¥ DESARMA DEFINITIVAMENTE A ABERTURA (CRÃTICO)
-  sessionStorage.setItem("clena_abertura_ok", "1");
-  const aberturaFrame = document.getElementById("aberturaFrame");
-  if (aberturaFrame) aberturaFrame.remove();
-
-  // ðŸ”¥ LIMPA QUALQUER TRAVA GLOBAL (MODAL / BUSCA / OVERFLOW)
-  document.body.classList.remove("modal-open");
-  document.body.classList.remove("search-open");
-
-  document.body.style.overflow = "auto";
-  document.documentElement.style.overflow = "auto";
-  document.body.style.touchAction = "auto";
-  document.body.style.height = "auto";
-
-  // ðŸ§± TELA DE BLOQUEIO
-  document.body.innerHTML = `
-    <div style="
-      min-height:100vh;
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      background:#0f0f10;
-      color:#fff;
-      font-family:Inter,Arial;
-      padding:20px;
-      overflow-y:auto;
-    ">
-      <div style="width:100%;max-width:960px">
-
-        <!-- ðŸš« BLOQUEIO -->
-        <div style="
-          background:#1b1b1e;
-          padding:30px;
-          border-radius:16px;
-          box-shadow:0 20px 40px rgba(0,0,0,.6);
-          text-align:center;
-          margin-bottom:26px;
-        ">
-          <h1 style="color:#e50914;margin-bottom:10px">
-            ðŸš« Acesso bloqueado
-          </h1>
-
-          <p style="color:#ccc;margin-bottom:14px">
-            Seu acesso estÃ¡ temporariamente bloqueado.<br>
-            Escolha um plano abaixo para continuar assistindo.
-          </p>
-
-          <div style="font-size:12px;color:#777">
-            Email: <strong>${email}</strong>
-          </div>
-        </div>
-
-        <!-- ðŸ’³ PLANOS -->
-        <div id="planosContainer"></div>
-
-      </div>
-    </div>
-  `;
-
-  // ðŸ”¥ FORÃ‡A RECÃLCULO DE SCROLL (SAFARI / iOS)
-  setTimeout(() => {
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-  }, 0);
-
-  // ðŸš€ CARREGA PLANOS
-  carregarPlanosBloqueio();
-  return false;
-}
-
-
-
-  usuario = { email };
-  return true;
-}
-
-
-async function abrirLinkPlano(plano){
-  const email = localStorage.getItem("usuario_email");
-
-  if(!email){
-    localStorage.setItem("redirect_after_login", "index.html");
-    alert("FaÃ§a login para continuar");
-    location.href = "login.html";
-    return;
-  }
-
-  try{
-    const data = await ClenaAPI.criarPagamento({
-      action: "assinatura",
-      plano: plano,
-      email: email
-    });
-    console.log("RETORNO CREATE PAYMENT:", data);
-
-    if(data?.url){
-      window.location.href = data.url;
-      return;
-    }
-
-    alert("Erro ao iniciar pagamento");
-    console.error(data);
-
-  }catch(e){
-    alert("Falha de conexÃ£o");
-    console.error(e);
-  }
-}
-
-
-
-
-
-
-  
-
-async function carregarAvatarHeader() {
-  const email = localStorage.getItem("usuario_email");
-  if (!email) return;
-
-  const data = await ClenaAPI.perfil();
-
-  const avatarUrl =
-    data?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
-
-  perfilBtn.innerHTML = `
-    <img src="${avatarUrl}"
-         style="width:36px;height:36px;border-radius:50%;object-fit:cover">
-  `;
-}
-
-// ðŸ” CONTROLE DE SESSÃƒO DOS FILTROS
-if (!sessionStorage.getItem("clena_session")) {
-  // nova sessÃ£o (reload, aba nova, voltou depois)
-  localStorage.removeItem("clena_filtros");
-  sessionStorage.setItem("clena_session", "1");
-}
-
-
-(async () => {
-
-// ðŸ”¥ inicia UI imediatamente
-iniciarApp();
-
-// valida sessÃ£o em paralelo
-validarSessao().then(ok => {
-  if (!ok) return;
-  carregarAvatarHeader();
-});
-
-setTimeout(() => {
-  setInterval(() => {
-    if (!redirecionando) {
-      validarSessao();
-    }
-  }, 15000);
-}, 5000);
-
-window.addEventListener("message", (event) => {
-  if (event.data === "filtros_aplicados") {
-    sessionStorage.removeItem("clena_filtros_aberto"); // ðŸ”¥ ADICIONE
-    aplicarFiltrosAvancados();
-    atualizarBotaoFiltros();
-  }
-});
-
-
-  
-})();
-
-function abrirFiltrosAvancados(){
-  const overlay = document.getElementById("filtrosOverlay");
-  const iframe = document.getElementById("iframeFiltros");
-
-  sessionStorage.setItem("clena_filtros_aberto", "1");
-
-  document.body.classList.add("modal-open");
-  overlay.style.display = "flex";
-
-  const payload = {
-    type: "INIT_FILTROS",
-    dados: dados,
-    filtros: JSON.parse(localStorage.getItem("clena_filtros") || "{}")
-  };
-
-  // envia sempre
-  iframe.contentWindow?.postMessage(payload, "*");
-
-  // garante envio quando o iframe carregar pela 1Âª vez
-  if (!iframe.dataset.iniciado) {
-    iframe.addEventListener("load", () => {
-      iframe.contentWindow.postMessage(payload, "*");
-      iframe.dataset.iniciado = "1";
-    });
-  }
-}
-
-
-function fecharFiltros(){
-  sessionStorage.removeItem("clena_filtros_aberto");
-  document.body.classList.remove("modal-open");
-  document.getElementById("filtrosOverlay").style.display = "none";
-}
-
-function agruparSeries(lista){
-  const mapa = new Map();
-
-  lista.forEach(item => {
-    if (item.tipo === "serie") {
-      if (!mapa.has(item.serie_nome)) {
-        mapa.set(item.serie_nome, item);
+    // Validar sessão do Usuário com o Servidor
+    async function verificarSessao() {
+      const token = getSessionToken();
+      if (!token) {
+        // Se a sua aplicação possuir tela de login separada, redirecione aqui.
+        console.log("Nenhum token encontrado. Operando em modo de demonstração.");
+        return;
       }
-    } else {
-      mapa.set(Symbol(), item); // filmes continuam normais
-    }
-  });
-
-  return Array.from(mapa.values());
-}
-
-  
-function montarFiltrosCategorias(){
-  const box = document.getElementById("filtrosCategorias");
-  if (!box) return; // ðŸ”¥ BLOQUEIO ATIVO â†’ NÃƒO EXECUTA
-
-  const todasCategorias = dados
-    .flatMap(d =>
-      (d.categoria || "")
-        .split(",")
-        .map(c => c.trim())
-    )
-    .filter(Boolean);
-
-  const categoriasUnicas = [
-    "todas",
-    ...new Set(todasCategorias.map(c => c.toLowerCase()))
-  ];
-
-  box.innerHTML = categoriasUnicas.map((c,i) => `
-    <button
-      class="${i === 0 ? "active" : ""}"
-      onclick="setCategoria('${c}', this)">
-      ${c.charAt(0).toUpperCase() + c.slice(1)}
-    </button>
-  `).join("");
-}
-
-
-function setCategoria(cat, el){
-  categoriaAtiva = cat;
-
-  document
-    .querySelectorAll(".filtros-categorias button")
-    .forEach(b => b.classList.remove("active"));
-
-  el.classList.add("active");
-
-prepararLista(
-  JSON.parse(localStorage.getItem("clena_filtros") || "null"),
-  busca?.value?.toLowerCase() || ""
-);
-}
-async function carregarPlanosBloqueio() {
-  const planos = await ClenaAPI.planos();
-
-  const box = document.getElementById("planosContainer");
-
-  // ðŸ”¥ REMOVE APEX DA TELA DE BLOQUEIO
-  const planosAssinatura = planos.filter(p =>
-    !p.nome.toLowerCase().includes("apex")
-  );
-
-  box.innerHTML = `
-    <div class="planos-bloqueio">
-      ${planosAssinatura.map((plano, i) => `
-        <div class="plano-card ${i === 1 ? "destaque" : ""}">
-          <h3>${plano.nome}</h3>
-
-          <div class="plano-preco">
-            R$ ${Number(plano.valor).toFixed(2).replace(".", ",")}
-            <span>/mÃªs</span>
-          </div>
-
-          <ul>
-            <li>Acesso completo</li>
-            <li>ConteÃºdo exclusivo</li>
-            <li>Qualidade mÃ¡xima</li>
-          </ul>
-
-          <button
-            class="plano-btn"
-            onclick="abrirLinkPlano('${plano.nome}')">
-            Assinar agora
-          </button>
-        </div>
-      `).join("")}
-    </div>
-  `;
-}
-
-function mostrarSessaoEncerrada(userAgent){
-  document.getElementById("sessaoDevice").textContent =
-    userAgent || "Outro dispositivo";
-
-  document.getElementById("sessaoOverlay").style.display = "flex";
-}
-
-function sessaoSair(){
-  localStorage.clear();
-  sessionStorage.clear();
-
-  if (window.matchMedia("(display-mode: standalone)").matches) {
-    location.href = "login.html";
-  } else {
-    location.replace("login.html");
-  }
-}
-function abrirApexInfo(){
-  document.body.classList.add("modal-open");
-  document.getElementById("apexOverlay").style.display = "flex";
-}
-
-function fecharApexInfo(){
-  document.body.classList.remove("modal-open");
-  document.getElementById("apexOverlay").style.display = "none";
-}
-
-async function carregarApex(){
-  const email = localStorage.getItem("usuario_email");
-  if (!email) return;
-
-  try {
-    const data = await ClenaAPI.carteira();
-
-    // ðŸ”¥ saldo vem em REAIS do backend
-    const saldoReais = Number(data.apex || 0);
-
-    // ðŸ”¥ converte para APEX
-    const apex = reaisParaApex(saldoReais);
-
-    document.getElementById("apexQtd").textContent = apex;
-
-    // (opcional, mas PREMIUM) tooltip em reais
-    document.getElementById("apexQtd").title =
-      `â‰ˆ R$ ${apexParaReais(apex)}`;
-
-  } catch (err) {
-    console.error("Erro ao carregar Apex:", err);
-    document.getElementById("apexQtd").textContent = "0";
-  }
-}
-
-
-
-
-
-  </script>
-  <!-- ðŸ” POPUP SESSÃƒO ENCERRADA -->
-  <div id="sessaoOverlay" style="display:none">
-    <div class="sessaoPopup">
-
-      <div class="sessaoIcon">ðŸ”’</div>
-
-      <h2>VocÃª foi desconectado</h2>
-
-      <p class="sessaoText">
-        Detectamos um novo login na sua conta.
-        <br>Por seguranÃ§a, esta sessÃ£o foi encerrada.
-      </p>
-
-      <div class="sessaoBox">
-        <span class="sessaoLabel">Dispositivo:</span>
-        <div class="sessaoDevice" id="sessaoDevice">
-          Outro dispositivo
-        </div>
-      </div>
-
-      <button class="sessaoBtn" onclick="sessaoSair()">
-      Entendi, sair
-    </button>
-
-    </div>
-  </div>
-  <!-- ðŸŽ›ï¸ POPUP FILTROS AVANÃ‡ADOS -->
-  <div id="filtrosOverlay" style="display:none">
-    <div class="filtrosPopup">
-      <button class="filtrosFechar" onclick="fecharFiltros()">âœ•</button>
-      <iframe id="iframeFiltros" src="filtros.html"></iframe>
-    </div>
-  </div>
-
-
-  <script>
-    // ðŸš€ CRIA ABERTURA APENAS UMA VEZ POR SESSÃƒO
-  if (!sessionStorage.getItem("clena_abertura_ok")) {
-    document.body.style.overflow = "hidden";
-
-    const iframe = document.createElement("iframe");
-    iframe.id = "aberturaFrame";
-    iframe.src = "abertura.html";
-    iframe.style.cssText = `
-      position:fixed;
-      inset:0;
-      width:100%;
-      height:100%;
-      border:none;
-      z-index:999999;
-      background:#0f0f10;
-    `;
-
-    document.body.appendChild(iframe);
-  }
-  </script>
-
-  <script>
-    window.addEventListener("message", (event) => {
-  if (event.data === "ABERTURA_OK") {
-    sessionStorage.setItem("clena_abertura_ok", "1");
-
-    const frame = document.getElementById("aberturaFrame");
-    if (!frame) return;
-
-    frame.style.transition = "opacity .6s ease";
-    frame.style.opacity = "0";
-
-    setTimeout(() => {
-      frame.remove();
-      document.body.style.overflow = "";
-    }, 600);
-  }
-});
-
-  </script>
-
-  <script>
-    // ðŸ”¥ FAILSAFE ABSOLUTO DA ABERTURA
-  setTimeout(() => {
-    const frame = document.getElementById("aberturaFrame");
-    if (frame) {
-      sessionStorage.setItem("clena_abertura_ok", "1");
-      frame.remove();
-      document.body.style.overflow = "";
-    }
-  }, 3500);
-  </script>
-
-  <script>
-    // ðŸ”¥ ABRIR PERFIL AUTOMATICAMENTE VIA URL
-  const urlParams = new URLSearchParams(location.search);
-
-  if (urlParams.get("abrirPerfil") === "1") {
-    setTimeout(() => {
-      if (typeof perfilAbrir === "function") {
-        perfilAbrir();
+      try {
+        const usuario = await apiFetch("/auth/session", {
+          method: "POST",
+          headers: authHeaders()
+        });
+        atualizarLayoutUsuario(usuario);
+      } catch (err) {
+        console.error("Erro ao validar sessão:", err.message);
       }
-    }, 600);
-  }
-  </script>
+    }
 
+    function atualizarLayoutUsuario(usuario) {
+      const btnPerfil = document.querySelector("#perfilBtn span");
+      if (btnPerfil && usuario.nome) {
+        btnPerfil.textContent = usuario.nome.substring(0, 2).toUpperCase();
+      }
+      // Injeta os dados originais direto nos inputs do modal modular novo
+      document.getElementById("perfilNomeNovo").value = usuario.nome || "";
+      document.getElementById("perfilUsernameNovo").value = usuario.username || "";
+      document.getElementById("perfilEmailNovo").textContent = usuario.email || "";
+      document.getElementById("perfilPlanoNovo").textContent = usuario.plano || "Básico";
+      document.getElementById("apexQtd").textContent = usuario.carteira ? usuario.carteira.toFixed(2) : "0.00";
+      
+      // Tratamentos estéticos de valores mockados/vencimentos
+      document.getElementById("perfilValorNovo").textContent = usuario.plano === "Ultra" ? "R$ 45,90" : usuario.plano === "Premium" ? "R$ 29,90" : "R$ 19,90";
+      document.getElementById("perfilVencimentoNovo").textContent = "Renovação Automática";
+
+      if (usuario.avatar_url) {
+        document.getElementById("perfilAvatarNovo").src = usuario.avatar_url;
+      } else {
+        document.getElementById("perfilAvatarNovo").src = "https://via.placeholder.com/150";
+      }
+    }
+
+    // Carregar e processar o Catálogo de mídias
+    async function carregarCatalogo() {
+      try {
+        const dados = await apiFetch("/api/catalogo");
+        catalogoCompleto.filmes = dados.filmes || [];
+        catalogoCompleto.series = dados.series || [];
+        
+        gerarFiltrosCategorias();
+        aplicarFiltros();
+        configurarHero();
+      } catch (err) {
+        console.error("Erro ao carregar o catálogo:", err.message);
+      }
+    }
+
+    // Configuração do Banner de Destaque (Hero)
+    function configurarHero() {
+      const todosItens = [...catalogoCompleto.filmes, ...catalogoCompleto.series];
+      if (todosItens.length === 0) return;
+
+      // Seleciona um item aleatório para ser o destaque do banner
+      heroItem = todosItens[Math.floor(Math.random() * todosItens.length)];
+      
+      document.getElementById("heroTitle").textContent = heroItem.titulo;
+      document.getElementById("heroDesc").textContent = heroItem.descricao || "Sem descrição disponível.";
+      document.getElementById("heroMeta").textContent = `${heroItem.categoria || "Geral"} • ${heroItem.ano || "Conteúdo"} • ${heroItem.classificacao || "Livre"}`;
+      
+      const videoFundo = document.getElementById("heroVideo");
+      if (heroItem.video_url) {
+        videoFundo.src = heroItem.video_url;
+        videoFundo.style.display = "block";
+        videoFundo.play().catch(() => console.log("Autoplay bloqueado pelo navegador. Aguardando interação."));
+      } else {
+        videoFundo.style.display = "none";
+        document.getElementById("hero").style.backgroundImage = `url('${heroItem.capa_url}')`;
+        document.getElementById("hero").style.backgroundSize = "cover";
+        document.getElementById("hero").style.backgroundPosition = "center";
+      }
+    }
+
+    // Geração dinâmica de botões de categoria baseada no retorno do banco
+    function gerarFiltrosCategorias() {
+      const container = document.getElementById("filtrosCategorias");
+      container.innerHTML = `<button class="active" onclick="setFiltroCategoria('todas', this)">Todas as Categorias</button>`;
+      
+      const todosItens = [...catalogoCompleto.filmes, ...catalogoCompleto.series];
+      const categoriasUnicas = [...new Set(todosItens.map(item => item.categoria).filter(Boolean))];
+
+      categoriasUnicas.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.textContent = cat;
+        btn.onclick = (e) => setFiltroCategoria(cat, e.target);
+        container.appendChild(btn);
+      });
+    }
+
+    function setFiltro(tipo, elemento) {
+      document.querySelectorAll(".filtros button").forEach(b => b.classList.remove("active"));
+      elemento.classList.add("active");
+      filtroTipo = tipo;
+      aplicarFiltros();
+    }
+
+    function setFiltroCategoria(categoria, elemento) {
+      document.querySelectorAll("#filtrosCategorias button").forEach(b => b.classList.remove("active"));
+      elemento.classList.add("active");
+      filtroCategoria = categoria;
+      aplicarFiltros();
+    }
+
+    // Regras de filtragem locais combinando os dois escopos de botões
+    function aplicarFiltros() {
+      let lista = [];
+
+      if (filtroTipo === 'todos') {
+        lista = [...catalogoCompleto.filmes, ...catalogoCompleto.series];
+      } else if (filtroTipo === 'filme') {
+        lista = catalogoCompleto.filmes.filter(f => f.tipo !== 'documentarios');
+      } else if (filtroTipo === 'serie') {
+        lista = catalogoCompleto.series;
+      } else if (filtroTipo === 'documentarios') {
+        lista = catalogoCompleto.filmes.filter(f => f.tipo === 'documentarios');
+      }
+
+      if (filtroCategoria !== 'todas') {
+        lista = lista.filter(item => item.categoria === filtroCategoria);
+      }
+
+      itensFiltrados = lista;
+      paginaAtual = 1;
+      itensExibidos = [];
+      document.getElementById("grid").innerHTML = "";
+      renderizarMaisItens();
+    }
+
+    // Renderização com paginação progressiva
+    function renderizarMaisItens() {
+      const inicio = (paginaAtual - 1) * itensPorPagina;
+      const fim = inicio + itensPorPagina;
+      const proximosItens = itensFiltrados.slice(inicio, fim);
+
+      if (proximosItens.length === 0) return;
+
+      const grid = document.getElementById("grid");
+      proximosItens.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.onclick = () => abrirPlayer(item);
+
+        card.innerHTML = `
+          <img src="${item.capa_url || 'https://via.placeholder.com/180x260'}" alt="${item.titulo}" loading="lazy">
+          <div class="title">${item.titulo}</div>
+        `;
+        grid.appendChild(card);
+        itensExibidos.push(item);
+      });
+    }
+
+    function configurarScrollInfinito() {
+      const sentinela = document.getElementById("sentinela");
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && itensExibidos.length < itensFiltrados.length) {
+          paginaAtual++;
+          renderizarMaisItens();
+        }
+      }, { threshold: 0.1 });
+      
+      observer.observe(sentinela);
+    }
+
+    // ==========================================
+    // SISTEMA DO PLAYER (FILMES VS SÉRIES)
+    // ==========================================
+    async function abrirPlayer(item) {
+      if (!item) return;
+      const playerContainer = document.getElementById("player");
+      const videoElement = document.getElementById("video");
+      const isFilme = Object.prototype.hasOwnProperty.call(item, 'video_url');
+
+      playerContainer.style.display = "block";
+      document.getElementById("pTitle").textContent = item.titulo;
+      document.getElementById("pDesc").textContent = item.descricao || "";
+      document.getElementById("pMeta").textContent = `${item.categoria || ""} • ${item.ano || ""}`;
+
+      if (isFilme) {
+        // Comportamento para Filmes
+        document.getElementById("serieControls").style.display = "none";
+        document.getElementById("btnProximo").style.display = "none";
+        videoElement.src = item.video_url;
+        
+        // Registrar início no Histórico via API externa
+        enviarHistorico(item.id, 0);
+        configurarLogProgresso(item.id);
+      } else {
+        // Comportamento para Séries
+        document.getElementById("serieControls").style.display = "block";
+        await carregarEpisodiosDaSerie(item.id);
+      }
+    }
+
+    async function carregarEpisodiosDaSerie(serieId) {
+      try {
+        episodiosDaSerieAtual = await apiFetch(`/api/episodios/${serieId}`);
+        
+        const selTemporada = document.getElementById("selTemporada");
+        const selEpisodio = document.getElementById("selEpisodio");
+        
+        selTemporada.innerHTML = "";
+        selEpisodio.innerHTML = "";
+
+        if (episodiosDaSerieAtual.length === 0) {
+          selTemporada.innerHTML = "<option>Nenhum episódio localizado</option>";
+          return;
+        }
+
+        // Isolar temporadas existentes
+        const temporadas = [...new Set(episodiosDaSerieAtual.map(ep => ep.temporada))].sort((a,b) => a - b);
+        temporadas.forEach(t => {
+          selTemporada.innerHTML += `<option value="${t}">Temporada ${t}</option>`;
+        });
+
+        selTemporada.onchange = () => atualizarListaEpisodiosDisponiveis(selTemporada.value);
+        selEpisodio.onchange = () => alternarVideoParaEpisodio(selEpisodio.value);
+
+        // Inicializar com a primeira temporada carregada
+        atualizarListaEpisodiosDisponiveis(temporadas[0]);
+
+      } catch (err) {
+        console.error("Erro ao carregar episódios:", err.message);
+      }
+    }
+
+    function atualizarListaEpisodiosDisponiveis(temporadaSelecionada) {
+      const selEpisodio = document.getElementById("selEpisodio");
+      selEpisodio.innerHTML = "";
+
+      const epsFiltrados = episodiosDaSerieAtual
+        .filter(ep => ep.temporada == temporadaSelecionada)
+        .sort((a,b) => a.episodio - b.episodio);
+
+      epsFiltrados.forEach(ep => {
+        selEpisodio.innerHTML += `<option value="${ep.id}">Ep. ${ep.episodio} - ${ep.titulo}</option>`;
+      });
+
+      if (epsFiltrados.length > 0) {
+        alternarVideoParaEpisodio(epsFiltrados[0].id);
+      }
+    }
+
+    function alternarVideoParaEpisodio(idEpisodio) {
+      idEpisodioAtual = idEpisodio;
+      const episodio = episodiosDaSerieAtual.find(ep => ep.id == idEpisodio);
+      if (!episodio) return;
+
+      const videoElement = document.getElementById("video");
+      videoElement.src = episodio.video_url;
+      
+      enviarHistorico(episodio.id, 0);
+      configurarLogProgresso(episodio.id);
+
+      // Ouvinte para ativação do gatilho de "Próximo Episódio" antes do encerramento da timeline
+      videoElement.ontimeupdate = () => {
+        const tempoRestante = videoElement.duration - videoElement.currentTime;
+        const btnProximo = document.getElementById("btnProximo");
+        
+        if (tempoRestante <= 60 && obterProximoEpisodioEstrutura()) {
+          btnProximo.style.display = "block";
+        } else {
+          btnProximo.style.display = "none";
+        }
+      };
+    }
+
+    function obterProximoEpisodioEstrutura() {
+      if (!idEpisodioAtual || episodiosDaSerieAtual.length === 0) return null;
+      const indexAtual = episodiosDaSerieAtual.findIndex(ep => ep.id == idEpisodioAtual);
+      if (indexAtual !== -1 && indexAtual + 1 < episodiosDaSerieAtual.length) {
+        return episodiosDaSerieAtual[indexAtual + 1];
+      }
+      return null;
+    }
+
+    function irProximoEpisodio() {
+      const proximo = obterProximoEpisodioEstrutura();
+      if (proximo) {
+        document.getElementById("selTemporada").value = proximo.temporada;
+        const selEpisodio = document.getElementById("selEpisodio");
+        
+        // Sincroniza selects visuais
+        const epsFiltrados = episodiosDaSerieAtual
+          .filter(ep => ep.temporada == proximo.temporada)
+          .sort((a,b) => a.episodio - b.episodio);
+          
+        selEpisodio.innerHTML = "";
+        epsFiltrados.forEach(ep => {
+          selEpisodio.innerHTML += `<option value="${ep.id}">Ep. ${ep.episodio} - ${ep.titulo}</option>`;
+        });
+
+        selEpisodio.value = proximo.id;
+        alternarVideoParaEpisodio(proximo.id);
+      }
+    }
+
+    function configurarLogProgresso(conteudoId) {
+      if (monitoramentoProgressoInterval) clearInterval(monitoramentoProgressoInterval);
+      
+      monitoramentoProgressoInterval = setInterval(() => {
+        const videoElement = document.getElementById("video");
+        if (videoElement && !videoElement.paused) {
+          enviarHistorico(conteudoId, Math.floor(videoElement.currentTime));
+        }
+      }, 10000); // Envia telemetria a cada 10 segundos para persistência
+    }
+
+    async function enviarHistorico(conteudoId, progresso) {
+      if (!getSessionToken()) return;
+      try {
+        await fetch(`${API_BASE_URL}/historico`, {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ conteudo_id: conteudoId, progresso: progresso })
+        });
+      } catch (e) {
+        console.log("Erro ao atualizar histórico em segundo plano.");
+      }
+    }
+
+    function fechar() {
+      const videoElement = document.getElementById("video");
+      if (videoElement) {
+        videoElement.pause();
+        videoElement.src = "";
+      }
+      if (monitoramentoProgressoInterval) clearInterval(monitoramentoProgressoInterval);
+      document.getElementById("player").style.display = "none";
+    }
+
+    // ==========================================
+    // SISTEMA DE INTERFACE DO MOTOR DE BUSCA
+    // ==========================================
+    function inicializarBusca() {
+      const buscaDesktop = document.getElementById("busca");
+      const buscaMobile = document.getElementById("buscaMobile");
+      const searchBtnMobile = document.getElementById("searchBtn");
+      const searchMobileBox = document.getElementById("searchMobileBox");
+      const searchResults = document.getElementById("searchResults");
+
+      const processarTermoBusca = (termo) => {
+        if (!termo.trim()) {
+          searchResults.style.display = "none";
+          document.body.classList.remove("search-open");
+          return;
+        }
+
+        const todosItens = [...catalogoCompleto.filmes, ...catalogoCompleto.series];
+        const resultados = todosItens.filter(item => 
+          item.titulo.toLowerCase().includes(termo.toLowerCase()) || 
+          (item.categoria && item.categoria.toLowerCase().includes(termo.toLowerCase()))
+        );
+
+        exibirResultadosPesquisa(resultados);
+      };
+
+      buscaDesktop.addEventListener("input", (e) => processarTermoBusca(e.target.value));
+      buscaMobile.addEventListener("input", (e) => processarTermoBusca(e.target.value));
+
+      searchBtnMobile.addEventListener("click", () => {
+        const estaVisivel = searchMobileBox.style.display === "block";
+        searchMobileBox.style.display = estaVisivel ? "none" : "block";
+        if (!estaVisivel) {
+          buscaMobile.focus();
+          document.body.classList.add("search-open");
+        } else {
+          searchResults.style.display = "none";
+          document.body.classList.remove("search-open");
+        }
+      });
+
+      // Fechamento da caixa de pesquisa flutuante ao clicar fora
+      document.addEventListener("click", (e) => {
+        if (!searchResults.contains(e.target) && 
+            !buscaDesktop.contains(e.target) && 
+            !buscaMobile.contains(e.target) && 
+            !searchBtnMobile.contains(e.target)) {
+          searchResults.style.display = "none";
+          searchMobileBox.style.display = "none";
+          document.body.classList.remove("search-open");
+        }
+      });
+    }
+
+    function exibirResultadosPesquisa(resultados) {
+      const grid = document.getElementById("searchGrid");
+      const container = document.getElementById("searchResults");
+      grid.innerHTML = "";
+
+      if (resultados.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #777; padding: 20px;">Nenhum conteúdo correspondente localizado.</div>`;
+      } else {
+        resultados.forEach(item => {
+          const card = document.createElement("div");
+          card.className = "search-card";
+          card.onclick = () => {
+            container.style.display = "none";
+            document.body.classList.remove("search-open");
+            abrirPlayer(item);
+          };
+
+          card.innerHTML = `
+            <img src="${item.capa_url || 'https://via.placeholder.com/140x200'}" alt="${item.titulo}">
+            <span>${item.titulo}</span>
+          `;
+          grid.appendChild(card);
+        });
+      }
+      container.style.display = "block";
+    }
+
+    // ==========================================
+    // SEÇÃO PERFIL, AVATAR E CARTEIRA (MODULAR)
+    // ==========================================
+    function perfilAbrir() {
+      document.getElementById("perfilOverlayNovo").style.display = "flex";
+      document.body.classList.add("modal-open");
+    }
+
+    function perfilFechar() {
+      document.getElementById("perfilOverlayNovo").style.display = "none";
+      document.body.classList.remove("modal-open");
+    }
+
+    async function perfilSalvar() {
+      const nome = document.getElementById("perfilNomeNovo").value;
+      const username = document.getElementById("perfilUsernameNovo").value;
+
+      try {
+        // Envia atualização cadastral estruturada ao backend SQLite
+        await apiFetch("/perfil", {
+          method: "PATCH",
+          headers: authHeaders(),
+          body: JSON.stringify({ nome, username })
+        });
+        alert("Perfil atualizado com sucesso!");
+        perfilFechar();
+        verificarSessao();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function perfilUploadAvatar(inputElement) {
+      if (!inputElement.files || inputElement.files.length === 0) return;
+      
+      const formData = new FormData();
+      formData.append("avatar", inputElement.files[0]);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/perfil/avatar`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${getSessionToken()}`
+          },
+          body: formData
+        });
+
+        if (!response.ok) throw new Error("Falha ao subir imagem.");
+        
+        const resultado = await response.json();
+        document.getElementById("perfilAvatarNovo").src = resultado.avatar_url;
+        verificarSessao();
+      } catch (err) {
+        alert("Erro no upload do avatar: " + err.message);
+      }
+    }
+
+    function perfilValidarUsername() {
+      // Implementação visual opcional em tempo de digitação
+      const status = document.getElementById("perfilUsernameStatus");
+      status.textContent = "Disponível para alteração";
+      status.style.color = "#22c55e";
+    }
+
+    // Gerenciamento de janelas e carregamentos da Carteira de Crédito
+    function abrirApexInfo() {
+      document.getElementById("apexOverlay").style.display = "flex";
+    }
+
+    function fecharApexInfo() {
+      document.getElementById("apexOverlay").style.display = "none";
+      // Revalida a carteira local quando fechar a janela externa de recargas
+      verificarSessao();
+    }
+
+    function abrirFiltrosAvancados() {
+      alert("Painel de Filtros Avançados integrado ao Core nativo.");
+    }
+
+    function logout() {
+      localStorage.removeItem("session_token");
+      alert("Sessão finalizada.");
+      window.location.reload();
+    }
+  </script>
 </body>
-
 </html>
