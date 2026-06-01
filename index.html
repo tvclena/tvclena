@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -16,7 +16,6 @@
 <title>Clena TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f0f10">
@@ -94,7 +93,7 @@ input, textarea, select {
 /* ================= HERO ================= */
 .hero{
   height:85vh;
-  padding:64px 40px 80px; /* só empurra o conteúdo */
+  padding:64px 40px 80px; /* sÃ³ empurra o conteÃºdo */
   display:flex;
   align-items:flex-end;
   position:relative;
@@ -182,7 +181,7 @@ input, textarea, select {
   color:#fff;
 }
 
-/* REFORÇO DO GRADIENTE NO DESKTOP */
+/* REFORÃ‡O DO GRADIENTE NO DESKTOP */
 @media (min-width:1024px){
   .hero::before{
     background:
@@ -209,10 +208,10 @@ input, textarea, select {
 }
 #heroVideo{
   position:absolute;
-  top:-28%;        /* 🔥 sobe mais */
+  top:-28%;        /* ðŸ”¥ sobe mais */
   left:0;
   width:100%;
-  height:150%;     /* 🔥 cobre tudo */
+  height:150%;     /* ðŸ”¥ cobre tudo */
   object-fit:cover;
   object-position:center 40%;
   z-index:0;
@@ -238,7 +237,7 @@ input, textarea, select {
   -webkit-overflow-scrolling:touch;
 }
 
-/* garante que os botões não quebrem */
+/* garante que os botÃµes nÃ£o quebrem */
 .filtros-categorias button{
   flex:0 0 auto;
 }
@@ -423,7 +422,7 @@ section{padding:20px 14px}
   font-weight:700;
   color:#00ff99;
 }
-/* ▶ BOTÃO PRÓXIMO EPISÓDIO */
+/* â–¶ BOTÃƒO PRÃ“XIMO EPISÃ“DIO */
 #btnProximo{
   position:absolute;
   right:40px;
@@ -468,11 +467,11 @@ html, body {
 
   display:none;
 
-  z-index:99999;          /* 🔥 acima do hero e do vídeo */
-  isolation:isolate;     /* 🔥 quebra stacking context */
+  z-index:99999;          /* ðŸ”¥ acima do hero e do vÃ­deo */
+  isolation:isolate;     /* ðŸ”¥ quebra stacking context */
   pointer-events:auto;
 
-  overscroll-behavior:contain; /* 🔥 scroll NÃO vaza */
+  overscroll-behavior:contain; /* ðŸ”¥ scroll NÃƒO vaza */
 }
 
 
@@ -553,7 +552,7 @@ html, body {
     display:block;
   }
 }
-/* 🔍 BUSCA MOBILE INPUT */
+/* ðŸ” BUSCA MOBILE INPUT */
 #searchMobileBox{
   position:fixed;
   top:56px;
@@ -712,7 +711,7 @@ body.search-open{
 .search-box input::placeholder{
   color:#bbb;
 }
-/* 🚫 ESCONDE BUSCA DESKTOP NO MOBILE */
+/* ðŸš« ESCONDE BUSCA DESKTOP NO MOBILE */
 @media (max-width:768px){
   .search-box{
     display:none;
@@ -925,7 +924,7 @@ body.search-open {
 }
 
 .plano-card ul li::before {
-  content: "✓";
+  content: "âœ“";
   color: #22c55e;
   margin-right: 6px;
 }
@@ -958,11 +957,11 @@ body.search-open {
 @media (max-width: 768px) {
   .planos-bloqueio {
     grid-template-columns: 1fr;
-    max-height: 75vh;   /* 🔥 ainda mais espaço */
+    max-height: 75vh;   /* ðŸ”¥ ainda mais espaÃ§o */
   }
 }
 
-/* 🔐 POPUP SESSÃO PREMIUM */
+/* ðŸ” POPUP SESSÃƒO PREMIUM */
 #sessaoOverlay{
   position:fixed;
   inset:0;
@@ -1112,7 +1111,7 @@ body.search-open {
   width:420px;
   max-width:94%;
   height:520px;
-  max-height:85vh; /* 🔥 isso resolve no mobile */
+  max-height:85vh; /* ðŸ”¥ isso resolve no mobile */
   background:#0f0f10;
   border-radius:16px;
   overflow:hidden;
@@ -1145,7 +1144,7 @@ body.modal-open{
   height:100vh;
   touch-action:none;
 }
-/* ================= BOTÃO RECARREGAR CARTEIRA (NEO) ================= */
+/* ================= BOTÃƒO RECARREGAR CARTEIRA (NEO) ================= */
 .btn-neo-apex{
   position: relative;
   width:100%;
@@ -1203,7 +1202,7 @@ body.modal-open{
   z-index:1;
 }
 
-/* animação */
+/* animaÃ§Ã£o */
 @keyframes neo-giro{
   to{ transform:rotate(360deg); }
 }
@@ -1288,10 +1287,10 @@ body.modal-open{
 
   <!-- BUSCA DESKTOP BONITA -->
   <div class="search-box">
-    <span class="search-icon">🔍</span>
+    <span class="search-icon">ðŸ”</span>
     <input
       id="busca"
-      placeholder="Buscar filmes e séries..."
+      placeholder="Buscar filmes e sÃ©ries..."
       autocomplete="off"
     >
   </div>
@@ -1299,19 +1298,19 @@ body.modal-open{
 <div id="perfilBtn" onclick="perfilAbrir()"><span>US</span></div>
 
   <!-- mobile -->
-<div id="searchBtn">🔍</div>
+<div id="searchBtn">ðŸ”</div>
 </header>
 
-<!-- 🔍 BUSCA MOBILE -->
+<!-- ðŸ” BUSCA MOBILE -->
 <div id="searchMobileBox">
   <input
     id="buscaMobile"
-    placeholder="Buscar filmes e séries..."
+    placeholder="Buscar filmes e sÃ©ries..."
     autocomplete="off"
   >
 </div>
 
-<!-- 🔍 RESULTADOS -->
+<!-- ðŸ” RESULTADOS -->
 <div id="searchResults">
   <h4>Resultados</h4>
   <div class="search-grid" id="searchGrid"></div>
@@ -1320,7 +1319,7 @@ body.modal-open{
 
 <div class="hero" id="hero">
 
-  <!-- 🎬 PREVIEW DE FUNDO -->
+  <!-- ðŸŽ¬ PREVIEW DE FUNDO -->
 <video
   id="heroVideo"
   muted
@@ -1347,7 +1346,7 @@ body.modal-open{
   Ler mais
 </div>
 
-<button onclick="abrirPlayer(heroItem)">▶ Assistir</button>
+<button onclick="abrirPlayer(heroItem)">â–¶ Assistir</button>
 
   </div>
 
@@ -1357,15 +1356,15 @@ body.modal-open{
 <div class="filtros">
 <button class="active" onclick="setFiltro('todos', this)">Todos</button>
 <button onclick="setFiltro('filme', this)">Filmes</button>
-<button onclick="setFiltro('serie', this)">Séries</button>
-<button onclick="setFiltro('documentarios', this)">Documentários</button>
+<button onclick="setFiltro('serie', this)">SÃ©ries</button>
+<button onclick="setFiltro('documentarios', this)">DocumentÃ¡rios</button>
 </div>
 <div class="filtros" style="padding:12px 40px 0">
  <button
   id="btnFiltrosAvancados"
   onclick="abrirFiltrosAvancados()"
   class="btn-filtros-avancados">
-  🎛️ Filtros avançados
+  ðŸŽ›ï¸ Filtros avanÃ§ados
 </button>
 
 </div>
@@ -1375,28 +1374,28 @@ body.modal-open{
 </div>
 
 <section>
-  <h3>Catálogo</h3>
+  <h3>CatÃ¡logo</h3>
   <div class="grid" id="grid"></div>
- <!-- 🔥 SENTINELA DO SCROLL INFINITO -->
+ <!-- ðŸ”¥ SENTINELA DO SCROLL INFINITO -->
   <div id="sentinela"></div>
   
 </section>
 
 <!-- PLAYER -->
 <div id="player">
-  <button id="close" onclick="fechar()">←</button>
+  <button id="close" onclick="fechar()">â†</button>
 
   <div id="playerLayout">
 
-    <!-- 🎬 VÍDEO -->
+    <!-- ðŸŽ¬ VÃDEO -->
     <video id="video" controls autoplay></video>
 
-    <!-- ▶ PRÓXIMO EPISÓDIO (aparece 1 min antes) -->
+    <!-- â–¶ PRÃ“XIMO EPISÃ“DIO (aparece 1 min antes) -->
     <button id="btnProximo" onclick="irProximoEpisodio()">
-      ▶ Próximo episódio
+      â–¶ PrÃ³ximo episÃ³dio
     </button>
 
-    <!-- ℹ️ INFORMAÇÕES -->
+    <!-- â„¹ï¸ INFORMAÃ‡Ã•ES -->
     <div id="sideInfo">
       <h2 id="pTitle"></h2>
       <div class="meta" id="pMeta"></div>
@@ -1415,7 +1414,7 @@ body.modal-open{
 <!-- ================= PERFIL MODULAR NOVO ================= -->
 <div id="apexOverlay" style="display:none">
   <div class="apexPopup">
-    <button class="apexFechar" onclick="fecharApexInfo()">✕</button>
+    <button class="apexFechar" onclick="fecharApexInfo()">âœ•</button>
     <iframe src="apex.html"></iframe>
   </div>
 </div>
@@ -1437,7 +1436,7 @@ body.modal-open{
       <label>Nome</label>
       <input id="perfilNomeNovo">
 
-      <label>Usuário</label>
+      <label>UsuÃ¡rio</label>
       <div class="username-box-novo">
         <span>@</span>
         <input id="perfilUsernameNovo" oninput="perfilValidarUsername()">
@@ -1487,11 +1486,119 @@ body.modal-open{
   
 <script src="env.js"></script>
 <script>
-const sb = supabase.createClient(
-  window.ENV.SUPABASE_URL,
-  window.ENV.SUPABASE_ANON_KEY
-);
-// ================= APEX CONVERSÃO =================
+const API_BASE_URL = (
+  window.ENV?.API_BASE_URL ||
+  window.ENV?.API_URL ||
+  "https://www.clena.com.br/api"
+).replace(/\/+$/, "");
+
+function getSessionToken(){
+  return localStorage.getItem("session_token") || "";
+}
+
+function getUsuarioEmail(){
+  return localStorage.getItem("usuario_email") || "";
+}
+
+function authHeaders(extra = {}){
+  const token = getSessionToken();
+  return {
+    ...extra,
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  };
+}
+
+async function apiFetch(path, options = {}){
+  const url = path.startsWith("http")
+    ? path
+    : `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+
+  const isFormData = options.body instanceof FormData;
+
+  const res = await fetch(url, {
+    cache: "no-store",
+    ...options,
+    headers: authHeaders({
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      ...(options.headers || {})
+    })
+  });
+
+  const contentType = res.headers.get("content-type") || "";
+  const data = contentType.includes("application/json")
+    ? await res.json()
+    : await res.text();
+
+  if (!res.ok) {
+    const message = data?.message || data?.error || "Erro ao comunicar com o servidor";
+    throw new Error(message);
+  }
+
+  return data;
+}
+
+const ClenaAPI = {
+  login: ({ email, senha }) =>
+    apiFetch("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, senha })
+    }),
+
+  validarSessao: ({ email, token }) =>
+    apiFetch("/auth/session", {
+      method: "POST",
+      body: JSON.stringify({ email, token })
+    }),
+
+  catalogo: () => apiFetch("/catalogo"),
+
+  perfil: () =>
+    apiFetch(`/perfil?email=${encodeURIComponent(getUsuarioEmail())}`),
+
+  validarUsername: ({ username, userId }) =>
+    apiFetch(`/perfil/username?username=${encodeURIComponent(username)}&user_id=${encodeURIComponent(userId || "")}`),
+
+  salvarPerfil: (payload) =>
+    apiFetch("/perfil", {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    }),
+
+  uploadAvatar: (formData) =>
+    apiFetch("/perfil/avatar", {
+      method: "POST",
+      body: formData
+    }),
+
+  favorito: (payload) =>
+    apiFetch("/favoritos", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }),
+
+  historico: (payload) =>
+    apiFetch("/historico", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }),
+
+  planos: () => apiFetch("/planos"),
+
+  criarPagamento: (payload) =>
+    apiFetch("/pagamentos/create", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }),
+
+  carteira: () =>
+    apiFetch(`/carteira?email=${encodeURIComponent(getUsuarioEmail())}`),
+
+  player: (id) =>
+    apiFetch(`/player/${encodeURIComponent(id)}`)
+};
+
+window.ClenaAPI = ClenaAPI;
+// ================= APEX CONVERSÃƒO =================
 const APEX_POR_REAL = 15;
 
 function reaisParaApex(reais){
@@ -1532,39 +1639,27 @@ async function perfilCarregar(){
   const email = localStorage.getItem("usuario_email");
   if (!email) return;
 
-  const { data: user, error } = await sb
-    .from("usuarios")
-    .select(`
-      id,
-      email,
-      nome_usuario,
-      username,
-      avatar_url,
-      tipo_assinatura,
-      valor_assinatura,
-      vencimento_assinatura
-    `)
-    .eq("email", email)
-    .single();
-
-  if (error || !user) {
+  let user;
+  try {
+    user = await ClenaAPI.perfil();
+  } catch (error) {
     console.error("Erro ao carregar perfil:", error);
     return;
   }
 
   perfilUserId = user.id;
 
-  // 📧 Dados básicos
+  // ðŸ“§ Dados bÃ¡sicos
   pEmail.textContent = user.email;
   pNome.value = user.nome_usuario || "";
   pUser.value = user.username || "";
 
-  // 🖼 Avatar
+  // ðŸ–¼ Avatar
   pAvatar.src =
     user.avatar_url ||
     `https://ui-avatars.com/api/?name=${(user.nome_usuario || "U")[0]}&background=e50914&color=fff`;
 
-  // 💳 Plano (vem DIRETO do usuário)
+  // ðŸ’³ Plano (vem DIRETO do usuÃ¡rio)
   pPlano.textContent = user.tipo_assinatura || "-";
 
   pValor.textContent = user.valor_assinatura
@@ -1592,19 +1687,18 @@ async function perfilValidarUsername(){
     return false;
   }
 
-  const { data } = await sb
-    .from("usuarios")
-    .select("id")
-    .eq("username", u)
-    .neq("id", perfilUserId);
+  const data = await ClenaAPI.validarUsername({
+    username: u,
+    userId: perfilUserId
+  });
 
-  if(data.length){
-    pStatus.textContent="Já em uso";
+  if(data?.disponivel === false || data?.available === false){
+    pStatus.textContent="JÃ¡ em uso";
     pStatus.style.color="#ff5555";
     return false;
   }
 
-  pStatus.textContent="Disponível";
+  pStatus.textContent="DisponÃ­vel";
   pStatus.style.color="#00ff99";
   return true;
 }
@@ -1612,12 +1706,12 @@ async function perfilValidarUsername(){
 async function perfilSalvar(){
   if(!(await perfilValidarUsername())) return;
 
-  await sb.from("usuarios")
-    .update({
-      nome_usuario: pNome.value,
-      username: pUser.value
-    })
-    .eq("id", perfilUserId);
+  await ClenaAPI.salvarPerfil({
+    id: perfilUserId,
+    email: getUsuarioEmail(),
+    nome_usuario: pNome.value,
+    username: pUser.value
+  });
 
   perfilFechar();
 }
@@ -1660,31 +1754,22 @@ async function perfilUploadAvatar(input){
 
   URL.revokeObjectURL(img.src);
 
-  const nome = `${perfilUserId}_${Date.now()}.jpg`;
+  const formData = new FormData();
+  formData.append("avatar", blob, `${perfilUserId}_${Date.now()}.jpg`);
+  formData.append("id", perfilUserId);
+  formData.append("email", getUsuarioEmail());
 
-  const uploadUrl =
-    `https://br.storage.bunnycdn.com/sessao99/avatars/${nome}`;
-
-  const res = await fetch(uploadUrl,{
-    method:"PUT",
-    headers:{
-      "AccessKey":"d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
-      "Content-Type":"application/octet-stream"
-    },
-    body:blob
-  });
-
-  if(!res.ok){
+  let data;
+  try {
+    data = await ClenaAPI.uploadAvatar(formData);
+  } catch (error) {
+    console.error("Erro ao enviar avatar:", error);
     alert("Erro ao enviar avatar");
     return;
   }
 
-  const avatarUrl =
-    `https://sessao99.b-cdn.net/avatars/${nome}`;
-
-  await sb.from("usuarios")
-    .update({ avatar_url: avatarUrl })
-    .eq("id", perfilUserId);
+  const avatarUrl = data.avatar_url || data.avatarUrl || data.url;
+  if (!avatarUrl) return;
 
   pAvatar.src = avatarUrl;
   await carregarAvatarHeader();
@@ -1730,33 +1815,20 @@ async function iniciarApp() {
 
 
 
-const { data, error } = await sb
-  .from("filmes")
-  .select(`
-  id,
-  titulo,
-  serie_nome,
-  tipo,
-  categoria,
-  capa_url,
-  descricao,
-  video_url
-`)
-;
-
-
-
-if (error) {
+let data;
+try {
+  data = await ClenaAPI.catalogo();
+} catch (error) {
   console.error(error);
-  alert("Erro ao carregar catálogo");
+  alert("Erro ao carregar catÃƒÂ¡logo");
   return;
 }
 
 
-  console.log("🎬 FILMES CARREGADOS:", data);
+  console.log("ðŸŽ¬ FILMES CARREGADOS:", data);
 
 dados = (data || []).map(d => {
-  // 🔢 classificação indicativa → número
+  // ðŸ”¢ classificaÃ§Ã£o indicativa â†’ nÃºmero
   let classificacaoNum = null;
   if (d.classificacao_indicativa) {
     const m = d.classificacao_indicativa.match(/\d+/);
@@ -1783,7 +1855,7 @@ dados = (data || []).map(d => {
   idioma: (d.idioma || "").toLowerCase(),
   audio: (d.audio || "").toLowerCase(),
 
-  // 🔥 CACHE DE BUSCA (CRÍTICO)
+  // ðŸ”¥ CACHE DE BUSCA (CRÃTICO)
   _search: `
     ${d.titulo || ""}
     ${d.serie_nome || ""}
@@ -1793,8 +1865,8 @@ dados = (data || []).map(d => {
 
 });
   dadosCarregados = true;
-montarFiltrosCategorias(); // 👈 ADICIONE AQUI
-// ✅ aplica filtros APENAS se o popup de filtros ainda estiver ativo
+montarFiltrosCategorias(); // ðŸ‘ˆ ADICIONE AQUI
+// âœ… aplica filtros APENAS se o popup de filtros ainda estiver ativo
 if (
   sessionStorage.getItem("clena_filtros_aberto") === "1" &&
   localStorage.getItem("clena_filtros")
@@ -1807,7 +1879,7 @@ if (
   
 
   if (!dados.length) {
-    console.warn("⚠️ Nenhum filme ativo encontrado");
+    console.warn("âš ï¸ Nenhum filme ativo encontrado");
     return;
   }
 
@@ -1817,12 +1889,12 @@ if (
 
   hero.style.backgroundImage = `url(${heroItem.capa_url})`;
   heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
-  heroMeta.textContent = `${heroItem.categoria} • ${heroItem.tipo}`;
+  heroMeta.textContent = `${heroItem.categoria} â€¢ ${heroItem.tipo}`;
   heroDesc.textContent = heroItem.descricao || "";
 
   const heroVideo = document.getElementById("heroVideo");
 
-  // ⏳ adia vídeo para depois do primeiro paint
+  // â³ adia vÃ­deo para depois do primeiro paint
 setTimeout(() => {
   if (!heroItem.video_url) return;
 
@@ -1834,9 +1906,9 @@ setTimeout(() => {
 
   
 
-// 🔥 GARANTE ESTADO DO BOTÃO AO CARREGAR
+// ðŸ”¥ GARANTE ESTADO DO BOTÃƒO AO CARREGAR
 atualizarBotaoFiltros();
-// 🚀 LOAD INICIAL PROGRESSIVO
+// ðŸš€ LOAD INICIAL PROGRESSIVO
 prepararLista(
   JSON.parse(localStorage.getItem("clena_filtros") || "null"),
   busca?.value?.toLowerCase() || ""
@@ -1875,7 +1947,7 @@ const busca = document.getElementById("busca");
 function executarBusca(texto) {
   if (!dadosCarregados) {
     searchGrid.innerHTML =
-      "<p style='color:#777'>Carregando catálogo...</p>";
+      "<p style='color:#777'>Carregando catÃ¡logo...</p>";
     searchResults.style.display = "block";
     return;
   }
@@ -1890,12 +1962,12 @@ function executarBusca(texto) {
   }
 
 const resultados = [
-  // 🎬 FILMES
+  // ðŸŽ¬ FILMES
   ...dados.filter(d =>
     d.tipo === "filme" && d._search.includes(q)
   ),
 
-  // 📺 SÉRIES (AGRUPADAS)
+  // ðŸ“º SÃ‰RIES (AGRUPADAS)
   ...[
     ...new Map(
       dados
@@ -1936,7 +2008,7 @@ function toggleSearch(){
   buscaMobile.value = "";
   document.body.classList.add("search-open");
 
-  // força foco sem zoom
+  // forÃ§a foco sem zoom
   setTimeout(() => buscaMobile.focus(), 100);
 }
 const searchBtn = document.getElementById("searchBtn");
@@ -1970,7 +2042,7 @@ document.addEventListener("click", e => {
     searchResults.contains(e.target) ||
     searchMobileBox.contains(e.target) ||
     e.target.closest(".search-card") ||
-    e.target.closest("#searchBtn") // 🔥 ESSENCIAL
+    e.target.closest("#searchBtn") // ðŸ”¥ ESSENCIAL
   ) {
     return;
   }
@@ -2095,7 +2167,7 @@ function render(buscaTxt = "") {
     );
   }
 
-  // 🎬 FILMES
+  // ðŸŽ¬ FILMES
   if (filtro === "todos" || filtro === "filme") {
     lista
       .filter(d => d.tipo === "filme")
@@ -2103,7 +2175,7 @@ function render(buscaTxt = "") {
       .forEach(f => html += card(f));
   }
 
-  // 📺 SÉRIES
+  // ðŸ“º SÃ‰RIES
   if (filtro === "todos" || filtro === "serie") {
     const series = [...new Map(
       lista.filter(d => d.tipo === "serie")
@@ -2115,7 +2187,7 @@ function render(buscaTxt = "") {
       .forEach(s => html += card(s));
   }
 
-  // 🎥 DOCUMENTÁRIOS ✅
+  // ðŸŽ¥ DOCUMENTÃRIOS âœ…
   if (filtro === "documentarios") {
     lista
       .filter(d => d.tipo === "documentario")
@@ -2129,7 +2201,7 @@ function render(buscaTxt = "") {
 function prepararLista(filtros = null, buscaTxt = "") {
   let lista = [...dados];
 
-  // 🎯 FILTRO PRINCIPAL
+  // ðŸŽ¯ FILTRO PRINCIPAL
   if (filtro !== "todos") {
     lista = lista.filter(d => {
       if (filtro === "documentarios") {
@@ -2187,7 +2259,7 @@ function carregarProximaPagina() {
   const lote = dadosFiltrados.slice(inicio, fim);
 
 if (!lote.length) {
-  observer.unobserve(sentinela); // 🛑 para o infinite scroll
+  observer.unobserve(sentinela); // ðŸ›‘ para o infinite scroll
   carregando = false;
   return;
 }
@@ -2230,11 +2302,23 @@ function formatarData(data){
   return new Date(data).toLocaleDateString("pt-BR");
 }
 
-function abrirPlayer(item){
-  // 🔥 impede restauração ao voltar
+async function abrirPlayer(item){
+  // ðŸ”¥ impede restauraÃ§Ã£o ao voltar
   sessionStorage.removeItem("clena_filtros_aberto");
 
-  const dados = encodeURIComponent(JSON.stringify(item));
+  let playerItem = item;
+
+  if (item?.id) {
+    try {
+      playerItem = await ClenaAPI.player(item.id);
+    } catch (error) {
+      console.error("Erro ao carregar informaÃ§Ãµes do player:", error);
+      alert("Erro ao carregar o vÃ­deo");
+      return;
+    }
+  }
+
+  const dados = encodeURIComponent(JSON.stringify(playerItem));
   location.href = `player.html?item=${dados}`;
 }
 
@@ -2257,7 +2341,7 @@ function montarEpisodios(){
 
   episodioIndexAtual = 0;
 
-  // ▶️ reproduz o primeiro episódio
+  // â–¶ï¸ reproduz o primeiro episÃ³dio
   tocarEpisodio(eps, episodioIndexAtual);
 
   selEpisodio.onchange = () => {
@@ -2265,13 +2349,24 @@ function montarEpisodios(){
     tocarEpisodio(eps, episodioIndexAtual);
   };
 }
-function tocarEpisodio(eps, index){
-  btnProximo.style.display = "none"; // 👈 ESCONDE SEMPRE
+async function tocarEpisodio(eps, index){
+  btnProximo.style.display = "none"; // ðŸ‘ˆ ESCONDE SEMPRE
 
   const episodio = eps[index];
   if(!episodio) return;
 
-  video.src = episodio.video_url;
+  let playerInfo = episodio;
+  if (episodio?.id) {
+    try {
+      playerInfo = await ClenaAPI.player(episodio.id);
+    } catch (error) {
+      console.error("Erro ao carregar episÃ³dio:", error);
+      alert("Erro ao carregar o episÃ³dio");
+      return;
+    }
+  }
+
+  video.src = playerInfo.video_url;
   video.play().catch(() => {});
 }
 
@@ -2301,14 +2396,14 @@ function irProximoEpisodio(){
 
   episodioIndexAtual++;
 
-  // ▶️ próximo episódio da mesma temporada
+  // â–¶ï¸ prÃ³ximo episÃ³dio da mesma temporada
   if (episodioIndexAtual < epsDaTemp.length) {
     selEpisodio.value = episodioIndexAtual;
     tocarEpisodio(epsDaTemp, episodioIndexAtual);
     return;
   }
 
-  // 🔄 próxima temporada
+  // ðŸ”„ prÃ³xima temporada
   const temporadas = [...new Set(serieAtual.map(e => e.temporada))];
   const tempIndex = temporadas.indexOf(Number(temporadaAtual));
 
@@ -2320,7 +2415,7 @@ function irProximoEpisodio(){
 
 video.addEventListener("ended", () => {
 
-  // se não estiver em série, ignora
+  // se nÃ£o estiver em sÃ©rie, ignora
   if (!serieAtual.length) return;
 
   const temporadaAtual = selTemporada.value;
@@ -2330,14 +2425,14 @@ video.addEventListener("ended", () => {
 
   episodioIndexAtual++;
 
-  // ▶️ ainda tem episódio na mesma temporada
+  // â–¶ï¸ ainda tem episÃ³dio na mesma temporada
   if (episodioIndexAtual < epsDaTemp.length) {
     selEpisodio.value = episodioIndexAtual;
     tocarEpisodio(epsDaTemp, episodioIndexAtual);
     return;
   }
 
-  // 🔄 acabou a temporada → tenta próxima
+  // ðŸ”„ acabou a temporada â†’ tenta prÃ³xima
   const temporadas = [...new Set(serieAtual.map(e => e.temporada))];
   const tempIndex = temporadas.indexOf(Number(temporadaAtual));
 
@@ -2348,19 +2443,19 @@ video.addEventListener("ended", () => {
     return;
   }
 
-  // 🛑 acabou a série
-  console.log("Série finalizada");
+  // ðŸ›‘ acabou a sÃ©rie
+  console.log("SÃ©rie finalizada");
 });
 video.addEventListener("timeupdate", () => {
 
-  // só funciona para série
+  // sÃ³ funciona para sÃ©rie
   if (!serieAtual.length) return;
 
   if (!video.duration) return;
 
   const tempoRestante = video.duration - video.currentTime;
 
-  // ⏱ mostra com 60 segundos restantes
+  // â± mostra com 60 segundos restantes
   if (tempoRestante <= 60) {
     btnProximo.style.display = "block";
   } else {
@@ -2370,7 +2465,7 @@ video.addEventListener("timeupdate", () => {
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").then(reg => {
 
-    // 🔥 força atualização quando houver nova versão
+    // ðŸ”¥ forÃ§a atualizaÃ§Ã£o quando houver nova versÃ£o
     if (reg.waiting) {
       reg.waiting.postMessage({ type: "SKIP_WAITING" });
     }
@@ -2400,7 +2495,7 @@ async function validarSessao() {
   const email = localStorage.getItem("usuario_email");
   const tokenLocal = localStorage.getItem("session_token");
 
-  // 🛑 PASSO 3 — SE NÃO TIVER EMAIL OU TOKEN, CAI FORA
+  // ðŸ›‘ PASSO 3 â€” SE NÃƒO TIVER EMAIL OU TOKEN, CAI FORA
 if (!email || !tokenLocal) {
   localStorage.clear();
 
@@ -2413,12 +2508,24 @@ if (!email || !tokenLocal) {
 }
 
 
- const { data, error } = await sb
-  .from("usuarios")
-.select("id, status, trial_expires_at, session_token, controle_sessao, tipo_assinatura")
-  .eq("email", email)
-  .maybeSingle();
-// 🔥 REGRA OPÇÃO A — LOGADO MAS SEM PLANO → PLANOS
+ let data;
+ try {
+   data = await ClenaAPI.validarSessao({
+     email,
+     token: tokenLocal
+   });
+ } catch (error) {
+   console.error("Erro ao validar sessÃ£o:", error);
+   localStorage.clear();
+
+   if (!redirecionando) {
+     redirecionando = true;
+     location.replace("login.html");
+   }
+
+   return false;
+ }
+// ðŸ”¥ REGRA OPÃ‡ÃƒO A â€” LOGADO MAS SEM PLANO â†’ PLANOS
 if (!data.tipo_assinatura) {
   if (!redirecionando) {
     redirecionando = true;
@@ -2428,20 +2535,14 @@ if (!data.tipo_assinatura) {
 }
 
 
-// 🔐 PASSO 4 — CONTROLE DE SESSÃO (OUTRO DISPOSITIVO)
+// ðŸ” PASSO 4 â€” CONTROLE DE SESSÃƒO (OUTRO DISPOSITIVO)
 if (data.controle_sessao === true) {
   if (data.session_token !== tokenLocal) {
 
-    const { data: ultimoLogin } = await sb
-      .from("login_logs")
-      .select("user_agent, created_at")
-      .eq("user_id", data.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
     const agente =
-      ultimoLogin?.user_agent || "Outro dispositivo";
+      data.ultimo_login_user_agent ||
+      data.ultimoLogin?.user_agent ||
+      "Outro dispositivo";
 
 mostrarSessaoEncerrada(agente);
 return false;
@@ -2466,21 +2567,21 @@ if (data.status === "bloqueado") {
   const emailUser = email;
 
   const mensagem = encodeURIComponent(
-`Olá, meu acesso está bloqueado.
+`OlÃ¡, meu acesso estÃ¡ bloqueado.
 
-📧 Email: ${emailUser}
+ðŸ“§ Email: ${emailUser}
 
 Gostaria de regularizar minha assinatura.`
   );
 
   const whatsappUrl = `https://wa.me/5575998112535?text=${mensagem}`;
 
-  // 🔥 DESARMA DEFINITIVAMENTE A ABERTURA (CRÍTICO)
+  // ðŸ”¥ DESARMA DEFINITIVAMENTE A ABERTURA (CRÃTICO)
   sessionStorage.setItem("clena_abertura_ok", "1");
   const aberturaFrame = document.getElementById("aberturaFrame");
   if (aberturaFrame) aberturaFrame.remove();
 
-  // 🔥 LIMPA QUALQUER TRAVA GLOBAL (MODAL / BUSCA / OVERFLOW)
+  // ðŸ”¥ LIMPA QUALQUER TRAVA GLOBAL (MODAL / BUSCA / OVERFLOW)
   document.body.classList.remove("modal-open");
   document.body.classList.remove("search-open");
 
@@ -2489,7 +2590,7 @@ Gostaria de regularizar minha assinatura.`
   document.body.style.touchAction = "auto";
   document.body.style.height = "auto";
 
-  // 🧱 TELA DE BLOQUEIO
+  // ðŸ§± TELA DE BLOQUEIO
   document.body.innerHTML = `
     <div style="
       min-height:100vh;
@@ -2504,7 +2605,7 @@ Gostaria de regularizar minha assinatura.`
     ">
       <div style="width:100%;max-width:960px">
 
-        <!-- 🚫 BLOQUEIO -->
+        <!-- ðŸš« BLOQUEIO -->
         <div style="
           background:#1b1b1e;
           padding:30px;
@@ -2514,11 +2615,11 @@ Gostaria de regularizar minha assinatura.`
           margin-bottom:26px;
         ">
           <h1 style="color:#e50914;margin-bottom:10px">
-            🚫 Acesso bloqueado
+            ðŸš« Acesso bloqueado
           </h1>
 
           <p style="color:#ccc;margin-bottom:14px">
-            Seu acesso está temporariamente bloqueado.<br>
+            Seu acesso estÃ¡ temporariamente bloqueado.<br>
             Escolha um plano abaixo para continuar assistindo.
           </p>
 
@@ -2527,20 +2628,20 @@ Gostaria de regularizar minha assinatura.`
           </div>
         </div>
 
-        <!-- 💳 PLANOS -->
+        <!-- ðŸ’³ PLANOS -->
         <div id="planosContainer"></div>
 
       </div>
     </div>
   `;
 
-  // 🔥 FORÇA RECÁLCULO DE SCROLL (SAFARI / iOS)
+  // ðŸ”¥ FORÃ‡A RECÃLCULO DE SCROLL (SAFARI / iOS)
   setTimeout(() => {
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
   }, 0);
 
-  // 🚀 CARREGA PLANOS
+  // ðŸš€ CARREGA PLANOS
   carregarPlanosBloqueio();
   return false;
 }
@@ -2557,28 +2658,17 @@ async function abrirLinkPlano(plano){
 
   if(!email){
     localStorage.setItem("redirect_after_login", "index.html");
-    alert("Faça login para continuar");
+    alert("FaÃ§a login para continuar");
     location.href = "login.html";
     return;
   }
 
   try{
-    const res = await fetch(
-      "https://www.clena.com.br/api/create-payment",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-store",
-        credentials: "same-origin",
-        body: JSON.stringify({
-          action: "assinatura", // 🔥 IGUAL AO OUTRO
-          plano: plano,
-          email: email
-        })
-      }
-    );
-
-    const data = await res.json();
+    const data = await ClenaAPI.criarPagamento({
+      action: "assinatura",
+      plano: plano,
+      email: email
+    });
     console.log("RETORNO CREATE PAYMENT:", data);
 
     if(data?.url){
@@ -2590,7 +2680,7 @@ async function abrirLinkPlano(plano){
     console.error(data);
 
   }catch(e){
-    alert("Falha de conexão");
+    alert("Falha de conexÃ£o");
     console.error(e);
   }
 }
@@ -2606,11 +2696,7 @@ async function carregarAvatarHeader() {
   const email = localStorage.getItem("usuario_email");
   if (!email) return;
 
-  const { data } = await sb
-    .from("usuarios")
-    .select("avatar_url, nome_usuario")
-    .eq("email", email)
-    .single();
+  const data = await ClenaAPI.perfil();
 
   const avatarUrl =
     data?.avatar_url ||
@@ -2622,9 +2708,9 @@ async function carregarAvatarHeader() {
   `;
 }
 
-// 🔐 CONTROLE DE SESSÃO DOS FILTROS
+// ðŸ” CONTROLE DE SESSÃƒO DOS FILTROS
 if (!sessionStorage.getItem("clena_session")) {
-  // nova sessão (reload, aba nova, voltou depois)
+  // nova sessÃ£o (reload, aba nova, voltou depois)
   localStorage.removeItem("clena_filtros");
   sessionStorage.setItem("clena_session", "1");
 }
@@ -2632,10 +2718,10 @@ if (!sessionStorage.getItem("clena_session")) {
 
 (async () => {
 
-// 🔥 inicia UI imediatamente
+// ðŸ”¥ inicia UI imediatamente
 iniciarApp();
 
-// valida sessão em paralelo
+// valida sessÃ£o em paralelo
 validarSessao().then(ok => {
   if (!ok) return;
   carregarAvatarHeader();
@@ -2651,7 +2737,7 @@ setTimeout(() => {
 
 window.addEventListener("message", (event) => {
   if (event.data === "filtros_aplicados") {
-    sessionStorage.removeItem("clena_filtros_aberto"); // 🔥 ADICIONE
+    sessionStorage.removeItem("clena_filtros_aberto"); // ðŸ”¥ ADICIONE
     aplicarFiltrosAvancados();
     atualizarBotaoFiltros();
   }
@@ -2679,7 +2765,7 @@ function abrirFiltrosAvancados(){
   // envia sempre
   iframe.contentWindow?.postMessage(payload, "*");
 
-  // garante envio quando o iframe carregar pela 1ª vez
+  // garante envio quando o iframe carregar pela 1Âª vez
   if (!iframe.dataset.iniciado) {
     iframe.addEventListener("load", () => {
       iframe.contentWindow.postMessage(payload, "*");
@@ -2714,7 +2800,7 @@ function agruparSeries(lista){
   
 function montarFiltrosCategorias(){
   const box = document.getElementById("filtrosCategorias");
-  if (!box) return; // 🔥 BLOQUEIO ATIVO → NÃO EXECUTA
+  if (!box) return; // ðŸ”¥ BLOQUEIO ATIVO â†’ NÃƒO EXECUTA
 
   const todasCategorias = dados
     .flatMap(d =>
@@ -2754,12 +2840,11 @@ prepararLista(
 );
 }
 async function carregarPlanosBloqueio() {
-  const res = await fetch("/api/get-planos");
-  const planos = await res.json();
+  const planos = await ClenaAPI.planos();
 
   const box = document.getElementById("planosContainer");
 
-  // 🔥 REMOVE APEX DA TELA DE BLOQUEIO
+  // ðŸ”¥ REMOVE APEX DA TELA DE BLOQUEIO
   const planosAssinatura = planos.filter(p =>
     !p.nome.toLowerCase().includes("apex")
   );
@@ -2772,13 +2857,13 @@ async function carregarPlanosBloqueio() {
 
           <div class="plano-preco">
             R$ ${Number(plano.valor).toFixed(2).replace(".", ",")}
-            <span>/mês</span>
+            <span>/mÃªs</span>
           </div>
 
           <ul>
             <li>Acesso completo</li>
-            <li>Conteúdo exclusivo</li>
-            <li>Qualidade máxima</li>
+            <li>ConteÃºdo exclusivo</li>
+            <li>Qualidade mÃ¡xima</li>
           </ul>
 
           <button
@@ -2824,20 +2909,19 @@ async function carregarApex(){
   if (!email) return;
 
   try {
-    const res = await fetch(`/api/carteira?email=${encodeURIComponent(email)}`);
-    const data = await res.json();
+    const data = await ClenaAPI.carteira();
 
-    // 🔥 saldo vem em REAIS do backend
+    // ðŸ”¥ saldo vem em REAIS do backend
     const saldoReais = Number(data.apex || 0);
 
-    // 🔥 converte para APEX
+    // ðŸ”¥ converte para APEX
     const apex = reaisParaApex(saldoReais);
 
     document.getElementById("apexQtd").textContent = apex;
 
     // (opcional, mas PREMIUM) tooltip em reais
     document.getElementById("apexQtd").title =
-      `≈ R$ ${apexParaReais(apex)}`;
+      `â‰ˆ R$ ${apexParaReais(apex)}`;
 
   } catch (err) {
     console.error("Erro ao carregar Apex:", err);
@@ -2850,17 +2934,17 @@ async function carregarApex(){
 
 
 </script>
-  <!-- 🔐 POPUP SESSÃO ENCERRADA -->
+  <!-- ðŸ” POPUP SESSÃƒO ENCERRADA -->
 <div id="sessaoOverlay" style="display:none">
   <div class="sessaoPopup">
     
-    <div class="sessaoIcon">🔒</div>
+    <div class="sessaoIcon">ðŸ”’</div>
 
-    <h2>Você foi desconectado</h2>
+    <h2>VocÃª foi desconectado</h2>
 
     <p class="sessaoText">
       Detectamos um novo login na sua conta.
-      <br>Por segurança, esta sessão foi encerrada.
+      <br>Por seguranÃ§a, esta sessÃ£o foi encerrada.
     </p>
 
     <div class="sessaoBox">
@@ -2876,17 +2960,17 @@ async function carregarApex(){
 
   </div>
 </div>
-<!-- 🎛️ POPUP FILTROS AVANÇADOS -->
+<!-- ðŸŽ›ï¸ POPUP FILTROS AVANÃ‡ADOS -->
 <div id="filtrosOverlay" style="display:none">
   <div class="filtrosPopup">
-    <button class="filtrosFechar" onclick="fecharFiltros()">✕</button>
+    <button class="filtrosFechar" onclick="fecharFiltros()">âœ•</button>
 <iframe id="iframeFiltros" src="filtros.html"></iframe>
   </div>
 </div>
 
 
   <script>
-  // 🚀 CRIA ABERTURA APENAS UMA VEZ POR SESSÃO
+  // ðŸš€ CRIA ABERTURA APENAS UMA VEZ POR SESSÃƒO
   if (!sessionStorage.getItem("clena_abertura_ok")) {
     document.body.style.overflow = "hidden";
 
@@ -2931,7 +3015,7 @@ window.addEventListener("message", (event) => {
 </script>
 
 <script>
-  // 🔥 FAILSAFE ABSOLUTO DA ABERTURA
+  // ðŸ”¥ FAILSAFE ABSOLUTO DA ABERTURA
   setTimeout(() => {
     const frame = document.getElementById("aberturaFrame");
     if (frame) {
@@ -2943,7 +3027,7 @@ window.addEventListener("message", (event) => {
 </script>
 
 <script>
-  // 🔥 ABRIR PERFIL AUTOMATICAMENTE VIA URL
+  // ðŸ”¥ ABRIR PERFIL AUTOMATICAMENTE VIA URL
   const urlParams = new URLSearchParams(location.search);
 
   if (urlParams.get("abrirPerfil") === "1") {
